@@ -2,19 +2,48 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-	<title>无损音乐 点我播放</title>
-	<meta name="application-name" content="无损音乐 点我播放" />
-	<meta name="apple-mobile-web-app-title" content="无损音乐 点我播放" />
-	<meta property="og:title" content="无损音乐 点我播放" />
-	<meta name="twitter:title" content="无损音乐 点我播放" />
-	<!-- 增加一个 ASCII 备用标题供某些内置浏览器回退 -->
-	<meta name="x-fallback-title" content="Music Library" />
+	
+	<!-- Primary Metadata -->
+	<title>无损点播</title>
+	<meta name="description" content="无损音乐点播系统，支持在线上传音频文件" />
+	<meta name="keywords" content="无损,音乐,点播,上传,mp3,flac,wav" />
+	
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="无损音乐点播" />
+	<meta property="og:site_name" content="无损音乐点播" />
+	<meta property="og:url" content="{{ request.url }}" />
+	<meta property="og:description" content="无损音乐点播系统，支持在线上传音频文件" />
+	<meta property="og:image" content="{{ request.url_root }}preview.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:locale" content="en_US" />
+	
+	<!-- Clubhouse Frames -->
+	<meta property="fc:frame" content="vNext" />
+	<meta property="fc:frame:image" content="{{ request.url_root }}preview.png" />
+	<meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
+	<meta property="fc:frame:button:1" content="进入点播" />
+	<meta property="fc:frame:button:1:action" content="post_redirect" />
+	<meta property="fc:frame:button:1:target" content="{{ request.url }}" />
+	<meta property="fc:frame:post_url" content="{{ request.url }}" />
+	
+	<!-- iOS/Mobile -->
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-title" content="无损点播" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="theme-color" content="#1e1f24" />
+	
+	<!-- Compatibility -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="renderer" content="webkit" />
+	
 	<link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
 	<header>
-		<h1>音乐库</h1>
 		<div class="toolbar">
 			<input id="uploadFile" type="file" accept=".mp3,.wav,.flac" style="display:none;" />
 			<button id="uploadBtn" aria-label="上传">上传</button>

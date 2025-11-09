@@ -1,6 +1,8 @@
-import os, sys, json, threading, time, subprocess, configparser
-from flask import Flask, render_template, jsonify, request
+import os, sys, json, threading, time, subprocess, configparser, platform
+from flask import Flask, render_template, jsonify, request, abort, send_file
 from werkzeug.utils import secure_filename
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 
 APP = Flask(__name__, template_folder='.')
 
@@ -15,13 +17,27 @@ DEFAULT_CFG = {
 	'FLASK_HOST': '0.0.0.0',
 	'FLASK_PORT': '9000',
 	'DEBUG': 'true',
-	'MPV_CMD': r'c:\mpv\mpv.exe --input-ipc-server=\\.\pipe\mpv-pipe --idle=yes --force-window=no'
+	'MPV_CMD': None  # 将在运行时设置
 }
 
+def _get_app_dir():
+    """获取应用程序目录，支持打包和开发环境"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+# 设置默认的 MPV 命令
+def _get_default_mpv_cmd():
+    app_dir = _get_app_dir()
+    mpv_path = os.path.join(app_dir, 'mpv.exe')
+    if os.path.exists(mpv_path):
+        return f'"{mpv_path}" --input-ipc-server=\\\\.\\\pipe\\\\mpv-pipe --idle=yes --force-window=no'
+    return r'c:\mpv\mpv.exe --input-ipc-server=\\.\pipe\mpv-pipe --idle=yes --force-window=no'
+
+DEFAULT_CFG['MPV_CMD'] = _get_default_mpv_cmd()
+
 def _ini_path():
-	if getattr(sys, 'frozen', False):
-		return os.path.join(os.path.dirname(sys.executable), 'settings.ini')
-	return os.path.join(os.path.dirname(__file__), 'settings.ini')
+    return os.path.join(_get_app_dir(), 'settings.ini')
 
 def _ensure_ini_exists():
 	ini_path = _ini_path()
@@ -484,6 +500,275 @@ def api_debug_mpv():
 		'shuffle': 'SHUFFLE' in globals() and globals().get('SHUFFLE')
 	}
 	return jsonify({'status':'OK','info': info})
+
+@APP.route('/preview.png')
+def preview_image():
+    """提供社交媒体预览图片"""
+    print("[DEBUG] 访问预览图片路由")
+    from flask import send_file, abort
+    from io import BytesIO
+    from PIL import Image, ImageDraw, ImageFont
+    import os, traceback, math
+
+    def get_system_font():
+        """获取系统中文字体"""
+        try:
+            if platform.system().lower() == 'windows':
+                # 首先尝试直接加载微软雅黑（最常见的中文字体）
+                msyh_path = os.path.join(os.environ.get('SystemRoot', 'C:\\Windows'), 'Fonts', 'msyh.ttc')
+                if os.path.exists(msyh_path):
+                    try:
+                        # 尝试以二进制方式读取字体文件
+                        with open(msyh_path, 'rb') as font_file:
+                            font_bytes = font_file.read()
+                            # 从字节创建BytesIO对象
+                            font_io = BytesIO(font_bytes)
+                            # 尝试加载字体
+                            test_font = ImageFont.truetype(font_io, 24)
+                            # 验证字体是否支持中文
+                            bbox = test_font.getbbox("测试")
+                            if bbox and bbox[2] > 0 and bbox[3] > 0:
+                                print("[DEBUG] 成功加载微软雅黑字体")
+                                return font_bytes
+                    except Exception as e:
+                        print(f"[WARN] 微软雅黑加载失败: {e}")
+
+                # 如果微软雅黑加载失败，尝试其他中文字体
+                for font_name in ['simhei.ttf', 'simsun.ttc']:
+                    try:
+                        font_path = os.path.join(os.environ.get('SystemRoot', 'C:\\Windows'), 'Fonts', font_name)
+                        if os.path.exists(font_path):
+                            with open(font_path, 'rb') as font_file:
+                                font_bytes = font_file.read()
+                                font_io = BytesIO(font_bytes)
+                                test_font = ImageFont.truetype(font_io, 24)
+                                bbox = test_font.getbbox("测试")
+                                if bbox and bbox[2] > 0 and bbox[3] > 0:
+                                    print(f"[DEBUG] 成功加载字体: {font_name}")
+                                    return font_bytes
+                    except Exception as e:
+                        print(f"[WARN] 字体加载失败 {font_name}: {e}")
+            
+            print("[WARN] 无法加载系统中文字体")
+            return None
+        except Exception as e:
+            print(f"[ERROR] 字体加载过程出错: {e}")
+            return None
+
+    try:
+        print("[DEBUG] 创建预览图片...")
+        # 创建预览图片（1200x630是社交媒体预览的推荐尺寸）
+        width, height = 600, 630
+        img = Image.new('RGB', (width, height), color=(30, 31, 36))  # 深色背景
+        draw = ImageDraw.Draw(img)
+
+        # 绘制网页风格背景
+        print("[DEBUG] 绘制背景...")
+        
+        # 顶部工具栏背景
+        toolbar_height = 60
+        draw.rectangle([(0, 0), (width, toolbar_height)], 
+                      fill=(40, 41, 46))
+        
+        # 底部播放器栏背景
+        player_height = 50
+        draw.rectangle([(0, height-player_height), (width, height)], 
+                      fill=(40, 41, 46))
+        
+        # 进度条
+        progress_height = 4
+        progress_y = height - player_height - progress_height
+        draw.rectangle([(0, progress_y), (width, progress_y + progress_height)], 
+                      fill=(50, 51, 56))
+        # 进度
+        draw.rectangle([(0, progress_y), (width * 0.7, progress_y + progress_height)], 
+                      fill=(86, 156, 214))
+        
+        # 获取实际的播放列表
+        tree = build_tree()
+        file_items = []
+        def collect_files(node, depth=0):
+            # 收集文件夹
+            for dir_node in node['dirs']:
+                if depth < 2:  # 限制显示深度
+                    file_items.append(f"📂 {dir_node['name']}")
+                    collect_files(dir_node, depth + 1)
+            # 收集文件
+            for file_node in node['files']:
+                if len(file_items) < 5:  # 限制显示数量
+                    ext = os.path.splitext(file_node['name'])[1].lower()
+                    icon = "🎵" if ext in {'.mp3', '.wav', '.flac'} else "📄"
+                    file_items.append(f"{icon} {file_node['name']}")
+
+        collect_files(tree)
+        
+        # 如果列表为空，添加一些提示文本
+        if not file_items:
+            file_items = ["📂 音乐库暂无内容", "💡 点击上传按钮添加音乐"]
+        
+        # 确保至少有5个项目（用空白填充）
+        while len(file_items) < 5:
+            file_items.append("")
+        
+        y = toolbar_height + 20
+        for item in file_items:
+            # 绘制半透明的选择框背景
+            if "无损音乐" in item:  # 当前播放项
+                draw.rectangle([(40, y-5), (width-40, y+35)], 
+                             fill=(86, 156, 214, 30))
+            draw.rectangle([(40, y-5), (width-40, y+35)], 
+                         outline=(60, 61, 66), width=1)
+            y += 50
+
+        # 尝试加载字体
+        print("[DEBUG] 加载字体...")
+        # 获取系统字体字节数据
+        font_bytes = get_system_font()
+        
+        # 定义字体大小
+        font_size_title = 64
+        font_size_button = 32
+        font_size_text = 24
+        font_size_desc = 60
+
+        # 创建字体对象
+        font_bytes = get_system_font()
+        try:
+            if font_bytes:
+                font_io = BytesIO(font_bytes)
+                title_font = ImageFont.truetype(font_io, font_size_title)
+                font_io.seek(0)  # 重置BytesIO位置
+                button_font = ImageFont.truetype(font_io, font_size_button)
+                font_io.seek(0)
+                text_font = ImageFont.truetype(font_io, font_size_text)
+                font_io.seek(0)
+                desc_font = ImageFont.truetype(font_io, font_size_desc)
+                print("[DEBUG] 成功加载所有字体大小变体")
+            else:
+                raise Exception("No font bytes available")
+        except Exception as e:
+            print(f"[ERROR] 加载字体失败: {e}")
+            title_font = button_font = text_font = desc_font = ImageFont.load_default()
+            print("[WARN] 使用默认字体")
+
+        # 定义要显示的文本
+        title = "支持上传音乐"
+        description = ""
+	
+        # 绘制界面元素
+        print("[DEBUG] 绘制界面元素...")
+        
+        # 顶部工具栏按钮
+        buttons = ["上传", "上一曲", "下一曲", "随机", "展开", "折叠"]
+        x = 20
+        for btn in buttons:
+            w = 80 if len(btn) > 1 else 50
+            draw.rectangle([(x, 10), (x+w, 50)], 
+                         fill=(50, 51, 56),
+                         outline=(60, 61, 66))
+            if hasattr(draw, 'textbbox'):
+                bbox = draw.textbbox((0, 0), btn, font=button_font)
+                text_w = bbox[2] - bbox[0]
+                text_h = bbox[3] - bbox[1]
+            else:
+                text_w, text_h = draw.textsize(btn, font=button_font)
+            draw.text((x + (w-text_w)//2, 15), btn, 
+                     font=button_font, fill=(200, 200, 220))
+            x += w + 10
+
+        # 文件列表文字
+        y = toolbar_height + 20
+        for item in file_items:
+            if "无损音乐" in item:  # 当前播放项
+                color = (86, 156, 214)
+            else:
+                color = (200, 200, 220)
+            draw.text((60, y), item, font=text_font, fill=color)
+            y += 50
+
+           
+        # 音量控制
+        try:
+            current_volume = mpv_get('volume')
+            volume_text = f"音量: {int(current_volume)}%" if current_volume is not None else "音量: --"
+        except:
+            volume_text = "音量: --"
+        draw.text((width-120, height-player_height+15), volume_text, 
+                 font=text_font, fill=(200, 200, 220))
+
+        # 绘制标题
+        print("[DEBUG] 绘制标题...")
+        if hasattr(draw, 'textbbox'):
+            title_bbox = draw.textbbox((0, 0), title, font=title_font)
+            title_width = title_bbox[2] - title_bbox[0]
+            title_height = title_bbox[3] - title_bbox[1]
+            
+            desc_bbox = draw.textbbox((0, 0), description, font=desc_font)
+            desc_width = desc_bbox[2] - desc_bbox[0]
+            desc_height = desc_bbox[3] - desc_bbox[1]
+        else:
+            title_width, title_height = draw.textsize(title, font=title_font)
+            desc_width, desc_height = draw.textsize(description, font=desc_font)
+
+        # 绘制标题（带发光效果）
+        title_x = (width - title_width) // 2
+        title_y = (height - title_height - desc_height - 40) // 2
+
+        # 发光效果
+        glow_color = (255, 255, 255)
+        for offset in [(dx,dy) for dx in range(-3,4) for dy in range(-3,4)]:
+            if abs(offset[0]) + abs(offset[1]) <= 4:
+                draw.text((title_x + offset[0], title_y + offset[1]), 
+                         title, font=title_font, fill=glow_color)
+
+        # 主标题
+        draw.text((title_x, title_y), title, 
+                 font=title_font, fill=(52, 174, 235))
+
+        # 描述文字
+        desc_x = (width - desc_width) // 2
+        desc_y = title_y + title_height + 40
+        draw.text((desc_x, desc_y), description, 
+                 font=desc_font, fill=(52, 174, 235))
+
+        print("[DEBUG] 保存为PNG...")
+        img_io = BytesIO()
+        img.save(img_io, format='PNG', optimize=True)
+        img_io.seek(0)
+        
+        print("[DEBUG] 准备发送响应...")
+        response = send_file(
+            img_io,
+            mimetype='image/png',
+            as_attachment=False,
+            download_name='preview.png'
+        )
+        
+        # 添加必要的响应头，以支持社交媒体预览
+        response.headers['Cache-Control'] = 'public, max-age=31536000'
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = '*'
+        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+        
+        print("[DEBUG] 响应准备完成")
+        return response
+
+    except Exception as e:
+        print(f"[ERROR] 预览图片生成失败: {e}")
+        print("[ERROR] 详细错误信息:")
+        print(traceback.format_exc())
+        abort(500)
+        
+        return send_file(
+            output,
+            mimetype='image/png',
+            as_attachment=False,
+            download_name='preview.png'
+        )
+    except (binascii.Error, Exception) as e:
+        print(f'[ERROR] Preview image generation failed: {str(e)}')
+        abort(500)
 
 @APP.route('/volume', methods=['POST'])
 def api_volume():
