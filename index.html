@@ -6,24 +6,34 @@
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
 	
 	<!-- Primary Metadata -->
-	<title>无损点播</title>
-	<meta name="description" content="无损音乐点播系统，支持在线上传音频文件" />
-	<meta name="keywords" content="无损,音乐,点播,上传,mp3,flac,wav" />
+	<title>音乐点播 支持YouTube串流</title>
+	<meta name="description" content="音乐点播系统，支持串流" />
+	<meta name="keywords" content="音乐,点播,串流,mp3,flac,wav" />
 	
 	<!-- Open Graph -->
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="无损音乐点播" />
-	<meta property="og:site_name" content="无损音乐点播" />
+	<meta property="og:title" content="音乐点播 支持YouTube串流" />
+	<meta property="og:site_name" content="音乐点播 支持YouTube串流" />
 	<meta property="og:url" content="{{ request.url }}" />
-	<meta property="og:description" content="无损音乐点播系统，支持在线上传音频文件" />
-	<meta property="og:image" content="{{ request.url_root }}preview.png" />
+	<meta property="og:description" content="音乐点播系统，支持YouTube串流" />
+	<meta property="og:image" content="preview.png" />
+	<meta property="og:image:secure_url" content="preview.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content="音乐点播 支持YouTube串流预览图" />
+	<link rel="image_src" href="preview.png" />
+	<!-- Twitter / Summary card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="音乐点播 支持YouTube串流" />
+	<meta name="twitter:description" content="音乐点播系统，支持YouTube串流" />
+	<meta name="twitter:image" content="preview.png" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
 	<meta property="og:locale" content="en_US" />
 	
 	<!-- Clubhouse Frames -->
 	<meta property="fc:frame" content="vNext" />
-	<meta property="fc:frame:image" content="{{ request.url_root }}preview.png" />
+	<meta property="fc:frame:image" content="preview.png" />
 	<meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
 	<meta property="fc:frame:button:1" content="进入点播" />
 	<meta property="fc:frame:button:1:action" content="post_redirect" />
@@ -31,48 +41,80 @@
 	<meta property="fc:frame:post_url" content="{{ request.url }}" />
 	
 	<!-- iOS/Mobile -->
+	<meta name="mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<meta name="apple-mobile-web-app-title" content="无损点播" />
+	<meta name="apple-mobile-web-app-title" content="音乐点播" />
 	<meta name="format-detection" content="telephone=no" />
 	<meta name="theme-color" content="#1e1f24" />
 	
 	<!-- Compatibility -->
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 	<meta name="renderer" content="webkit" />
-	
 	<link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
 	<header>
+		<nav class="tabs-nav">
+			<button class="tab-btn active" data-tab="local">本地</button>
+			<button class="tab-btn" data-tab="youtube">YouTube</button>
+		</nav>
 		<div class="toolbar">
-			<input id="uploadFile" type="file" accept=".mp3,.wav,.flac" style="display:none;" />
-			<button id="youtubeBtn" aria-label="YouTube">YouTube</button>
-			<button id="prevBtn" aria-label="上一首">上首</button>
-			<button id="nextBtn" aria-label="下一首">下首</button>
-			<button id="shuffleBtn" aria-label="随机" data-on="0">随机</button>
-			<button id="toggleExpand" aria-label="展开/折叠">展开</button>
-			
+		<script id="boot-data" type="application/json">{{ {'tree': tree, 'musicDir': music_dir}|tojson }}</script>
+		<input id="volSlider" type="range" min="0" max="100" value="50" class="header-volume-slider" />
 		</div>
 	</header>
-	<main id="tree" aria-label="文件列表"></main>
-	<footer id="playerBar"><div id="nowPlaying">未播放</div><div class="volWrap"><input id="volSlider" type="range" min="0" max="130" value="50" /></div></footer>
-	<div id="playerProgress" aria-hidden="true"><div id="playerProgressFill"></div></div>
-		<script id="boot-data" type="application/json">{{ {'tree': tree, 'musicDir': music_dir}|tojson }}</script>
-	</main>
-
-	<!-- YouTube弹窗 -->
-	<div id="youtubeModal" class="youtube-modal" aria-hidden="true">
-		<div class="youtube-content">
-			<h3 class="youtube-title">输入YouTube视频地址</h3>
-			<input id="youtubeInput" type="text" class="youtube-input" value="https://youtu.be/P94RFMk1AcY?si=QjjXTdh_Lw6vl3Me" />
-			<div id="youtubeStatus" class="youtube-status"></div>
-			<div class="youtube-actions">
-				<button id="youtubeCancel" class="youtube-btn">取消</button>
-				<button id="youtubeSubmit" class="youtube-btn primary">提交</button>
+	<main id="tree" class="tab-content local-tab local-theme" aria-label="文件列表"></main>
+	<div id="youtubePlaylist" class="tab-content youtube-tab youtube-theme" style="display:none;" aria-label="YouTube播放列表">
+		<div class="youtube-tab-header">
+			<div class="youtube-input-group">
+				<textarea id="youtubeInput" class="youtube-input" placeholder="输入YouTube视频或播放列表地址" rows="2"></textarea>
+				<button id="youtubeSubmit" class="youtube-btn primary">播放</button>
 			</div>
+			<div id="youtubeStatus" class="youtube-status"></div>
+		</div>
+		<div class="youtube-divider"></div>
+		<div class="youtube-queue-section" id="youtubeQueueSection" style="display:none;">
+			<h4 class="youtube-queue-title">当前播放队列</h4>
+			<div id="youtubeQueueList" class="youtube-queue-list"></div>
 		</div>
 	</div>
-
+	
+	<footer id="playerBar">
+		<div id="playerProgress" aria-hidden="true"><div id="playerProgressFill"></div></div>
+		<div id="nowPlaying">未播放</div>
+		<div class="footer-controls-wrapper">
+			<div class="footer-controls-left">
+				<button id="shuffleBtn" class="control-btn" data-icon="🔀" title="随机" data-on="0">🔀</button>
+				<button id="historyBtn" class="control-btn" data-icon="📋" title="历史">📋</button>
+				<button id="prevBtn" class="control-btn" data-icon="⏮" title="上一首">⏮</button>
+			</div>
+			<button id="playPauseBtn" class="control-btn play-pause-large" data-icon="▶" title="播放/暂停">▶</button>
+			<div class="footer-controls-right">
+				<button id="nextBtn" class="control-btn" data-icon="⏭" title="下一首">⏭</button>
+				<button id="volumePopupBtn" class="control-btn" data-icon="🔊" title="音量">🔊</button>
+				<button id="toggleExpand" class="control-btn" data-icon="☰" title="展开/折叠">☰</button>
+			</div>
+		</div>
+		<!-- Volume popup slider - entire popup is the slider -->
+		<div id="volumePopup" class="volume-popup" style="display:none;">
+			<div id="volumeSliderTrack" class="volume-slider-track">
+				<div id="volumeSliderFill" class="volume-slider-fill"></div>
+				<div id="volumeSliderThumb" class="volume-slider-thumb"></div>
+			</div>
+		</div>
+	</footer>
+	
+	<!-- History modal -->
+	<div id="historyModal" class="history-modal" style="display:none;">
+		<div class="history-modal-content">
+			<div class="history-modal-header">
+				<h3>播放历史</h3>
+				<button class="history-modal-close" data-icon="✕">✕</button>
+			</div>
+			<div class="history-modal-list" id="historyList"></div>
+		</div>
+	</div>
+	
 	<script src="/static/main.js"></script>
 	<script src="/static/youtube.js"></script>
 </body>

@@ -198,6 +198,12 @@ _LAST_PLAY_TIME = 0  # 记录最后一次启动播放的时间戳，用于跳过
 # 保存被网络流打断前的播放状态，以便网络流结束后恢复本地播放列表
 PREV_INDEX = None
 PREV_META = None
+# YouTube 播放历史记录
+YOUTUBE_HISTORY = []  # 存储已播放的 YouTube URL 和元数据，最多保留 100 条记录
+YOUTUBE_HISTORY_MAX = 100
+# YouTube 播放列表队列（当前正在播放的列表）
+YOUTUBE_QUEUE = []  # 存储当前播放列表中的所有视频队列
+CURRENT_QUEUE_INDEX = -1  # 当前播放列表中的索引
 
 # =========== 文件树 / 安全路径 ===========
 def safe_path(rel: str):
@@ -256,6 +262,13 @@ def ensure_mpv():
 		return False
 	if mpv_pipe_exists():
 		return True
+	# 清理任何现存的 mpv 进程，防止重复启动
+	try:
+		if os.name == 'nt':
+			subprocess.run(['taskkill', '/IM', 'mpv.exe', '/F'], capture_output=True, timeout=2)
+			time.sleep(0.3)  # 让进程完全退出
+	except Exception as e:
+		print(f'[DEBUG] 清理 mpv 进程时的异常（可忽略）: {e}')
 	print(f'[INFO] 尝试启动 mpv: {MPV_CMD}')
 	try:
 		subprocess.Popen(MPV_CMD, shell=True)
@@ -367,6 +380,11 @@ def _play_index(idx: int):
 	# Debug: print play info
 	print(f"[DEBUG] _play_index -> idx={idx}, rel={rel}, abs_file={abs_file}")
 	try:
+		# 确保 mpv 管道存在，否则尝试启动 mpv
+		if not mpv_pipe_exists():
+			print(f"[WARN] mpv 管道不存在，尝试启动 mpv...")
+			if not ensure_mpv():
+				raise RuntimeError("无法启动或连接到 mpv")
 		mpv_command(['loadfile', abs_file, 'replace'])
 	except Exception as e:
 		print(f"[ERROR] mpv_command failed when playing {abs_file}: {e}")
@@ -377,10 +395,16 @@ def _play_index(idx: int):
 	print(f"[DEBUG] CURRENT_INDEX set to {CURRENT_INDEX}")
 	return True
 
-def _play_url(url: str):
-	"""播放网络 URL（如 YouTube）。使用 --ytdl-format=bestaudio 标志让 mpv 正确处理 YouTube。"""
+def _play_url(url: str, save_to_history: bool = True, update_queue: bool = True):
+	"""播放网络 URL（如 YouTube）。使用 --ytdl-format=bestaudio 标志让 mpv 正确处理 YouTube。
+	
+	参数:
+	  url: 要播放的 URL
+	  save_to_history: 是否保存该 URL 到历史记录（仅保存用户直接输入的URL）
+	  update_queue: 是否更新播放队列（如果False则只播放该URL，保持现有队列）
+	"""
 	#global CURRENT_INDEX, CURRENT_META, _LAST_PLAY_TIME
-	print(f"[DEBUG] _play_url -> url={url}")
+	print(f"[DEBUG] _play_url -> url={url}, save_to_history={save_to_history}, update_queue={update_queue}")
 	try:
 		# 检查 mpv 进程是否运行
 		if not mpv_pipe_exists():
@@ -396,20 +420,125 @@ def _play_url(url: str):
 		mpv_command(['loadfile', url, 'replace'])
 		print(f"[DEBUG] 已向 mpv 发送播放命令")
 		# 保存当前本地播放状态，以便网络流结束后恢复
-		global CURRENT_META, PREV_INDEX, PREV_META, CURRENT_INDEX
+		global CURRENT_META, PREV_INDEX, PREV_META, CURRENT_INDEX, YOUTUBE_HISTORY, YOUTUBE_QUEUE, CURRENT_QUEUE_INDEX
 		PREV_INDEX = CURRENT_INDEX
 		PREV_META = dict(CURRENT_META) if CURRENT_META else None
-		# 初始化 CURRENT_META，保留 rel 为 URL，但提供可用于显示的 name 字段
-		CURRENT_META = {'abs_path': url, 'rel': url, 'index': -1, 'ts': int(time.time()), 'name': url}
-		# 稍等让 mpv 初始化 media metadata，然后尝试读取 media-title 作为显示名称
-		time.sleep(0.8)
-		try:
-			media_title = mpv_get('media-title')
-			if media_title:
-				CURRENT_META['name'] = media_title
-				print(f"[DEBUG] mpv media-title 探测到: {media_title}")
-		except Exception as _e:
-			print(f"[WARN] 无法读取 mpv media-title: {_e}")
+		# 初始化 CURRENT_META：保留 raw_url，并使用占位名（避免将原始 URL 直接显示给用户）
+		# 同时准备 media_title 字段供客户端优先显示
+		CURRENT_META = {'abs_path': url, 'rel': url, 'index': -1, 'ts': int(time.time()), 'name': '加载中…', 'raw_url': url, 'media_title': None}
+		
+		# 检测是否为播放列表 URL
+		is_playlist = False
+		playlist_entries = []
+		if 'youtube.com/playlist' in url or 'youtu.be' in url or 'youtube.com/watch' in url:
+			try:
+				# 使用 yt-dlp 获取播放列表信息
+				print(f"[DEBUG] 尝试使用 yt-dlp 提取播放列表信息...")
+				cmd = ['yt-dlp', '--flat-playlist', '-j', url]
+				result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+				if result.returncode == 0:
+					lines = result.stdout.strip().split('\n')
+					for line in lines:
+						if line.strip():
+							try:
+								entry = json.loads(line)
+								if isinstance(entry, dict):
+									entry_url = entry.get('url') or entry.get('id')
+									entry_title = entry.get('title', '未知')
+									# 构建完整 YouTube URL
+									if entry_url and not entry_url.startswith('http'):
+										if len(entry_url) == 11:  # 可能是视频 ID
+											entry_url = f'https://www.youtube.com/watch?v={entry_url}'
+									playlist_entries.append({
+										'url': entry_url,
+										'title': entry_title,
+										'ts': int(time.time())
+									})
+							except json.JSONDecodeError:
+								pass
+					if playlist_entries:
+						is_playlist = True
+						print(f"[DEBUG] 检测到播放列表，共 {len(playlist_entries)} 项")
+			except Exception as e:
+				print(f"[WARN] 提取播放列表失败: {e}")
+				is_playlist = False
+				playlist_entries = []
+		
+		# 添加到 YouTube 历史记录
+		if is_playlist:
+			# 如果是播放列表，仅在save_to_history为True时添加原始URL（播放列表URL）
+			if save_to_history:
+				history_item = {'url': url, 'ts': int(time.time()), 'name': f'播放列表 ({len(playlist_entries)} 首)', 'from_playlist': False}
+				YOUTUBE_HISTORY.insert(0, history_item)
+				if len(YOUTUBE_HISTORY) > YOUTUBE_HISTORY_MAX:
+					YOUTUBE_HISTORY = YOUTUBE_HISTORY[:YOUTUBE_HISTORY_MAX]
+				print(f"[DEBUG] 已添加播放列表到历史记录")
+			else:
+				print(f"[DEBUG] 跳过添加播放列表到历史记录 (save_to_history=False)")
+			# 设置当前播放队列（仅当update_queue为True时）
+			if update_queue:
+				YOUTUBE_QUEUE = playlist_entries
+				CURRENT_QUEUE_INDEX = 0
+				print(f"[DEBUG] 已设置播放队列，共 {len(YOUTUBE_QUEUE)} 项")
+			else:
+				print(f"[DEBUG] 跳过更新播放队列 (update_queue=False)")
+		else:
+			# 单个视频的添加逻辑
+			if save_to_history:
+				history_item = {'url': url, 'ts': int(time.time()), 'name': '加载中…'}
+				YOUTUBE_HISTORY.insert(0, history_item)  # 新项插入到列表开头
+				if len(YOUTUBE_HISTORY) > YOUTUBE_HISTORY_MAX:
+					YOUTUBE_HISTORY = YOUTUBE_HISTORY[:YOUTUBE_HISTORY_MAX]  # 保留最多 100 条
+				print(f"[DEBUG] 已添加单个视频到历史记录")
+			else:
+				print(f"[DEBUG] 跳过添加单个视频到历史记录 (save_to_history=False)")
+			# 单个视频的队列（仅当update_queue为True时）
+			if update_queue:
+				YOUTUBE_QUEUE = [{'url': url, 'title': '加载中…', 'ts': int(time.time())}]
+				CURRENT_QUEUE_INDEX = 0
+			else:
+				print(f"[DEBUG] 跳过更新播放队列 (update_queue=False)")
+		
+		# 尝试轮询获取 mpv 的 media-title，最多尝试 20 次（大约 10 秒）以容纳 yt-dlp 的元数据提取延迟
+		def _is_invalid_title(tit, urlraw):
+			try:
+				if not tit or not isinstance(tit, str):
+					return True
+				s = tit.strip()
+				if not s:
+					return True
+				# 如果返回看起来像 URL 或直接包含原始 URL，则视为无效
+				if s.startswith('http') or s.startswith('https') or urlraw and s == urlraw:
+					return True
+				# 常见 YouTube ID（11字符且仅字母数字-_）不作为有效标题
+				if len(s) == 11 and all(c.isalnum() or c in ('-','_') for c in s):
+					return True
+				# 含有 youtube 域名或 youtu 标记也可能是无效（如 mpv 暂时返回片段）
+				if 'youtu' in s.lower():
+					return True
+				return False
+			except Exception:
+				return True
+
+		for attempt in range(20):
+			time.sleep(0.5)
+			try:
+				media_title = mpv_get('media-title')
+				if media_title and isinstance(media_title, str) and not _is_invalid_title(media_title, url):
+					# 将获得的媒体标题写入 media_title 字段，并同步更新用户可见的 name
+					CURRENT_META['media_title'] = media_title
+					CURRENT_META['name'] = media_title
+					# 更新历史记录中最新项的标题（仅当save_to_history为True时）
+				if save_to_history and YOUTUBE_HISTORY and YOUTUBE_HISTORY[0]['url'] == url:
+					YOUTUBE_HISTORY[0]['name'] = media_title
+					print(f"[DEBUG] mpv media-title 探测到 (尝试 {attempt+1}): {media_title}")
+					break
+				else:
+					if attempt < 4:
+						print(f"[DEBUG] media-title 未就绪或不符合 (尝试 {attempt+1}), 值: {repr(media_title)}")
+			except Exception as _e:
+				if attempt == 19:
+					print(f"[WARN] 无法读取 mpv media-title (最终失败): {_e}")
 	except Exception as e:
 		print(f"[ERROR] _play_url failed for {url}: {e}")
 		import traceback
@@ -530,7 +659,28 @@ def _auto_loop():
 				# 如果当前播放的是网络流（URL），不要自动跳到下一首
 				cur_rel = CURRENT_META.get('rel') if CURRENT_META else None
 				if cur_rel and isinstance(cur_rel, str) and cur_rel.startswith('http'):
-					print('[INFO] 网络流检测到结束，准备恢复本地播放列表 (若有)')
+					print('[INFO] 网络流检测到结束')
+					# 检查是否有YouTube播放队列
+					if YOUTUBE_QUEUE and CURRENT_QUEUE_INDEX >= 0:
+						print(f'[INFO] 检测到YouTube播放队列，尝试播放下一首 (当前索引: {CURRENT_QUEUE_INDEX})')
+						next_index = CURRENT_QUEUE_INDEX + 1
+						if next_index < len(YOUTUBE_QUEUE):
+							# 播放下一首
+							try:
+								next_url = YOUTUBE_QUEUE[next_index]['url']
+								CURRENT_QUEUE_INDEX = next_index
+								_play_url(next_url, save_to_history=False, update_queue=False)
+								print(f'[INFO] 已自动播放队列中的下一首: {next_index}')
+								time.sleep(1)
+								continue
+							except Exception as e:
+								print(f'[WARN] 播放队列中的下一首失败: {e}')
+						else:
+							print('[INFO] 已到达播放队列末尾')
+							YOUTUBE_QUEUE = []
+							CURRENT_QUEUE_INDEX = -1
+					# 如果没有队列或队列播放失败，尝试恢复本地播放列表
+					print('[INFO] 准备恢复本地播放列表 (若有)')
 					# 尝试恢复之前被网络流打断的播放状态
 					try:
 						global PREV_INDEX, PREV_META
@@ -647,7 +797,47 @@ def api_status():
 				pass
 	except Exception:
 		pass
-	return jsonify({'status':'OK','playing': playing, 'mpv': mpv_info})
+	# 计算一个服务器端的友好显示名，优先使用 mpv 的 media-title
+	try:
+		pd = {}
+		pd.update(playing or {})
+		media_title = pd.get('media_title') or pd.get('mediaTitle')
+		name_field = pd.get('name') or pd.get('rel') or ''
+		# 简单校验 media_title，避免使用看起来像 URL 或视频 ID 的值
+		def _valid_title(t, raw):
+			try:
+				if not t or not isinstance(t, str):
+					return False
+				s = t.strip()
+				if not s:
+					return False
+				if s.startswith('http'):
+					return False
+				if raw and s == raw:
+					return False
+				if 'youtu' in s.lower():
+					return False
+				if len(s) == 11 and all(c.isalnum() or c in ('-','_') for c in s):
+					return False
+				return True
+			except Exception:
+				return False
+
+		if _valid_title(media_title, pd.get('raw_url')):
+			pd['display_name'] = media_title
+		else:
+			# 如果 name 看起来像 URL，则返回加载占位；否则使用 name
+			try:
+				if isinstance(name_field, str) and name_field.startswith('http'):
+					pd['display_name'] = '加载中…'
+				else:
+					pd['display_name'] = name_field or '未播放'
+			except Exception:
+				pd['display_name'] = name_field or '未播放'
+	except Exception:
+		pd = playing
+		pd['display_name'] = pd.get('name') if pd else '未播放'
+	return jsonify({'status':'OK','playing': pd, 'mpv': mpv_info})
 
 @APP.route('/shuffle', methods=['POST'])
 def api_shuffle():
@@ -706,272 +896,36 @@ def api_debug_mpv():
 
 @APP.route('/preview.png')
 def preview_image():
-    """提供社交媒体预览图片"""
-    print("[DEBUG] 访问预览图片路由")
-    from flask import send_file, abort
-    from io import BytesIO
-    from PIL import Image, ImageDraw, ImageFont
-    import os, traceback, math
+	"""Serve a static preview image or a simple placeholder.
 
-    def get_system_font():
-        """获取系统中文字体"""
-        try:
-            if platform.system().lower() == 'windows':
-                # 首先尝试直接加载微软雅黑（最常见的中文字体）
-                msyh_path = os.path.join(os.environ.get('SystemRoot', 'C:\\Windows'), 'Fonts', 'msyh.ttc')
-                if os.path.exists(msyh_path):
-                    try:
-                        # 尝试以二进制方式读取字体文件
-                        with open(msyh_path, 'rb') as font_file:
-                            font_bytes = font_file.read()
-                            # 从字节创建BytesIO对象
-                            font_io = BytesIO(font_bytes)
-                            # 尝试加载字体
-                            test_font = ImageFont.truetype(font_io, 24)
-                            # 验证字体是否支持中文
-                            bbox = test_font.getbbox("测试")
-                            if bbox and bbox[2] > 0 and bbox[3] > 0:
-                                print("[DEBUG] 成功加载微软雅黑字体")
-                                return font_bytes
-                    except Exception as e:
-                        print(f"[WARN] 微软雅黑加载失败: {e}")
-
-                # 如果微软雅黑加载失败，尝试其他中文字体
-                for font_name in ['simhei.ttf', 'simsun.ttc']:
-                    try:
-                        font_path = os.path.join(os.environ.get('SystemRoot', 'C:\\Windows'), 'Fonts', font_name)
-                        if os.path.exists(font_path):
-                            with open(font_path, 'rb') as font_file:
-                                font_bytes = font_file.read()
-                                font_io = BytesIO(font_bytes)
-                                test_font = ImageFont.truetype(font_io, 24)
-                                bbox = test_font.getbbox("测试")
-                                if bbox and bbox[2] > 0 and bbox[3] > 0:
-                                    print(f"[DEBUG] 成功加载字体: {font_name}")
-                                    return font_bytes
-                    except Exception as e:
-                        print(f"[WARN] 字体加载失败 {font_name}: {e}")
-            
-            print("[WARN] 无法加载系统中文字体")
-            return None
-        except Exception as e:
-            print(f"[ERROR] 字体加载过程出错: {e}")
-            return None
-
-    try:
-        print("[DEBUG] 创建预览图片...")
-        # 创建预览图片（1200x630是社交媒体预览的推荐尺寸）
-        width, height = 600, 630
-        img = Image.new('RGB', (width, height), color=(30, 31, 36))  # 深色背景
-        draw = ImageDraw.Draw(img)
-
-        # 绘制网页风格背景
-        print("[DEBUG] 绘制背景...")
-        
-        # 顶部工具栏背景
-        toolbar_height = 60
-        draw.rectangle([(0, 0), (width, toolbar_height)], 
-                      fill=(40, 41, 46))
-        
-        # 底部播放器栏背景
-        player_height = 50
-        draw.rectangle([(0, height-player_height), (width, height)], 
-                      fill=(40, 41, 46))
-        
-        # 进度条
-        progress_height = 4
-        progress_y = height - player_height - progress_height
-        draw.rectangle([(0, progress_y), (width, progress_y + progress_height)], 
-                      fill=(50, 51, 56))
-        # 进度
-        draw.rectangle([(0, progress_y), (width * 0.7, progress_y + progress_height)], 
-                      fill=(86, 156, 214))
-        
-        # 获取实际的播放列表
-        tree = build_tree()
-        file_items = []
-        def collect_files(node, depth=0):
-            # 收集文件夹
-            for dir_node in node['dirs']:
-                if depth < 2:  # 限制显示深度
-                    file_items.append(f"📂 {dir_node['name']}")
-                    collect_files(dir_node, depth + 1)
-            # 收集文件
-            for file_node in node['files']:
-                if len(file_items) < 5:  # 限制显示数量
-                    ext = os.path.splitext(file_node['name'])[1].lower()
-                    icon = "🎵" if ext in {'.mp3', '.wav', '.flac'} else "📄"
-                    file_items.append(f"{icon} {file_node['name']}")
-
-        collect_files(tree)
-        
-        # 如果列表为空，添加一些提示文本
-        if not file_items:
-            file_items = ["📂 音乐库暂无内容", "💡 点击上传按钮添加音乐"]
-        
-        # 确保至少有5个项目（用空白填充）
-        while len(file_items) < 5:
-            file_items.append("")
-        
-        y = toolbar_height + 20
-        for item in file_items:
-            # 绘制半透明的选择框背景
-            if "无损音乐" in item:  # 当前播放项
-                draw.rectangle([(40, y-5), (width-40, y+35)], 
-                             fill=(86, 156, 214, 30))
-            draw.rectangle([(40, y-5), (width-40, y+35)], 
-                         outline=(60, 61, 66), width=1)
-            y += 50
-
-        # 尝试加载字体
-        print("[DEBUG] 加载字体...")
-        # 获取系统字体字节数据
-        font_bytes = get_system_font()
-        
-        # 定义字体大小
-        font_size_title = 64
-        font_size_button = 32
-        font_size_text = 24
-        font_size_desc = 60
-
-        # 创建字体对象
-        font_bytes = get_system_font()
-        try:
-            if font_bytes:
-                font_io = BytesIO(font_bytes)
-                title_font = ImageFont.truetype(font_io, font_size_title)
-                font_io.seek(0)  # 重置BytesIO位置
-                button_font = ImageFont.truetype(font_io, font_size_button)
-                font_io.seek(0)
-                text_font = ImageFont.truetype(font_io, font_size_text)
-                font_io.seek(0)
-                desc_font = ImageFont.truetype(font_io, font_size_desc)
-                print("[DEBUG] 成功加载所有字体大小变体")
-            else:
-                raise Exception("No font bytes available")
-        except Exception as e:
-            print(f"[ERROR] 加载字体失败: {e}")
-            title_font = button_font = text_font = desc_font = ImageFont.load_default()
-            print("[WARN] 使用默认字体")
-
-        # 定义要显示的文本
-        title = "支持YouTube串流"
-        description = ""
-	
-        # 绘制界面元素
-        print("[DEBUG] 绘制界面元素...")
-        
-        # 顶部工具栏按钮
-        buttons = ["上传", "上一曲", "下一曲", "随机", "展开", "折叠"]
-        x = 20
-        for btn in buttons:
-            w = 80 if len(btn) > 1 else 50
-            draw.rectangle([(x, 10), (x+w, 50)], 
-                         fill=(50, 51, 56),
-                         outline=(60, 61, 66))
-            if hasattr(draw, 'textbbox'):
-                bbox = draw.textbbox((0, 0), btn, font=button_font)
-                text_w = bbox[2] - bbox[0]
-                text_h = bbox[3] - bbox[1]
-            else:
-                text_w, text_h = draw.textsize(btn, font=button_font)
-            draw.text((x + (w-text_w)//2, 15), btn, 
-                     font=button_font, fill=(200, 200, 220))
-            x += w + 10
-
-        # 文件列表文字
-        y = toolbar_height + 20
-        for item in file_items:
-            if "无损音乐" in item:  # 当前播放项
-                color = (86, 156, 214)
-            else:
-                color = (200, 200, 220)
-            draw.text((60, y), item, font=text_font, fill=color)
-            y += 50
-
-           
-        # 音量控制
-        try:
-            current_volume = mpv_get('volume')
-            volume_text = f"音量: {int(current_volume)}%" if current_volume is not None else "音量: --"
-        except:
-            volume_text = "音量: --"
-        draw.text((width-120, height-player_height+15), volume_text, 
-                 font=text_font, fill=(200, 200, 220))
-
-        # 绘制标题
-        print("[DEBUG] 绘制标题...")
-        if hasattr(draw, 'textbbox'):
-            title_bbox = draw.textbbox((0, 0), title, font=title_font)
-            title_width = title_bbox[2] - title_bbox[0]
-            title_height = title_bbox[3] - title_bbox[1]
-            
-            desc_bbox = draw.textbbox((0, 0), description, font=desc_font)
-            desc_width = desc_bbox[2] - desc_bbox[0]
-            desc_height = desc_bbox[3] - desc_bbox[1]
-        else:
-            title_width, title_height = draw.textsize(title, font=title_font)
-            desc_width, desc_height = draw.textsize(description, font=desc_font)
-
-        # 绘制标题（带发光效果）
-        title_x = (width - title_width) // 2
-        title_y = (height - title_height - desc_height - 40) // 2
-
-        # 发光效果
-        glow_color = (255, 255, 255)
-        for offset in [(dx,dy) for dx in range(-3,4) for dy in range(-3,4)]:
-            if abs(offset[0]) + abs(offset[1]) <= 4:
-                draw.text((title_x + offset[0], title_y + offset[1]), 
-                         title, font=title_font, fill=glow_color)
-
-        # 主标题
-        draw.text((title_x, title_y), title, 
-                 font=title_font, fill=(52, 174, 235))
-
-        # 描述文字
-        desc_x = (width - desc_width) // 2
-        desc_y = title_y + title_height + 40
-        draw.text((desc_x, desc_y), description, 
-                 font=desc_font, fill=(52, 174, 235))
-
-        print("[DEBUG] 保存为PNG...")
-        img_io = BytesIO()
-        img.save(img_io, format='PNG', optimize=True)
-        img_io.seek(0)
-        
-        print("[DEBUG] 准备发送响应...")
-        response = send_file(
-            img_io,
-            mimetype='image/png',
-            as_attachment=False,
-            download_name='preview.png'
-        )
-        
-        # 添加必要的响应头，以支持社交媒体预览
-        response.headers['Cache-Control'] = 'public, max-age=31536000'
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = '*'
-        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        
-        print("[DEBUG] 响应准备完成")
-        return response
-
-    except Exception as e:
-        print(f"[ERROR] 预览图片生成失败: {e}")
-        print("[ERROR] 详细错误信息:")
-        print(traceback.format_exc())
-        abort(500)
-        
-        return send_file(
-            output,
-            mimetype='image/png',
-            as_attachment=False,
-            download_name='preview.png'
-        )
-    except (binascii.Error, Exception) as e:
-        print(f'[ERROR] Preview image generation failed: {str(e)}')
-        abort(500)
+	This endpoint no longer generates an image from site content. It first tries
+	to serve `static/preview.png` (use this to provide a custom image). If not
+	present, it returns a simple neutral placeholder PNG generated in-memory.
+	"""
+	from flask import send_file, abort
+	from io import BytesIO
+	try:
+		static_path = os.path.join(_get_app_dir(), 'static', 'preview.png')
+		if os.path.isfile(static_path):
+			return send_file(static_path, mimetype='image/png', as_attachment=False, download_name='preview.png')
+		# Fallback: generate a minimal placeholder (does not use site content)
+		try:
+			from PIL import Image
+			width, height = 1200, 630
+			img = Image.new('RGB', (width, height), color=(36, 37, 41))
+			bio = BytesIO()
+			img.save(bio, format='PNG')
+			bio.seek(0)
+			resp = send_file(bio, mimetype='image/png', as_attachment=False, download_name='preview.png')
+			# Short cache for the placeholder
+			resp.headers['Cache-Control'] = 'public, max-age=3600'
+			return resp
+		except Exception:
+			# If PIL is not available, return 204 No Content
+			return ('', 204)
+	except Exception as e:
+		print(f"[ERROR] preview_image failed: {e}")
+		return ('', 500)
 
 @APP.route('/volume', methods=['POST'])
 def api_volume():
@@ -993,71 +947,18 @@ def api_volume():
 		return jsonify({'status':'ERROR','error':'设置失败'}), 400
 	return jsonify({'status':'OK','volume': f})
 
-# Ensure upload directory exists inside MUSIC_DIR
 
-def _ensure_upload_dir():
-	upload_dir = os.path.join(MUSIC_DIR, 'upload')
-	try:
-		os.makedirs(upload_dir, exist_ok=True)
-	except Exception as e:
-		print('[WARN] 无法创建 upload 目录:', e)
-	return upload_dir
-
-# Note: download directory helper removed — download-by-URL functionality was removed.
-
-@APP.route('/upload', methods=['POST'])
-def api_upload():
-    """接受单个文件上传，保存至 MUSIC_DIR/upload，仅允许 ALLOWED 扩展名。"""
-    if 'file' not in request.files:
-        return jsonify({'status':'ERROR','error':'缺少文件字段 file'}), 400
-    f = request.files['file']
-    if f.filename == '':
-        return jsonify({'status':'ERROR','error':'未选择文件'}), 400
-    filename = secure_filename(f.filename)
-    ext = os.path.splitext(filename)[1].lower()
-    if ext not in ALLOWED:
-        return jsonify({'status':'ERROR','error':'不允许的文件类型'}), 400
-    upload_dir = _ensure_upload_dir()
-    target = os.path.join(upload_dir, filename)
-    
-    # 打印上传信息
-    size_mb = f.content_length / (1024*1024) if f.content_length else 0
-    print(f"[UPLOAD] 接收文件:")
-    print(f"- 源文件: {f.filename}")
-    print(f"- 大小: {size_mb:.2f}MB")
-    print(f"- 类型: {f.content_type}")
-    print(f"- 来源IP: {request.remote_addr}")
-    print(f"- 目标: {target}")
-
-    # 防止覆盖已有文件：若存在则在文件名后追加数字
-    base, e = os.path.splitext(filename)
-    i = 1
-    while os.path.exists(target):
-        filename = f"{base}_{i}{e}"
-        target = os.path.join(upload_dir, filename)
-        i += 1
-        print(f"- 重命名为: {filename} (避免覆盖)")
-
-    try:
-        f.save(target)
-        print(f"[UPLOAD] 保存成功: {filename}")
-    except Exception as e:
-        print(f"[UPLOAD] 保存失败: {e}")
-        return jsonify({'status':'ERROR','error':f'保存失败: {e}'}), 500
-    # Optionally rebuild playlist now or let next playlist scan pick it up
-    # We will rebuild the in-memory PLAYLIST so it's immediately visible
-    try:
-        global PLAYLIST
-        PLAYLIST = _build_playlist()
-    except Exception:
-        pass
-    return jsonify({'status':'OK','filename': filename, 'path': os.path.relpath(target, os.path.abspath(MUSIC_DIR)).replace('\\','/')})
-
-"""
-Removed: previously supported `/youtube` download route that used yt-dlp to save video/audio to
-the local `download` directory. Download functionality was removed per user request; streaming
-via `/play_youtube` remains.
-"""
+@APP.route('/toggle_pause', methods=['POST'])
+def api_toggle_pause():
+	"""切换暂停/播放状态"""
+	if not ensure_mpv():
+		return jsonify({'status':'ERROR','error':'mpv 未就绪'}), 400
+	# 通过 cycle pause 命令来切换暂停状态
+	if not mpv_command(['cycle', 'pause']):
+		return jsonify({'status':'ERROR','error':'切换失败'}), 400
+	# 获取当前暂停状态
+	paused = mpv_get('pause')
+	return jsonify({'status':'OK','paused': paused})
 
 
 @APP.route('/play_youtube', methods=['POST'])
@@ -1082,6 +983,66 @@ def api_play_youtube():
 		import traceback
 		traceback.print_exc()
 		return jsonify({'status':'ERROR','error': str(e)}), 500
+
+@APP.route('/youtube_queue')
+def api_youtube_queue():
+	"""返回当前 YouTube 播放队列。
+	
+	返回:
+	  queue  当前播放列表的所有项目
+	  current_index  当前播放的索引
+	  current_title  当前播放的标题
+	"""
+	return jsonify({
+		'status': 'OK',
+		'queue': YOUTUBE_QUEUE,
+		'current_index': CURRENT_QUEUE_INDEX,
+		'current_title': YOUTUBE_QUEUE[CURRENT_QUEUE_INDEX]['title'] if 0 <= CURRENT_QUEUE_INDEX < len(YOUTUBE_QUEUE) else None
+	})
+
+@APP.route('/youtube_queue_play', methods=['POST'])
+def api_youtube_queue_play():
+	"""播放队列中指定索引的歌曲，保持队列状态。
+	
+	参数:
+	  index  要播放的队列索引
+	"""
+	from flask import request
+	global CURRENT_QUEUE_INDEX
+	
+	try:
+		index = int(request.form.get('index', -1))
+	except (ValueError, TypeError):
+		return jsonify({'status': 'ERROR', 'error': '索引参数非法'}), 400
+	
+	if not YOUTUBE_QUEUE or index < 0 or index >= len(YOUTUBE_QUEUE):
+		return jsonify({'status': 'ERROR', 'error': '索引超出范围'}), 400
+	
+	try:
+		# 更新当前索引
+		CURRENT_QUEUE_INDEX = index
+		# 播放该索引对应的URL，但不保存到历史记录，也不更新队列
+		url = YOUTUBE_QUEUE[index]['url']
+		_play_url(url, save_to_history=False, update_queue=False)
+		return jsonify({
+			'status': 'OK',
+			'current_index': CURRENT_QUEUE_INDEX,
+			'current_title': YOUTUBE_QUEUE[CURRENT_QUEUE_INDEX]['title']
+		})
+	except Exception as e:
+		print(f"[ERROR] 播放队列中的歌曲失败: {e}")
+		return jsonify({'status': 'ERROR', 'error': str(e)}), 500
+
+@APP.route('/youtube_history')
+def api_youtube_history():
+	"""返回 YouTube 播放历史记录。
+	
+	参数:
+	  limit  返回最多多少条记录（默认 20，最大 100）
+	"""
+	from flask import request
+	limit = min(int(request.args.get('limit', 20)), 100)
+	return jsonify({'status':'OK','history': YOUTUBE_HISTORY[:limit]})
 
 if __name__ == '__main__':
 	APP.run(host=cfg.get('FLASK_HOST','0.0.0.0'), port=cfg.get('FLASK_PORT',8000), debug=cfg.get('DEBUG',False))
