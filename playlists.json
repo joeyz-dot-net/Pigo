@@ -1,7 +1,9 @@
 {
   "order": [
     "1765409027829",
-    "default"
+    "default",
+    "1765425618275",
+    "1765426186721"
   ],
   "playlists": [
     {
@@ -9,81 +11,60 @@
       "name": "我的音乐",
       "songs": [
         {
-          "url": "https://www.youtube.com/watch?v=kYhh1PpsOg4",
-          "title": "周杰倫 Jay Chou【珊瑚海 Coral Sea (feat. 梁心頤 Lara)】-Official Music Video",
-          "name": "周杰倫 Jay Chou【珊瑚海 Coral Sea (feat. 梁心頤 Lara)】-Official Music Video",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1765421317,
-          "thumbnail_url": "https://img.youtube.com/vi/kYhh1PpsOg4/default.jpg",
-          "stream_type": "youtube",
-          "video_id": "kYhh1PpsOg4"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=xThHm69dnFA",
-          "title": "【張學友 - Jacky Cheung 2024】張學友傳唱金曲 20 《還是覺得妳最好, 情已逝, 吻別, 暗戀你, 分手總要在雨天, 用餘生去愛, 怎麼捨得你, 李香蘭, ...》",
-          "name": "【張學友 - Jacky Cheung 2024】張學友傳唱金曲 20 《還是覺得妳最好, 情已逝, 吻別, 暗戀你, 分手總要在雨天, 用餘生去愛, 怎麼捨得你, 李香蘭, ...》",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1765421317,
-          "thumbnail_url": "https://img.youtube.com/vi/xThHm69dnFA/default.jpg",
-          "stream_type": "youtube",
-          "video_id": "xThHm69dnFA"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=qpFxC5CvkHY",
+          "url": "https://www.youtube.com/watch?v=pQlAWZLOpgo",
           "title": "加载中…",
           "name": "加载中…",
           "type": "youtube",
           "duration": 0,
-          "ts": 1765421317,
+          "ts": 1765426091,
+          "thumbnail_url": "https://img.youtube.com/vi/pQlAWZLOpgo/default.jpg",
+          "stream_type": "youtube",
+          "video_id": "pQlAWZLOpgo"
+        },
+        {
+          "url": "Eason 陈奕迅/K 歌之王-陈奕迅._国语.flac",
+          "title": "K 歌之王-陈奕迅._国语",
+          "name": "K 歌之王-陈奕迅._国语",
+          "type": "local",
+          "duration": 0,
+          "ts": 1765426091,
+          "thumbnail_url": null,
+          "file_name": "K 歌之王-陈奕迅._国语.flac",
+          "file_extension": ".flac",
+          "file_size": 0
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=V51lvMylpNA",
+          "title": "加载中…",
+          "name": "加载中…",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1765426091,
+          "thumbnail_url": "https://img.youtube.com/vi/V51lvMylpNA/default.jpg",
+          "stream_type": "youtube",
+          "video_id": "V51lvMylpNA"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=qpFxC5CvkHY",
+          "title": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
+          "name": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1765426091,
           "thumbnail_url": "https://img.youtube.com/vi/qpFxC5CvkHY/default.jpg",
           "stream_type": "youtube",
           "video_id": "qpFxC5CvkHY"
         },
         {
-          "url": "https://www.youtube.com/watch?v=VNYN5JAGDKg",
-          "title": "袁Sir聊美国对日禁运：美国一掐脖子，日本就翻白眼 #lifeano漫聊 251209",
-          "name": "袁Sir聊美国对日禁运：美国一掐脖子，日本就翻白眼 #lifeano漫聊 251209",
+          "url": "https://www.youtube.com/watch?v=WBF3lcqpOJY",
+          "title": "Trending Spotify Hits 2026 ☃️ Winter 2025/2026 ❄️ Best New Pop Songs Playlist (Hits Collection)",
+          "name": "Trending Spotify Hits 2026 ☃️ Winter 2025/2026 ❄️ Best New Pop Songs Playlist (Hits Collection)",
           "type": "youtube",
           "duration": 0,
-          "ts": 1765421317,
-          "thumbnail_url": "https://img.youtube.com/vi/VNYN5JAGDKg/default.jpg",
+          "ts": 1765426091,
+          "thumbnail_url": "https://img.youtube.com/vi/WBF3lcqpOJY/default.jpg",
           "stream_type": "youtube",
-          "video_id": "VNYN5JAGDKg"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=9fRjdFBjq7A",
-          "title": "加载中…",
-          "name": "加载中…",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1765421317,
-          "thumbnail_url": "https://img.youtube.com/vi/9fRjdFBjq7A/default.jpg",
-          "stream_type": "youtube",
-          "video_id": "9fRjdFBjq7A"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=J1D9rldAaUw",
-          "title": "張學友 - 陽光普照 (Official Video)",
-          "name": "張學友 - 陽光普照 (Official Video)",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1765421317,
-          "thumbnail_url": "https://img.youtube.com/vi/J1D9rldAaUw/default.jpg",
-          "stream_type": "youtube",
-          "video_id": "J1D9rldAaUw"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=V51lvMylpNA",
-          "title": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
-          "name": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1765421317,
-          "thumbnail_url": "https://img.youtube.com/vi/V51lvMylpNA/default.jpg",
-          "stream_type": "youtube",
-          "video_id": "V51lvMylpNA"
+          "video_id": "WBF3lcqpOJY"
         },
         {
           "url": "https://www.youtube.com/watch?v=Qj2aSallqxI",
@@ -91,7 +72,7 @@
           "name": "从《只想一生跟你走》开始听张学友Jacky Cheung 30分钟精选歌单 |《华语金曲串烧》中国音乐电视 Music TV",
           "type": "youtube",
           "duration": 0,
-          "ts": 1765421317,
+          "ts": 1765426091,
           "thumbnail_url": "https://img.youtube.com/vi/Qj2aSallqxI/default.jpg",
           "stream_type": "youtube",
           "video_id": "Qj2aSallqxI"
@@ -102,15 +83,54 @@
           "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
           "type": "youtube",
           "duration": 0,
-          "ts": 1765421317,
+          "ts": 1765426091,
           "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
           "stream_type": "youtube",
           "video_id": "viis5-_JjXQ"
         }
       ],
-      "song_count": 9,
+      "song_count": 7,
       "created_at": 1765409027.829439,
       "updated_at": 1765409027.829439
+    },
+    {
+      "id": "1765425618275",
+      "name": "我的测试歌单",
+      "songs": [
+        {
+          "url": "https://www.youtube.com/watch?v=WBF3lcqpOJY",
+          "title": "Trending Spotify Hits 2026 ☃️ Winter 2025/2026 ❄️ Best New Pop Songs Playlist (Hits Collection)",
+          "name": "Trending Spotify Hits 2026 ☃️ Winter 2025/2026 ❄️ Best New Pop Songs Playlist (Hits Collection)",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1765426084,
+          "thumbnail_url": "https://img.youtube.com/vi/WBF3lcqpOJY/default.jpg",
+          "stream_type": "youtube",
+          "video_id": "WBF3lcqpOJY"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=r_L6gDc5MzU",
+          "title": "加载中…",
+          "name": "加载中…",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1765426084,
+          "thumbnail_url": "https://img.youtube.com/vi/r_L6gDc5MzU/default.jpg",
+          "stream_type": "youtube",
+          "video_id": "r_L6gDc5MzU"
+        }
+      ],
+      "song_count": 2,
+      "created_at": 1765425618.2751944,
+      "updated_at": 1765425618.2751944
+    },
+    {
+      "id": "1765426186721",
+      "name": "33423",
+      "songs": [],
+      "song_count": 0,
+      "created_at": 1765426186.7212358,
+      "updated_at": 1765426186.7212358
     }
   ]
 }

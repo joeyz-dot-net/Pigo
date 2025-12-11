@@ -2565,7 +2565,7 @@
 				youtubeSearchBtn.disabled = true;
 				youtubeSearchBtn.textContent = '搜索中...';
 
-				fetch('/youtube_search', {
+				fetch('/search_youtube', {
 					method: 'POST',
 					headers: {'Content-Type': 'application/x-www-form-urlencoded'},
 					body: 'query=' + encodeURIComponent(query)
@@ -2947,7 +2947,7 @@
 			}, 1000);
 		} else {
 			// 搜索关键字
-			fetch('/youtube_search', {
+			fetch('/search_youtube', {
 				method: 'POST',
 				headers: {'Content-Type': 'application/x-www-form-urlencoded'},
 				body: 'query=' + encodeURIComponent(query)

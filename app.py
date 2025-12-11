@@ -1604,8 +1604,8 @@ def api_youtube_extract_playlist():
     return jsonify(result)
 
 
-@APP.route("/youtube_search", methods=["POST"])
-def api_youtube_search():
+@APP.route("/search_youtube", methods=["POST"])
+def api_search_youtube():
     """搜索 YouTube 视频（包装函数）
 
     参数:
@@ -1617,6 +1617,129 @@ def api_youtube_search():
     query = request.form.get("query", "").strip()
     result = StreamSong.search(query)
     return jsonify(result)
+
+
+def search_local_songs(query: str) -> list:
+    """本地歌曲搜索功能
+    
+    参数:
+      query - 搜索关键词
+    
+    返回:
+      搜索结果列表
+    """
+    try:
+        # 从默认歌单获取所有歌曲
+        if CURRENT_PLAYLIST_ID not in PLAYLISTS_MANAGER._playlists:
+            return []
+        
+        current_playlist = PLAYLISTS_MANAGER._playlists[CURRENT_PLAYLIST_ID]
+        results = []
+        query_lower = query.lower()
+        
+        for song_data in current_playlist.songs:
+            # 支持dict和Song对象
+            if isinstance(song_data, dict):
+                title = song_data.get('title', '').lower()
+                artist = song_data.get('artist', '').lower()
+                song_type = song_data.get('type', '')
+            else:
+                title = song_data.title.lower()
+                artist = getattr(song_data, 'artist', '').lower()
+                song_type = song_data.type
+            
+            # 只搜索本地歌曲
+            if song_type != 'local':
+                continue
+            
+            # 按标题或艺术家匹配
+            if query_lower in title or query_lower in artist:
+                results.append({
+                    'title': song_data.get('title', '') if isinstance(song_data, dict) else song_data.title,
+                    'artist': song_data.get('artist', '本地音乐') if isinstance(song_data, dict) else getattr(song_data, 'artist', '本地音乐'),
+                    'url': song_data.get('url', '') if isinstance(song_data, dict) else song_data.url,
+                    'type': 'local',
+                    'thumbnail': '🎵'
+                })
+        
+        return results
+    
+    except Exception as e:
+        print(f"[ERROR] 本地搜索失败: {e}")
+        return []
+
+
+@APP.route("/search_song", methods=["POST"])
+def api_search_song():
+    """统一搜索接口 - 支持 YouTube 和本地音乐搜索
+    
+    参数:
+      query    - 搜索关键词（必需）
+      type     - 搜索类型: 'youtube'(YouTube)、'local'(本地)、'all'(同时搜索)
+                默认为 'youtube'
+    
+    返回:
+      status: 'OK' 或 'ERROR'
+      type: 搜索类型
+      results: 搜索结果列表
+    """
+    from flask import request
+    from models.song import StreamSong
+    
+    query = request.form.get('query', '').strip()
+    search_type = request.form.get('type', 'youtube').lower()
+    
+    if not query:
+        return jsonify({
+            "status": "ERROR",
+            "error": "搜索关键词不能为空"
+        }), 400
+    
+    try:
+        if search_type == 'youtube':
+            # 搜索 YouTube
+            result = StreamSong.search(query)
+            return jsonify({
+                "status": "OK",
+                "type": "youtube",
+                "results": result.get('results', []),
+                "message": result.get('message', '')
+            })
+        
+        elif search_type == 'local':
+            # 搜索本地音乐
+            results = search_local_songs(query)
+            return jsonify({
+                "status": "OK",
+                "type": "local",
+                "results": results
+            })
+        
+        elif search_type == 'all':
+            # 同时搜索 YouTube 和本地
+            yt_result = StreamSong.search(query)
+            local_results = search_local_songs(query)
+            
+            return jsonify({
+                "status": "OK",
+                "type": "mixed",
+                "youtube": yt_result.get('results', []),
+                "local": local_results,
+                "youtube_message": yt_result.get('message', '')
+            })
+        
+        else:
+            return jsonify({
+                "status": "ERROR",
+                "error": f"不支持的搜索类型: {search_type}。支持: youtube, local, all"
+            }), 400
+    
+    except Exception as e:
+        print(f"[ERROR] 搜索失败: {e}")
+        return jsonify({
+            "status": "ERROR",
+            "error": str(e)
+        }), 500
 
 
 # ============= 多歌单管理 API =============

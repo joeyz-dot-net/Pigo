@@ -192,6 +192,10 @@ MusicPlayer/
 - `POST /playlist_remove_song` - 从歌单删除歌曲
 
 ### 搜索
+- `POST /search_song` - **统一搜索接口**
+  - 参数：`query`（搜索词）、`type`（'youtube'、'local'、'all'）
+  - 支持 YouTube、本地或同时搜索两个来源
+  - 推荐使用此接口
 - `POST /search_youtube` - 搜索 YouTube
 - `GET /local_songs` - 获取本地音乐列表
 
@@ -271,6 +275,42 @@ port=80
 - **insert_front 逻辑**：排行榜选择时自动插入当前歌曲前面
 - **左滑删除统一**：当前歌曲和队列项使用相同逻辑
 - **状态轮询**：每 2 秒更新一次播放状态
+- **统一搜索接口**：`/search_song` 支持 YouTube、本地、全局搜索
+
+### API 使用示例
+
+**统一搜索接口示例：**
+```javascript
+// 搜索 YouTube
+fetch('/search_song', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'query=周杰伦&type=youtube'
+})
+.then(r => r.json())
+.then(data => console.log(data.results));
+
+// 搜索本地
+fetch('/search_song', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'query=周杰伦&type=local'
+})
+.then(r => r.json())
+.then(data => console.log(data.results));
+
+// 同时搜索
+fetch('/search_song', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'query=周杰伦&type=all'
+})
+.then(r => r.json())
+.then(data => {
+    console.log('YouTube 结果:', data.youtube);
+    console.log('本地结果:', data.local);
+});
+```
 
 ## 📦 依赖包
 

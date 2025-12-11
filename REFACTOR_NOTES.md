@@ -55,7 +55,7 @@
 - `POST /youtube_queue_remove` - 从 YouTube 队列移除
 - `POST /youtube_queue_clear` - 清空 YouTube 队列
 - `POST /youtube_queue_sort` - 排序 YouTube 队列
-- `POST /youtube_search` - 搜索 YouTube
+- `POST /search_youtube` - 搜索 YouTube
 - `POST /youtube_extract_playlist` - 提取 YouTube 播放列表
 
 #### 队列管理
