@@ -5,12 +5,12 @@
     "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
     "type": "youtube",
     "duration": 0,
-    "ts": 1765762183,
+    "ts": 1765929618,
     "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/maxresdefault.jpg",
     "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
     "stream_type": "youtube",
     "video_id": "viis5-_JjXQ",
-    "play_count": 13
+    "play_count": 14
   },
   {
     "url": "Jacky Cheung 张学友/张学友 - 一千个伤心的理由.flac",
@@ -18,13 +18,27 @@
     "name": "张学友 - 一千个伤心的理由",
     "type": "local",
     "duration": 0,
-    "ts": 1765762037,
+    "ts": 1765929344,
     "thumbnail_url": null,
     "artist": "张学友 - 一千个伤心的理由",
     "file_name": "张学友 - 一千个伤心的理由.flac",
     "file_extension": ".flac",
     "file_size": 0,
-    "play_count": 12
+    "play_count": 15
+  },
+  {
+    "url": "Jacky Cheung 张学友/张学友 - 只想一生跟你走.flac",
+    "title": "张学友 - 只想一生跟你走",
+    "name": "张学友 - 只想一生跟你走",
+    "type": "local",
+    "duration": 0,
+    "ts": 1765929319,
+    "thumbnail_url": null,
+    "artist": "张学友 - 只想一生跟你走",
+    "file_name": "张学友 - 只想一生跟你走.flac",
+    "file_extension": ".flac",
+    "file_size": 0,
+    "play_count": 5
   },
   {
     "url": "G.E.M 邓紫棋/启示录/11. G.E.M.邓紫棋 - 离心力.flac",
@@ -32,13 +46,41 @@
     "name": "11. G.E.M.邓紫棋 - 离心力.flac",
     "type": "local",
     "duration": 0,
-    "ts": 1765761737,
+    "ts": 1765929308,
     "thumbnail_url": null,
     "artist": "11. G.E.M.邓紫棋 - 离心力.flac",
     "file_name": "11. G.E.M.邓紫棋 - 离心力.flac",
     "file_extension": ".flac",
     "file_size": 0,
-    "play_count": 22
+    "play_count": 27
+  },
+  {
+    "url": "Jacky Cheung 张学友/张学友 - 偷心.flac",
+    "title": "张学友 - 偷心",
+    "name": "张学友 - 偷心",
+    "type": "local",
+    "duration": 0,
+    "ts": 1765929001,
+    "thumbnail_url": null,
+    "artist": "张学友 - 偷心",
+    "file_name": "张学友 - 偷心.flac",
+    "file_extension": ".flac",
+    "file_size": 0,
+    "play_count": 12
+  },
+  {
+    "url": "Stefanie Sun 孫燕姿/2000台北演唱会/03. 孙燕姿 - 很好(Live).flac",
+    "title": "03. 孙燕姿 - 很好(Live)",
+    "name": "03. 孙燕姿 - 很好(Live)",
+    "type": "local",
+    "duration": 0,
+    "ts": 1765927786,
+    "thumbnail_url": null,
+    "artist": "03. 孙燕姿 - 很好(Live)",
+    "file_name": "03. 孙燕姿 - 很好(Live).flac",
+    "file_extension": ".flac",
+    "file_size": 0,
+    "play_count": 8
   },
   {
     "url": "https://www.youtube.com/watch?v=EtwgTAVeEQc",
@@ -104,48 +146,6 @@
     "stream_type": "youtube",
     "video_id": "lGckkwfhJFQ",
     "play_count": 3
-  },
-  {
-    "url": "Stefanie Sun 孫燕姿/2000台北演唱会/03. 孙燕姿 - 很好(Live).flac",
-    "title": "03. 孙燕姿 - 很好(Live)",
-    "name": "03. 孙燕姿 - 很好(Live)",
-    "type": "local",
-    "duration": 0,
-    "ts": 1765731851,
-    "thumbnail_url": null,
-    "artist": "03. 孙燕姿 - 很好(Live)",
-    "file_name": "03. 孙燕姿 - 很好(Live).flac",
-    "file_extension": ".flac",
-    "file_size": 0,
-    "play_count": 7
-  },
-  {
-    "url": "Jacky Cheung 张学友/张学友 - 只想一生跟你走.flac",
-    "title": "张学友 - 只想一生跟你走",
-    "name": "张学友 - 只想一生跟你走",
-    "type": "local",
-    "duration": 0,
-    "ts": 1765731850,
-    "thumbnail_url": null,
-    "artist": "张学友 - 只想一生跟你走",
-    "file_name": "张学友 - 只想一生跟你走.flac",
-    "file_extension": ".flac",
-    "file_size": 0,
-    "play_count": 4
-  },
-  {
-    "url": "Jacky Cheung 张学友/张学友 - 偷心.flac",
-    "title": "张学友 - 偷心",
-    "name": "张学友 - 偷心",
-    "type": "local",
-    "duration": 0,
-    "ts": 1765731368,
-    "thumbnail_url": null,
-    "artist": "张学友 - 偷心",
-    "file_name": "张学友 - 偷心.flac",
-    "file_extension": ".flac",
-    "file_size": 0,
-    "play_count": 10
   },
   {
     "url": "单依纯/单依纯 - 开始懂了 (live).flac",

@@ -11,8 +11,11 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, File, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
+import uuid
+import asyncio
+import queue
 
 # ============================================
 # 初始化模块
@@ -36,6 +39,17 @@ from models import (
     MusicPlayer,
     Playlists,
     HitRank,
+)
+
+from models.stream import (
+    start_ffmpeg_stream,
+    stop_ffmpeg_stream,
+    register_client,
+    unregister_client,
+    get_mime_type as stream_get_mime_type,
+    ACTIVE_CLIENTS,
+    FFMPEG_PROCESS,
+    FFMPEG_FORMAT,
 )
 
 print("\n✓ 所有模块初始化完成！\n")
@@ -1127,6 +1141,134 @@ def mpv_command(cmd_list):
 def mpv_get(property_name):
     """获取 MPV 属性值"""
     return PLAYER.mpv_get(property_name)
+
+# ============================================
+# Stream 推流路由
+# ============================================
+
+@app.get("/stream/aac")
+async def stream_aac(request: Request, fmt: str = "aac"):
+    """AAC格式推流端点"""
+    client_id = str(uuid.uuid4())
+    format_map = {"aac": "aac", "aac-raw": "aac-raw", "mp3": "mp3"}
+    audio_format = format_map.get(fmt, "aac")
+    
+    print(f"[STREAM] 新客户端连接: {client_id}, 格式: {audio_format}")
+    
+    if not start_ffmpeg_stream(audio_format=audio_format):
+        print(f"[STREAM] FFmpeg启动失败")
+        return JSONResponse(
+            {"status": "ERROR", "message": "无法启动FFmpeg"},
+            status_code=500
+        )
+    
+    await asyncio.sleep(1.0)
+    
+    client_queue = register_client(client_id)
+    print(f"[STREAM] 已为客户端注册队列: {client_id}")
+    
+    async def stream_generator():
+        try:
+            consecutive_empty = 0
+            while consecutive_empty < 100:
+                try:
+                    chunk = client_queue.get(timeout=0.2)
+                    if chunk:
+                        print(f"[STREAM] 发送数据块: {len(chunk)} 字节 到客户端 {client_id}")
+                        yield chunk
+                        consecutive_empty = 0
+                    else:
+                        consecutive_empty += 1
+                except queue.Empty:
+                    consecutive_empty += 1
+                    await asyncio.sleep(0.05)
+        except Exception as e:
+            print(f"[STREAM] Generator异常: {e}")
+        finally:
+            print(f"[STREAM] 客户端断开: {client_id}")
+            unregister_client(client_id)
+    
+    return StreamingResponse(
+        stream_generator(),
+        media_type=stream_get_mime_type(audio_format),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
+
+
+@app.post("/stream/control")
+async def stream_control(request: Request):
+    """流控制接口"""
+    try:
+        form = await request.form()
+        action = form.get("action", "").strip()
+        format_type = form.get("format", "aac").strip()
+        
+        if action == "start":
+            if start_ffmpeg_stream(audio_format=format_type):
+                return JSONResponse({"status": "OK", "message": f"推流已启动 ({format_type})"})
+            else:
+                return JSONResponse(
+                    {"status": "ERROR", "message": f"无法启动推流 ({format_type})"},
+                    status_code=500
+                )
+        elif action == "stop":
+            stop_ffmpeg_stream()
+            return JSONResponse({"status": "OK", "message": "推流已停止"})
+        else:
+            return JSONResponse(
+                {"status": "ERROR", "message": "未知操作"},
+                status_code=400
+            )
+    except Exception as e:
+        return JSONResponse(
+            {"status": "ERROR", "message": str(e)},
+            status_code=500
+        )
+
+
+@app.get("/stream/status")
+async def stream_status():
+    """推流状态"""
+    import models.stream as stream_module
+    running = stream_module.FFMPEG_PROCESS is not None and stream_module.FFMPEG_PROCESS.poll() is None
+    active_clients = len(stream_module.ACTIVE_CLIENTS)
+    
+    # 计算统计数据
+    total_bytes = stream_module.STREAM_STATS.get("total_bytes", 0)
+    start_time = stream_module.STREAM_STATS.get("start_time")
+    duration = 0
+    avg_speed = 0
+    
+    if start_time:
+        duration = time.time() - start_time
+        if duration > 0:
+            avg_speed = (total_bytes / 1024) / duration
+    
+    return JSONResponse({
+        "status": "OK",
+        "data": {
+            "running": running,
+            "format": stream_module.FFMPEG_FORMAT,
+            "active_clients": active_clients,
+            "is_active": active_clients > 0,
+            "status_text": "✓ 已激活" if active_clients > 0 else "⚠️ 等待客户端连接",
+            "total_bytes": total_bytes,
+            "total_mb": round(total_bytes / 1024 / 1024, 2),
+            "duration": duration,
+            "avg_speed": round(avg_speed, 2)
+        }
+    })
+
+
+@app.get("/test/aac-stream")
+async def test_aac_stream():
+    """AAC推流测试页面"""
+    with open("templates/test_aac_stream.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(f.read())
 
 # ============================================
 # 错误处理

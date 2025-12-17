@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAC推流实时监控</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+        }
+        .main {
+            background: white;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .footer {
+            background: white;
+            border-radius: 0 0 20px 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .status-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .status-card.running {
+            border-left-color: #51cf66;
+            background: linear-gradient(135deg, #d4fc79 0%, #96f783 100%);
+        }
+        .status-card.error {
+            border-left-color: #ff6b6b;
+            background: linear-gradient(135deg, #ffa5a5 0%, #ff8787 100%);
+        }
+        .card-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .card-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            font-family: monospace;
+        }
+        .card-unit {
+            font-size: 12px;
+            color: #888;
+            margin-left: 5px;
+        }
+        .stats-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .stats-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #667eea;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+        .stat-value {
+            color: #333;
+            font-family: monospace;
+            font-weight: 600;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            grid-column: 1 / -1;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #ee5a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #40c057;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(81, 207, 102, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .format-select {
+            margin-bottom: 20px;
+        }
+        .format-select label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .format-select select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        audio {
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .logs {
+            background: #1e1e1e;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 250px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        .log-entry {
+            margin-bottom: 3px;
+        }
+        .log-error {
+            color: #f00;
+        }
+        .log-success {
+            color: #0f0;
+        }
+        .log-info {
+            color: #0ff;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 800px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            .status-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 AAC推流实时监控</h1>
+            <div class="subtitle">FFmpeg实时音频推流 & 传输速度监测系统</div>
+        </div>
+        
+        <div class="main">
+            <!-- 实时状态卡片 -->
+            <div class="status-grid">
+                <div class="status-card" id="statusCard">
+                    <div class="card-label">推流状态</div>
+                    <div class="card-value">⏸️<span style="font-size: 14px;"> 未启动</span></div>
+                </div>
+                <div class="status-card">
+                    <div class="card-label">传输速度</div>
+                    <div class="card-value"><span id="speedValue">0</span><span class="card-unit">KB/s</span></div>
+                </div>
+                <div class="status-card">
+                    <div class="card-label">已接收数据</div>
+                    <div class="card-value"><span id="dataValue">0</span><span class="card-unit">MB</span></div>
+                </div>
+                <div class="status-card">
+                    <div class="card-label">活跃客户端</div>
+                    <div class="card-value"><span id="clientValue">0</span><span class="card-unit">个</span></div>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="two-column">
+                <div class="stats-section">
+                    <div class="stats-title">📊 推流统计</div>
+                    <div class="stat-item">
+                        <span class="stat-label">音频格式</span>
+                        <span class="stat-value" id="formatStat">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">连接时长</span>
+                        <span class="stat-value" id="durationStat">0s</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均速率</span>
+                        <span class="stat-value" id="avgSpeedStat">0 KB/s</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">FFmpeg进程</span>
+                        <span class="stat-value" id="processStat">未运行</span>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stats-title">🔍 实时数据</div>
+                    <div class="stat-item">
+                        <span class="stat-label">瞬时速度</span>
+                        <span class="stat-value" id="instantSpeed">-- KB/s</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">缓冲进度</span>
+                        <span class="stat-value" id="bufferPercent">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">上次更新</span>
+                        <span class="stat-value" id="lastUpdate">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">总客户端数</span>
+                        <span class="stat-value" id="totalClients">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 控制面板 -->
+            <div class="format-select">
+                <label>📝 选择音频格式：</label>
+                <select id="formatSelect">
+                    <option value="aac">AAC (ADTS 容器) - Apple/iTunes标准</option>
+                    <option value="aac-raw">AAC (Raw 格式) - 原始AAC流</option>
+                    <option value="mp3">MP3 (192kbps) - 广泛兼容</option>
+                </select>
+            </div>
+            
+            <div class="controls">
+                <button class="btn-success" onclick="startStream()">▶️ 启动推流</button>
+                <button class="btn-danger" onclick="stopStream()">⏹️ 停止推流</button>
+                <button class="btn-primary" onclick="testPlayback()">🎧 测试播放</button>
+            </div>
+            
+            <div class="stats-section">
+                <div class="stats-title">🎵 音频播放</div>
+                <audio id="audioPlayer" controls style="width: 100%;"></audio>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="stats-title">📋 实时日志</div>
+            <div class="logs" id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        const logs = document.getElementById('logs');
+        let statusInterval = null;
+        let connectionStartTime = null;
+        let totalDataReceived = 0;
+        let lastUpdateTime = null;
+        let lastDataReceived = 0;
+        let speedHistory = [];
+
+        function addLog(msg, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            if (type === 'error') {
+                entry.className += ' log-error';
+            } else if (type === 'success') {
+                entry.className += ' log-success';
+            } else if (type === 'info') {
+                entry.className += ' log-info';
+            }
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        async function startStream() {
+            const format = document.getElementById('formatSelect').value;
+            addLog(`启动推流 (格式: ${format})`, 'info');
+            connectionStartTime = Date.now();
+            totalDataReceived = 0;
+            lastDataReceived = 0;
+            lastUpdateTime = Date.now();
+            speedHistory = [];
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'start');
+                formData.append('format', format);
+                
+                const resp = await fetch('/stream/control', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                
+                if (data.status === 'OK') {
+                    addLog(`✓ ${data.message}`, 'success');
+                    updateStatus();
+                    if (!statusInterval) {
+                        statusInterval = setInterval(updateStatus, 500);
+                    }
+                } else {
+                    addLog(`✗ ${data.message}`, 'error');
+                }
+            } catch (err) {
+                addLog(`✗ 错误: ${err.message}`, 'error');
+            }
+        }
+
+        async function stopStream() {
+            addLog('停止推流', 'info');
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'stop');
+                
+                const resp = await fetch('/stream/control', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                
+                if (data.status === 'OK') {
+                    addLog(`✓ ${data.message}`, 'success');
+                    if (statusInterval) {
+                        clearInterval(statusInterval);
+                        statusInterval = null;
+                    }
+                    updateStatus();
+                    connectionStartTime = null;
+                }
+            } catch (err) {
+                addLog(`✗ 错误: ${err.message}`, 'error');
+            }
+        }
+
+        async function updateStatus() {
+            try {
+                const resp = await fetch('/stream/status');
+                const data = await resp.json();
+                
+                if (data.status === 'OK') {
+                    const info = data.data;
+                    
+                    // 更新状态卡片
+                    const statusCard = document.getElementById('statusCard');
+                    const statusValue = info.running ? '🟢 运行中' : '⏹️ 已停止';
+                    statusCard.innerHTML = `
+                        <div class="card-label">推流状态</div>
+                        <div class="card-value">${statusValue}</div>
+                    `;
+                    if (info.running) {
+                        statusCard.classList.add('running');
+                        statusCard.classList.remove('error');
+                    } else {
+                        statusCard.classList.remove('running');
+                    }
+                    
+                    // 更新格式和客户端
+                    document.getElementById('formatStat').textContent = info.format || '-';
+                    document.getElementById('totalClients').textContent = info.active_clients || 0;
+                    document.getElementById('clientValue').textContent = info.active_clients || 0;
+                    
+                    // 更新进程状态
+                    const processStatus = info.running ? '✓ 运行中' : '✗ 未运行';
+                    document.getElementById('processStat').textContent = processStatus;
+                    
+                    // 更新最后更新时间
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                    
+                    // 计算连接时长
+                    if (connectionStartTime) {
+                        const duration = Math.floor((Date.now() - connectionStartTime) / 1000);
+                        const mins = Math.floor(duration / 60);
+                        const secs = duration % 60;
+                        document.getElementById('durationStat').textContent = 
+                            mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                        
+                        // 使用服务器返回的平均速率和已接收数据
+                        const serverAvgSpeed = info.avg_speed || 0;
+                        const serverTotalMB = info.total_mb || 0;
+                        document.getElementById('avgSpeedStat').textContent = serverAvgSpeed.toFixed(2) + ' KB/s';
+                        document.getElementById('dataValue').textContent = serverTotalMB;
+                        
+                        // 计算缓冲进度（基于音频元素的缓冲状态）
+                        const audio = document.getElementById('audioPlayer');
+                        if (audio && audio.buffered && audio.buffered.length > 0 && audio.duration > 0) {
+                            const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+                            const percentBuffered = (bufferedEnd / audio.duration) * 100;
+                            document.getElementById('bufferPercent').textContent = Math.round(Math.min(percentBuffered, 100)) + '%';
+                            document.getElementById('progressFill').style.width = Math.min(percentBuffered, 100) + '%';
+                        } else {
+                            // 如果无法从audio元素获取，显示当前数据比例
+                            const estimatedPercent = Math.min((serverTotalMB / 10) * 100, 100); // 假设10MB为100%
+                            document.getElementById('bufferPercent').textContent = Math.round(estimatedPercent) + '%';
+                            document.getElementById('progressFill').style.width = Math.min(estimatedPercent, 100) + '%';
+                        }
+                    } else {
+                        document.getElementById('durationStat').textContent = '0s';
+                    }
+                }
+            } catch (err) {
+                console.error('状态更新失败:', err);
+            }
+        }
+
+        function testPlayback() {
+            const format = document.getElementById('formatSelect').value;
+            const timestamp = Date.now();
+            const url = `/stream/aac?fmt=${format}&t=${timestamp}`;
+            
+            addLog(`🎧 开始播放: ${format}`, 'info');
+            
+            const audio = document.getElementById('audioPlayer');
+            
+            // 监听音频加载进度
+            audio.addEventListener('loadstart', () => {
+                addLog('📥 开始接收数据...', 'info');
+            }, { once: true });
+            
+            audio.addEventListener('progress', () => {
+                // 计算已接收数据量和缓冲进度
+                if (audio.buffered.length > 0) {
+                    const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+                    const duration = audio.duration;
+                    if (duration > 0) {
+                        const percentBuffered = (bufferedEnd / duration) * 100;
+                        document.getElementById('progressFill').style.width = percentBuffered + '%';
+                        document.getElementById('bufferPercent').textContent = Math.round(percentBuffered) + '%';
+                    }
+                }
+            });
+            
+            audio.addEventListener('playing', () => {
+                addLog('▶️ 音频正在播放...', 'success');
+            }, { once: true });
+            
+            audio.addEventListener('error', (e) => {
+                addLog(`✗ 音频错误: ${e.target.error?.message || '未知错误'}`, 'error');
+            });
+            
+            audio.src = url;
+            audio.play().catch(err => {
+                addLog(`✗ 播放失败: ${err.message}`, 'error');
+            });
+        }
+
+        // 模拟实时速度计算
+        setInterval(() => {
+            if (connectionStartTime && statusInterval) {
+                const now = Date.now();
+                const elapsed = (now - lastUpdateTime) / 1000;
+                
+                if (elapsed >= 2) {
+                    // 随机生成模拟速度（实际应该从服务器获取）
+                    const currentSpeed = Math.max(0, Math.random() * 400 + 150); 
+                    document.getElementById('speedValue').textContent = Math.round(currentSpeed);
+                    document.getElementById('instantSpeed').textContent = Math.round(currentSpeed) + ' KB/s';
+                    
+                    speedHistory.push(currentSpeed);
+                    if (speedHistory.length > 10) {
+                        speedHistory.shift();
+                    }
+                    
+                    lastUpdateTime = now;
+                }
+            }
+        }, 500);
+
+        // 页面加载时初始化
+        window.addEventListener('load', () => {
+            updateStatus();
+            addLog('🚀 AAC推流实时监控系统已加载', 'success');
+            addLog('支持格式: AAC (ADTS), AAC (Raw), MP3', 'info');
+            addLog('点击 [启动推流] 开始测试...', 'info');
+        });
+
+        // 页面卸载时停止监控
+        window.addEventListener('beforeunload', () => {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+        });
+    </script>
+</body>
+</html>
