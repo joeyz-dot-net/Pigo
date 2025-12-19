@@ -17,9 +17,9 @@ class UserSettings:
     # 默认设置
     DEFAULT_SETTINGS = {
         "theme": "dark",  # light / dark / auto
-        "auto_stream": True,  # 是否自动启动推流
+        "auto_stream": False,  # 是否自动启动推流 - 默认关闭，只有用户显式启用时才执行
         "stream_volume": 50,  # 推流音量 0-100
-        "language": "zh",  # zh / en
+        "language": "auto",  # auto / zh / en
     }
     
     def __init__(self, settings_file: str = "user_settings.json"):

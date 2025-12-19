@@ -77,8 +77,9 @@
 		</div>
 		
 		<div class="play-list-section" id="playListSection">
-			<div class="play-list-header">
+			<div class="play-list-header" style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
 				<h3 class="play-list-title" id="playListTitle">当前播放列表</h3>
+				<div id="streamProgressBarContainer" style="flex: 1; min-width: 100px;"></div>
 			</div>
 			<div id="playListContainer" class="play-list-container"></div>
 		</div>
@@ -448,6 +449,7 @@
 			</div>
 			<div class="ranking-tabs">
 				<button class="ranking-tab active" data-period="all">全部</button>
+				<button class="ranking-tab" data-period="today">本日</button>
 				<button class="ranking-tab" data-period="week">本周</button>
 				<button class="ranking-tab" data-period="month">本月</button>
 			</div>
@@ -569,6 +571,7 @@
 					<div class="settings-item">
 						<label class="settings-label">语言</label>
 						<select id="languageSetting" class="settings-select">
+							<option value="auto">自动选择</option>
 							<option value="zh">中文 (Chinese)</option>
 							<option value="en">English</option>
 						</select>
@@ -580,7 +583,7 @@
 					<h3 class="section-title">🎵 推流设置</h3>
 					
 					<div class="settings-item">
-						<label class="settings-label">自动启动推流</label>
+						<label class="settings-label">接收推流</label>
 						<div class="settings-toggle">
 							<input type="checkbox" id="autoStreamSetting" class="toggle-checkbox">
 							<label for="autoStreamSetting" class="toggle-label">

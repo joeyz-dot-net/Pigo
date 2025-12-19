@@ -24,22 +24,22 @@ body.theme-light {
 }
 
 /* 亮色主题 - 白色背景 + 黑色文字 */
-#playlist.bright-theme {
+#playlist.theme-light {
     background: #ffffff;
 }
 
-#playlist.bright-theme .play-list-header {
+#playlist.theme-light .play-list-header {
     border-bottom-color: #e0e0e0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     background: #f9f9f9;
 }
 
-#playlist.bright-theme .play-list-title {
+#playlist.theme-light .play-list-title {
     color: #1a1a1a;
     text-shadow: none;
 }
 
-#playlist.bright-theme .playlist-track-item {
+#playlist.theme-light .playlist-track-item {
     border-color: rgba(224, 224, 224, 0.6) !important;
     background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(6px) !important;
@@ -48,7 +48,7 @@ body.theme-light {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }
 
-#playlist.bright-theme .playlist-track-item:hover {
+#playlist.theme-light .playlist-track-item:hover {
     border-color: rgba(208, 208, 208, 0.7) !important;
     background: rgba(245, 245, 245, 0.9) !important;
     backdrop-filter: blur(8px) !important;
@@ -56,7 +56,7 @@ body.theme-light {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
-#playlist.bright-theme .playlist-track-item.current-playing {
+#playlist.theme-light .playlist-track-item.current-playing {
     border-color: rgba(187, 187, 187, 0.7) !important;
     background: rgba(240, 240, 240, 0.85) !important;
     backdrop-filter: blur(8px) !important;
@@ -64,37 +64,37 @@ body.theme-light {
     box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.04) !important;
 }
 
-#playlist.bright-theme .track-seq {
+#playlist.theme-light .track-seq {
     color: #1a1a1a !important;
     background: #f5f5f5 !important;
 }
 
-#playlist.bright-theme .track-type {
+#playlist.theme-light .track-type {
     color: #1a1a1a !important;
 }
 
-#playlist.bright-theme .track-title,
-#playlist.bright-theme .playlist-track-item .track-title {
+#playlist.theme-light .track-title,
+#playlist.theme-light .playlist-track-item .track-title {
     color: #1a1a1a !important;
 }
 
-#playlist.bright-theme .track-meta {
+#playlist.theme-light .track-meta {
     color: #888888 !important;
 }
 
-#playlist.bright-theme .track-playlist-name {
+#playlist.theme-light .track-playlist-name {
     color: #888888 !important;
 }
 
-#playlist.bright-theme .track-progress {
+#playlist.theme-light .track-progress {
     color: #888888 !important;
 }
 
-#playlist.bright-theme .playlist-track-item .track-menu-btn {
+#playlist.theme-light .playlist-track-item .track-menu-btn {
     color: #999999 !important;
 }
 
-#playlist.bright-theme .playlist-track-item .track-menu-btn:hover {
+#playlist.theme-light .playlist-track-item .track-menu-btn:hover {
     background: rgba(0, 0, 0, 0.05) !important;
     color: #1a1a1a !important;
 }

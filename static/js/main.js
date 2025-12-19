@@ -13,7 +13,9 @@ import { debug } from './debug.js';
 import { Toast, loading, formatTime } from './ui.js';
 import { isMobile } from './utils.js';
 import { localFiles } from './local.js';
-import { settingsManager } from './modules/settingsManager.js';
+import { settingsManager } from './settingsManager.js';
+import { navManager } from './navManager.js';
+import { i18n } from './i18n.js';
 
 // ==========================================
 // 应用初始化
@@ -32,6 +34,9 @@ class MusicPlayerApp {
         console.log('🎵 初始化音乐播放器...');
         
         try {
+            // 0.1 初始化多语言系统
+            i18n.init();
+            
             // 0. 从后端获取推流配置
             try {
                 const configResp = await fetch('/config/stream');
@@ -96,6 +101,12 @@ class MusicPlayerApp {
             // 7.6 初始化设置管理器
             await settingsManager.init();
             this.bindSettingsButton();
+            
+            // 7.7 初始化导航栏
+            navManager.init();
+            
+            // 7.8 恢复推流激活状态和播放状态
+            this.restorePlayState();
             
             // 8. 启动状态轮询（每200ms更新一次）
             player.startPolling(2000);
@@ -273,6 +284,42 @@ class MusicPlayerApp {
             settingsBtn.addEventListener('click', () => {
                 settingsManager.openPanel();
             });
+        }
+    }
+
+    /**
+     * 恢复播放状态和推流激活状态
+     * 页面刷新后恢复：
+     * 1. 推流激活状态
+     * 2. 正在播放的音乐
+     */
+    async restorePlayState() {
+        try {
+            // 恢复推流激活状态
+            const streamActive = localStorage.getItem('streamActive') === 'true';
+            if (streamActive && settingsManager.settings.auto_stream) {
+                const autoStreamEl = document.getElementById('autoStreamSetting');
+                if (autoStreamEl) {
+                    autoStreamEl.checked = true;
+                }
+                console.log('[恢复状态] ✓ 推流已恢复为激活状态');
+            }
+            
+            // 恢复播放状态
+            try {
+                const status = await api.getStatus();
+                if (status && !status.paused) {
+                    console.log('[恢复状态] 音乐正在播放，保持播放状态');
+                    player.updateStatus(status);
+                } else if (status && status.paused) {
+                    console.log('[恢复状态] 音乐已暂停');
+                    player.updateStatus(status);
+                }
+            } catch (err) {
+                console.warn('[恢复状态] 无法恢复播放状态:', err);
+            }
+        } catch (error) {
+            console.error('[恢复状态] 恢复失败:', error);
         }
     }
 
@@ -1153,14 +1200,21 @@ if (document.readyState === 'loading') {
 
 // 导出供调试使用
 window.MusicPlayerApp = app;
-window.modules = {
-    api,
-    player,
-    playlistManager,
-    volumeControl,
-    searchManager,
-    themeManager
+window.app = {
+    ...app,
+    player,      // 播放器对象
+    settingsManager,  // 设置管理器
+    modules: {
+        api,
+        player,
+        playlistManager,
+        volumeControl,
+        searchManager,
+        themeManager,
+        settingsManager,
+        navManager
+    }
 };
 
 console.log('💡 模块化音乐播放器已加载');
-console.log('💡 可通过 window.modules 访问各个模块');
+console.log('💡 可通过 window.app.player、window.app.settingsManager 访问核心模块');

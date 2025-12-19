@@ -1427,10 +1427,11 @@ async def get_settings_schema():
                 "type": "select",
                 "label": "语言",
                 "options": [
+                    {"value": "auto", "label": "自动选择"},
                     {"value": "zh", "label": "中文"},
                     {"value": "en", "label": "English"}
                 ],
-                "default": "zh"
+                "default": "auto"
             }
         }
     }

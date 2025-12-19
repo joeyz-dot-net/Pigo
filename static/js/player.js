@@ -6,6 +6,7 @@ export class Player {
         this.status = null;
         this.pollInterval = null;
         this.listeners = new Map();
+        this.currentPlayingUrl = null;  // 追踪当前播放的歌曲URL
     }
 
     // 事件监听
@@ -25,10 +26,16 @@ export class Player {
     async play(url, title, type = 'local', streamFormat = 'mp3') {
         const result = await api.play(url, title, type, streamFormat);
         
-        // 不再自动启动浏览器推流，用户需要手动点击"开启推流"按钮
-        // 后端会启动 FFmpeg，但浏览器推流需要用户主动激活
+        // 记录当前播放的URL
+        this.currentPlayingUrl = url;
         
         this.emit('play', { url, title, type });
+        
+        // 检查是否启用了接收推流，如果启用则自动播放推流
+        if (typeof window.app !== 'undefined' && window.app.settingsManager) {
+            window.app.settingsManager.checkAndStartAutoStream(streamFormat);
+        }
+        
         return result;
     }
     

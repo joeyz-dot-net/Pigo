@@ -50,7 +50,7 @@ class Rank(ABC):
 
         参数:
           items: 数据项列表
-          period: 时间周期 ('all', 'week', 'month')
+          period: 时间周期 ('all', 'today', 'week', 'month')
 
         返回:
           过滤后的列表
@@ -59,7 +59,12 @@ class Rank(ABC):
             return items
 
         now = time.time()
-        if period == 'week':
+        if period == 'today':
+            # 获取今天 00:00:00 的时间戳
+            import datetime
+            today_start = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            cutoff_time = today_start.timestamp()
+        elif period == 'week':
             cutoff_time = now - (7 * 24 * 60 * 60)
         elif period == 'month':
             cutoff_time = now - (30 * 24 * 60 * 60)
