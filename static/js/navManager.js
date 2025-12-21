@@ -28,8 +28,9 @@ export const navManager = {
             1: 'nav.local',      // 本地
             2: 'nav.ranking',    // 排行
             3: 'nav.search',     // 搜索
-            4: 'nav.settings',   // 设置
-            5: 'nav.debug'       // 调试
+            4: 'nav.stream',     // 推流
+            5: 'nav.settings',   // 设置
+            6: 'nav.debug'       // 调试
         };
 
         navItems.forEach((label, index) => {

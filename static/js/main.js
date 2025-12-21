@@ -1508,6 +1508,12 @@ class MusicPlayerApp {
             const tabName = item.getAttribute('data-tab');
             console.log(`📌 导航项${index}: data-tab="${tabName}"`);
             
+            // 跳过没有 data-tab 属性的按钮（如推流和设置）
+            if (!tabName || tabName === 'stream') {
+                console.log(`⏭️ 跳过 "${tabName}" 按钮（独立功能）`);
+                return;
+            }
+            
             item.addEventListener('click', async (e) => {
                 console.log('🖱️ 点击导航项:', tabName, '当前:', currentTab);
                 
@@ -1627,6 +1633,31 @@ class MusicPlayerApp {
                 currentTab = tabName;
             });
         });
+        
+        // 推流按钮点击处理
+        const streamNavBtn = document.getElementById('streamNavBtn');
+        if (streamNavBtn) {
+            streamNavBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                console.log('📡 推流按钮被点击');
+                
+                try {
+                    // 只开启推流，不关闭
+                    console.log('📡 启动推流');
+                    await player.startBrowserStream('mp3');
+                    localStorage.setItem('streamActive', 'true');
+                    this.updateStreamNavButton(true);
+                    Toast.success('推流已启动');
+                } catch (err) {
+                    console.error('推流启动失败:', err);
+                    Toast.error('推流启动失败: ' + (err.message || err));
+                }
+            });
+            
+            // 初始化推流按钮状态
+            const streamActive = localStorage.getItem('streamActive') === 'true';
+            this.updateStreamNavButton(streamActive);
+        }
         
         // 设置按钮点击处理
         const settingsBtn = document.getElementById('settingsNavBtn');
@@ -2006,6 +2037,41 @@ class MusicPlayerApp {
     }
 
     // 刷新调试信息
+    // 更新推流按钮外观
+    updateStreamNavButton(isActive) {
+        const streamNavBtn = document.getElementById('streamNavBtn');
+        const streamNavIcon = document.getElementById('streamNavIcon');
+        const streamNavIndicator = document.getElementById('streamNavIndicator');
+        
+        if (!streamNavBtn) return;
+        
+        if (isActive) {
+            // 推流激活
+            streamNavBtn.classList.add('active');
+            if (streamNavIcon) {
+                streamNavIcon.textContent = '📡'; // 可以改为发光的图标
+                streamNavIcon.style.color = '#51cf66';
+            }
+            if (streamNavIndicator) {
+                streamNavIndicator.style.display = 'block';
+                streamNavIndicator.style.background = '#51cf66';
+                // 添加脉冲动画
+                streamNavIndicator.style.animation = 'pulse 1.5s infinite';
+            }
+        } else {
+            // 推流未激活
+            streamNavBtn.classList.remove('active');
+            if (streamNavIcon) {
+                streamNavIcon.textContent = '📡';
+                streamNavIcon.style.color = '';
+            }
+            if (streamNavIndicator) {
+                streamNavIndicator.style.display = 'none';
+                streamNavIndicator.style.animation = '';
+            }
+        }
+    }
+
     refreshDebugInfo() {
         const debugPlayer = document.getElementById('debugPlayer');
         const debugPlaylist = document.getElementById('debugPlaylist');
@@ -2138,18 +2204,6 @@ class MusicPlayerApp {
             });
     }
 
-    // 处理进度条点击（旧版本，已被上面的新版本替代）
-    handleProgressClickOld(e) {
-        const progressContainer = e.currentTarget.parentElement;
-        const rect = progressContainer.getBoundingClientRect();
-        const percent = ((e.clientX - rect.left) / rect.width) * 100;
-        
-        const status = player.getStatus();
-        if (status?.mpv?.duration) {
-            const seekTime = (percent / 100) * status.mpv.duration;
-            player.seek(seekTime);
-        }
-    }
 }
 
 // ==========================================

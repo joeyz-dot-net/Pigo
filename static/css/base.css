@@ -411,6 +411,7 @@ button:active { transform: scale(0.98); }
     border: none;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
 }
 .nav-icon { font-size: 24px; }
 .nav-label { font-size: 10px; font-weight: 500; }

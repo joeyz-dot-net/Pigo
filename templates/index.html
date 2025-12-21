@@ -64,6 +64,22 @@
 		.footer {
 			height: calc(100% - (2/5 * 100%));
 		}
+		
+		/* 推流指示器脉冲动画 */
+		@keyframes pulse {
+			0% {
+				opacity: 1;
+				transform: scale(1);
+			}
+			50% {
+				opacity: 0.7;
+				transform: scale(1.2);
+			}
+			100% {
+				opacity: 1;
+				transform: scale(1);
+			}
+		}
 	</style>
 </head>
 <body>
@@ -229,6 +245,11 @@
 			<span class="nav-icon">🔍</span>
 			<span class="nav-label">搜索</span>
 		</button>
+		<button class="nav-item" data-tab="stream" id="streamNavBtn" title="推流">
+			<span class="nav-icon" id="streamNavIcon">📡</span>
+			<span class="nav-label">推流</span>
+			<span id="streamNavIndicator" style="position: absolute; width: 10px; height: 10px; background: #51cf66; border-radius: 50%; top: 4px; right: 4px; display: none;"></span>
+		</button>
 		<button class="nav-item" id="settingsNavBtn" title="设置">
 			<span class="nav-icon">⚙️</span>
 			<span class="nav-label">设置</span>
@@ -239,29 +260,7 @@
 		</button>
 	</nav>
 	
-	<footer id="playerBar" class="footer-collapsed" style="display:none;">
-		<button id="footerExpandBtn" class="footer-expand-btn" title="展开控制栏" style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin:0 auto;background:transparent;border:none;font-size:28px;cursor:pointer;">
-			⋯
-		</button>
-		<div id="playerProgress" aria-hidden="true">
-			<div id="playerProgressFill"></div>
-			<div id="playerProgressThumb"></div>
-		</div>
-		<div id="footerContent" class="footer-content">
-			<div class="footer-controls-wrapper">
-			<div class="footer-controls-left">
-				<button id="loopBtn" class="control-btn loop-btn" data-icon="↻" title="循环模式">↻</button>
-				<button id="prevBtn" class="control-btn" data-icon="⼮" title="上一首">⏮</button>
-			</div>
-				<button id="playPauseBtn" class="control-btn play-pause-large" data-icon="▶" title="播放/暂停">▶</button>
-			<div class="footer-controls-right">
-				<button id="nextBtn" class="control-btn" data-icon="⏭" title="下一首">⏭</button>
-				
-				<button id="volumePopupBtn" class="control-btn" data-icon="🔊" title="音量">🔊</button>
-			</div>
-			</div>
-		</div>
-	</footer>
+	
 	
 	<!-- History modal -->
 	<div id="historyModal" class="history-modal" style="display:none;">

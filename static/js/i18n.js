@@ -44,6 +44,7 @@ const translations = {
         'nav.local': '本地',
         'nav.ranking': '排行',
         'nav.search': '搜索',
+        'nav.stream': '推流',
         'nav.settings': '设置',
         'nav.debug': '调试',
         
@@ -102,6 +103,7 @@ const translations = {
         'nav.local': 'Local',
         'nav.ranking': 'Ranking',
         'nav.search': 'Search',
+        'nav.stream': 'Stream',
         'nav.settings': 'Settings',
         'nav.debug': 'Debug',
         

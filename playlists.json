@@ -9,19 +9,19 @@
       "name": "默认歌单",
       "songs": [
         {
-          "url": "ETC/R3hab&蔡依林-Stars Align.flac",
-          "title": "R3hab&蔡依林-Stars Align.flac",
-          "name": "R3hab&蔡依林-Stars Align.flac",
-          "type": "local",
+          "url": "https://www.youtube.com/watch?v=ojA7sPQ0sqU",
+          "title": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs",
+          "name": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs",
+          "type": "youtube",
           "duration": 0,
-          "ts": 1766204615,
-          "thumbnail_url": null,
-          "artist": "R3hab&蔡依林-Stars Align.flac"
+          "ts": 1766279960,
+          "thumbnail_url": "https://img.youtube.com/vi/ojA7sPQ0sqU/maxresdefault.jpg",
+          "artist": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs"
         }
       ],
       "song_count": 1,
       "created_at": 1766198864.462621,
-      "updated_at": 1766277672.4583433,
+      "updated_at": 1766279960.6529827,
       "current_playing_index": -1
     },
     {
