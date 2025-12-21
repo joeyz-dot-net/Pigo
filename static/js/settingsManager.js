@@ -57,13 +57,8 @@ export const settingsManager = {
             // 应用语言
             this.applyLanguage();
             
-            // 绑定事件
-            this.bindEvents();
-            
-            // 同步推流状态到 localStorage
-            const autoStream = this.getSettings('auto_stream') === 'true' || this.getSettings('auto_stream') === true;
-            localStorage.setItem('streamActive', autoStream ? 'true' : 'false');
-            console.log(`[设置] 推流状态已同步: ${autoStream ? '启用' : '禁用'}`);
+            // 更新UI并绑定事件
+            this.updateUI();
             
             console.log('✓ 设置管理器已初始化（localStorage）');
         } catch (error) {
@@ -152,116 +147,6 @@ export const settingsManager = {
         const themeSelect = document.getElementById('themeSetting');
         if (themeSelect) {
             themeSelect.value = settings.theme || 'dark';
-        }
-        
-        // 语言
-        const langSelect = document.getElementById('languageSetting');
-        if (langSelect) {
-            langSelect.value = settings.language || 'auto';
-        }
-        
-        // 自动推流
-        const autoStreamCheck = document.getElementById('autoStreamSetting');
-        if (autoStreamCheck) {
-            const autoStream = settings.auto_stream === 'true' || settings.auto_stream === true;
-            autoStreamCheck.checked = autoStream;
-        }
-        
-        // 推流音量
-        const streamVolumeSlider = document.getElementById('streamVolumeSetting');
-        const streamVolumeValue = document.getElementById('streamVolumeValue');
-        if (streamVolumeSlider) {
-            const volume = settings.stream_volume || 50;
-            streamVolumeSlider.value = volume;
-            if (streamVolumeValue) {
-                streamVolumeValue.textContent = `${volume}%`;
-            }
-            
-            // ✅ 初始化音频元素的音量
-            const audioElement = document.getElementById('browserStreamAudio');
-            if (audioElement) {
-                const volumeDecimal = parseInt(volume) / 100;
-                audioElement.volume = volumeDecimal;
-                console.log(`[音量] 初始化音频音量: ${volume}% (${volumeDecimal.toFixed(2)})`);
-            }
-        }
-    },
-    
-    /**
-     * 绑定事件
-     */
-    bindEvents() {
-        // 推流音量滑块实时更新
-        const streamVolumeSlider = document.getElementById('streamVolumeSetting');
-        const streamVolumeValue = document.getElementById('streamVolumeValue');
-        if (streamVolumeSlider) {
-            streamVolumeSlider.addEventListener('input', (e) => {
-                const volumePercent = e.target.value;
-                
-                // 保存到 localStorage
-                this.setSetting('stream_volume', volumePercent);
-                if (streamVolumeValue) {
-                    streamVolumeValue.textContent = `${volumePercent}%`;
-                }
-                
-                // ✅ 直接改变音频元素的音量（0-1 范围）
-                const audioElement = document.getElementById('browserStreamAudio');
-                if (audioElement) {
-                    const volumeDecimal = parseInt(volumePercent) / 100;
-                    audioElement.volume = volumeDecimal;
-                    console.log(`[音量] 设置音频音量: ${volumePercent}% (${volumeDecimal.toFixed(2)})`);
-                }
-            });
-        }
-        
-        // 推流开关 - 用户切换时保存到 localStorage
-        const autoStreamCheck = document.getElementById('autoStreamSetting');
-        if (autoStreamCheck) {
-            autoStreamCheck.addEventListener('change', async (e) => {
-                const isEnabled = e.target.checked;
-                
-                console.log(`%c[推流开关] 用户操作: ${isEnabled ? '✓ 启用' : '✗ 禁用'}`, 
-                    `color: ${isEnabled ? '#4CAF50' : '#FF9800'}; font-weight: bold`);
-                
-                // 保存到 localStorage
-                this.setSetting('auto_stream', isEnabled);
-                localStorage.setItem('streamActive', isEnabled ? 'true' : 'false');
-                console.log(`[设置] localStorage.streamActive = ${isEnabled ? 'true' : 'false'}`);
-                
-                if (isEnabled) {
-                    console.log('[接收推流] 用户启用推流，正在启动...');
-                    this.showNotification('🔄 正在启动推流服务...', 'info');
-                    
-                    const streamFormat = localStorage.getItem('streamFormat') || 'mp3';
-                    const streamVolume = this.getSettings('stream_volume') || 50;
-                    
-                    console.log(`[接收推流] 推流参数: 格式=${streamFormat}, 音量=${streamVolume}%`);
-                    
-                    this.showNotification(
-                        `📻 开始接收推流 (${streamFormat.toUpperCase()}, ${streamVolume}%)...`,
-                        'info'
-                    );
-                    
-                    // 使用 player.startBrowserStream() 启动推流
-                    if (this.player && this.player.startBrowserStream) {
-                        console.log('%c[接收推流] 调用 player.startBrowserStream() 启动推流', 'color: #2196F3; font-weight: bold; font-size: 12px');
-                        await this.player.startBrowserStream(streamFormat);
-                        this.showNotification('✓ 推流已启用', 'success');
-                    } else {
-                        console.warn('[接收推流] player 实例不可用');
-                        this.playStreamAudio(streamFormat, streamVolume / 100);
-                    }
-                } else {
-                    console.log('[接收推流] 用户禁用推流');
-                    this.stopStream();
-                    this.showNotification('✓ 已禁用接收推流', 'success');
-                }
-            });
-        }
-        
-        // 主题切换
-        const themeSelect = document.getElementById('themeSetting');
-        if (themeSelect) {
             themeSelect.addEventListener('change', (e) => {
                 this.setSetting('theme', e.target.value);
                 this.applyTheme(e.target.value);
@@ -437,14 +322,8 @@ export const settingsManager = {
             // 收集表单数据
             const updates = {
                 theme: document.getElementById('themeSetting')?.value || 'dark',
-                language: document.getElementById('languageSetting')?.value || 'auto',
-                auto_stream: document.getElementById('autoStreamSetting')?.checked !== false,
-                stream_volume: parseInt(document.getElementById('streamVolumeSetting')?.value || 50)
+                language: document.getElementById('languageSetting')?.value || 'auto'
             };
-            
-            // 保存推流激活状态到 localStorage（用于页面刷新后恢复）
-            localStorage.setItem('streamActive', updates.auto_stream ? 'true' : 'false');
-            console.log('[设置] 推流激活状态已保存:', updates.auto_stream);
             
             // 发送到服务器
             const response = await fetch('/settings', {
@@ -499,25 +378,15 @@ export const settingsManager = {
             // 默认设置值
             const defaults = {
                 theme: 'dark',
-                language: 'zh',
-                auto_stream: false,  // 推流功能默认关闭
-                stream_volume: 50
+                language: 'zh'
             };
             
             // 设置表单元素为默认值
             const themeEl = document.getElementById('themeSetting');
             const languageEl = document.getElementById('languageSetting');
-            const autoStreamEl = document.getElementById('autoStreamSetting');
-            const streamVolumeEl = document.getElementById('streamVolumeSetting');
-            const streamVolumeValueEl = document.getElementById('streamVolumeValue');
             
             if (themeEl) themeEl.value = defaults.theme;
             if (languageEl) languageEl.value = defaults.language;
-            if (autoStreamEl) autoStreamEl.checked = defaults.auto_stream;
-            if (streamVolumeEl) {
-                streamVolumeEl.value = defaults.stream_volume;
-                if (streamVolumeValueEl) streamVolumeValueEl.textContent = defaults.stream_volume + '%';
-            }
             
             console.log('[DEBUG] 表单元素已重置为默认值');
             
@@ -619,216 +488,6 @@ export const settingsManager = {
         } catch (error) {
             console.error(`[设置] 设置 ${key} 失败:`, error);
             return false;
-        }
-    },
-    
-    /**
-     * 检查并启动自动推流（歌曲播放后自动播放推流）
-     */
-    checkAndStartAutoStream(streamFormat = 'mp3') {
-        // 检查自动推流设置是否启用
-        if (!this.settings.auto_stream) {
-            console.log('[自动推流] 未启用，跳过');
-            // 保存推流状态为关闭
-            localStorage.setItem('streamActive', 'false');
-            return;
-        }
-        
-        console.log('[自动推流] 已启用，准备在浏览器中播放推流音频...');
-        
-        // 保存推流激活状态到 localStorage
-        localStorage.setItem('streamActive', 'true');
-        
-        // 获取推流音量设置
-        const streamVolume = this.settings.stream_volume || 50;
-        const volumeLevel = streamVolume / 100;
-        
-        // 启动浏览器推流
-        this.playStreamAudio(streamFormat, volumeLevel);
-    },
-    
-    /**
-     * 在浏览器中播放推流音频
-     */
-    playStreamAudio(streamFormat = 'mp3', volume = 0.5) {
-        const audioElement = document.getElementById('browserStreamAudio');
-        
-        if (!audioElement) {
-            console.warn('[推流音频] 浏览器音频元素不存在，可能需要在 HTML 中添加 <audio id="browserStreamAudio">');
-            return;
-        }
-        
-        try {
-            console.log(`[推流音频] 准备播放推流 (格式: ${streamFormat}, 音量: ${Math.round(volume * 100)}%)`);
-            
-            // 获取状态文本显示元素
-            const statusEl = document.getElementById('miniPlayerStatus');
-            if (!statusEl) {
-                console.warn('[推流] 未找到miniPlayerStatus元素');
-            }
-            
-            // 显示状态文本的辅助函数
-            let statusTimeout = null;
-            const showStatus = (text, autoHide = false) => {
-                if (statusEl) {
-                    statusEl.textContent = text;
-                    statusEl.classList.add('show');
-                    
-                    // 清理之前的定时器
-                    if (statusTimeout) {
-                        clearTimeout(statusTimeout);
-                    }
-                    
-                    // 自动隐藏
-                    if (autoHide) {
-                        statusTimeout = setTimeout(() => {
-                            statusEl.classList.remove('show');
-                        }, 3000);
-                    }
-                }
-            };
-            
-            // 停止之前的推流（如有）
-            if (!audioElement.paused) {
-                console.log('[推流音频] 停止之前的推流');
-                audioElement.pause();
-            }
-            
-            // 清理旧的源
-            audioElement.src = '';
-            audioElement.currentTime = 0;
-            
-            // 设置新源
-            const timestamp = Date.now();
-            const streamUrl = `/stream/play?format=${streamFormat}&t=${timestamp}`;
-            
-            console.log('[推流音频] 设置流地址:', streamUrl);
-            
-            // 显示初始状态
-            showStatus('🔄 正在连接...');
-            
-            audioElement.crossOrigin = 'anonymous';
-            audioElement.volume = Math.max(0, Math.min(1, volume));
-            audioElement.src = streamUrl;
-            audioElement.load();  // 明确加载媒体
-            
-            // 设置事件监听
-            audioElement.onloadstart = () => {
-                console.log('[推流音频] 开始加载流数据');
-                showStatus('🔄 开始连接...');
-            };
-            
-            audioElement.onprogress = () => {
-                console.log('[推流音频] 正在缓冲数据');
-                // 只在连接阶段显示，播放时不显示进度
-            };
-            
-            audioElement.onloadedmetadata = () => {
-                console.log('[推流音频] ✓ 元数据已加载');
-                showStatus('📦 准备就绪...');
-            };
-            
-            audioElement.oncanplay = () => {
-                console.log('[推流音频] ✓ 可以开始播放');
-                showStatus('✓ 准备就绪...');
-            };
-            
-            audioElement.onplay = () => {
-                console.log('[推流音频] ✓ 开始播放');
-                showStatus('▶ 正在播放...', true);
-            };
-            
-            audioElement.onplaying = () => {
-                console.log('[推流音频] ✓ 正在播放');
-                // 有声音播放后自动隐藏
-                if (statusEl) {
-                    statusEl.classList.remove('show');
-                }
-            };
-            
-            audioElement.onerror = (error) => {
-                console.error('[推流音频] ✗ 播放出错:', error, audioElement.error);
-                showStatus('❌ 连接失败', true);
-            };
-            
-            audioElement.onpause = () => {
-                console.log('[推流音频] 已暂停');
-            };
-            
-            audioElement.ondurationchange = () => {
-                console.log('[推流音频] 时长已更新');
-            };
-            
-            // 尝试播放
-            console.log('[推流音频] 尝试播放...');
-            const playPromise = audioElement.play();
-            
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        console.log('[推流音频] ✓ 播放成功');
-                    })
-                    .catch(error => {
-                        console.error('[推流音频] ✗ 播放失败:', error.name, error.message);
-                        showStatus('❌ 播放失败', true);
-                        
-                        // 自动播放被浏览器阻止，显示提示
-                        if (error.name === 'NotAllowedError') {
-                            console.warn('[推流音频] 浏览器禁用了自动播放，请用户交互后重试');
-                        }
-                    });
-            }
-            
-        } catch (error) {
-            console.error('[推流音频] 播放异常:', error);
-        }
-    },
-    
-    /**
-     * 停止推流
-     */
-    stopStream() {
-        const audioElement = document.getElementById('browserStreamAudio');
-        
-        if (!audioElement) {
-            console.warn('[推流音频] 音频元素不存在');
-            return;
-        }
-        
-        try {
-            console.log('[推流音频] 正在停止推流...');
-            
-            // 隐藏状态文本
-            const statusEl = document.getElementById('miniPlayerStatus');
-            if (statusEl) {
-                statusEl.classList.remove('show');
-                statusEl.textContent = '';
-            }
-            
-            // 暂停播放
-            if (!audioElement.paused) {
-                console.log('[推流音频] 暂停音频播放');
-                audioElement.pause();
-            }
-            
-            // 清空源
-            audioElement.src = '';
-            audioElement.currentTime = 0;
-            
-            // 移除所有事件监听器
-            audioElement.onplay = null;
-            audioElement.onpause = null;
-            audioElement.onerror = null;
-            audioElement.onloadstart = null;
-            audioElement.onloadedmetadata = null;
-            audioElement.onplaying = null;
-            audioElement.ondurationchange = null;
-            audioElement.onprogress = null;
-            audioElement.oncanplay = null;
-            
-            console.log('[推流音频] ✓ 推流已完全断开');
-        } catch (error) {
-            console.error('[推流音频] 停止推流异常:', error);
         }
     },
     

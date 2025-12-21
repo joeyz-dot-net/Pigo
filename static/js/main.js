@@ -45,46 +45,11 @@ class MusicPlayerApp {
         console.log('🎵 初始化音乐播放器...');
         
         try {
-            // 0. 保护浏览器音频元素，防止非法 URL 被设置
-            this.protectBrowserStreamAudio();
-            
-            // 0.1 清理旧的 localStorage 数据（迁移支持）
-            try {
-                const savedStreamState = localStorage.getItem('currentStreamState');
-                if (savedStreamState) {
-                    const streamState = JSON.parse(savedStreamState);
-                    // 如果有旧的 url 或 title 字段，说明是旧格式，清理掉
-                    if (streamState.url || streamState.title) {
-                        console.log('[初始化] 检测到旧的推流状态格式，清理...');
-                        localStorage.removeItem('currentStreamState');
-                        localStorage.setItem('streamActive', 'false');
-                    }
-                }
-            } catch (err) {
-                console.warn('[初始化] 清理旧数据失败:', err);
-            }
-            
             // 0.1 初始化多语言系统
             i18n.init();
             
-            // 0.2 从后端获取推流配置
-            try {
-                const configResp = await fetch('/config/stream');
-                const configData = await configResp.json();
-                if (configData.status === 'OK' && configData.data?.default_format) {
-                    const defaultFormat = configData.data.default_format;
-                    localStorage.setItem('streamFormat', defaultFormat);
-                    console.log(`[配置] 推流默认格式: ${defaultFormat}`);
-                }
-            } catch (err) {
-                console.warn('[配置] 获取推流配置失败:', err);
-            }
-            
             // 1. 初始化 UI 元素
             this.initUIElements();
-            
-            // 1.5 [关键] 页面刷新后快速恢复流连接（不等待其他初始化）
-            this.fastRestoreStream();
             
             // 2. 初始化播放器
             this.initPlayer();
@@ -253,37 +218,7 @@ class MusicPlayerApp {
 
     // 保护浏览器音频元素，防止非法 URL 被设置
     protectBrowserStreamAudio() {
-        const audioElement = document.getElementById('browserStreamAudio');
-        if (!audioElement) return;
-
-        // 保存原始的 src setter
-        const descriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'src');
-        const originalSetter = descriptor?.set;
-
-        if (originalSetter) {
-            // 覆盖 src 属性的 setter
-            Object.defineProperty(audioElement, 'src', {
-                get() {
-                    return this._src || '';
-                },
-                set(value) {
-                    // 只允许设置 /stream/play 开头的 URL 或空字符串
-                    if (!value || value.includes('/stream/play') || value === '') {
-                        this._src = value;
-                        // 调用原始 setter
-                        if (originalSetter) {
-                            originalSetter.call(this, value);
-                        }
-                        console.log('[音频保护] ✓ 允许设置 src:', value || '(清空)');
-                    } else {
-                        console.warn('[音频保护] ❌ 拒绝非法 src:', value);
-                        // 不设置非法 URL，直接返回
-                        return;
-                    }
-                },
-                configurable: true
-            });
-        }
+        // Stream functionality removed
     }
 
     // 初始化播放器
@@ -581,63 +516,6 @@ class MusicPlayerApp {
 
     async restorePlayState() {
         try {
-            // 恢复推流激活状态
-            const streamActive = localStorage.getItem('streamActive') === 'true';
-            if (streamActive && settingsManager.settings.auto_stream) {
-                const autoStreamEl = document.getElementById('autoStreamSetting');
-                if (autoStreamEl) {
-                    autoStreamEl.checked = true;
-                }
-                console.log('[恢复状态] ✓ 推流已恢复为激活状态');
-            }
-            
-            // 恢复播放流的状态（页面刷新后）
-            const savedStreamState = localStorage.getItem('currentStreamState');
-            if (savedStreamState) {
-                try {
-                    const streamState = JSON.parse(savedStreamState);
-                    
-                    // 检查保存的状态是否仍然有效（5分钟内）
-                    if (Date.now() - streamState.timestamp < 5 * 60 * 1000) {
-                        console.log('[恢复状态] 检测到活跃的直播流，准备恢复:', {
-                            format: streamState.format
-                        });
-                        
-                        // 恢复当前歌单ID
-                        if (streamState.playlistId) {
-                            this.currentPlaylistId = streamState.playlistId;
-                        }
-                        
-                        // 先检查后端流是否仍在运行，防止断开
-                        try {
-                            const streamStatus = await api.getStreamStatus();
-                            console.log('[恢复状态] 后端流状态:', {
-                                running: streamStatus.data?.running,
-                                format: streamStatus.data?.format
-                            });
-                        } catch (err) {
-                            console.warn('[恢复状态] 无法获取后端流状态:', err);
-                        }
-                        
-                        // 立即（不延迟）恢复直播连接
-                        try {
-                            console.log('[恢复状态] 立即重新连接直播流...');
-                            const streamFormat = streamState.format || 'mp3';
-                            player.startBrowserStream(streamFormat);
-                            console.log('[恢复状态] ✓ 直播流已恢复');
-                        } catch (err) {
-                            console.error('[恢复状态] 恢复直播流失败:', err);
-                        }
-                    } else {
-                        // 状态已过期，清除
-                        localStorage.removeItem('currentStreamState');
-                    }
-                } catch (err) {
-                    console.warn('[恢复状态] 解析保存的流状态失败:', err);
-                    localStorage.removeItem('currentStreamState');
-                }
-            }
-            
             // 恢复播放状态
             try {
                 const status = await api.getStatus();
@@ -654,102 +532,6 @@ class MusicPlayerApp {
         } catch (error) {
             console.error('[恢复状态] 恢复失败:', error);
         }
-    }
-
-    // 保存当前播放流的状态（页面卸载时）
-    saveStreamState() {
-        try {
-            const audioElement = document.getElementById('browserStreamAudio');
-            
-            // 激进的保存策略：只要音频元素存在并有 src，就保存状态
-            // （即使暂停了，也可能需要恢复）
-            if (audioElement && audioElement.src) {
-                const streamState = {
-                    // 注意：不保存 currentPlayingUrl，因为推流是从虚拟音频设备录制的，
-                    // 与当前播放的歌曲无关。只保存流的状态信息
-                    format: localStorage.getItem('streamFormat') || 'mp3',
-                    playlistId: this.currentPlaylistId || 'default',
-                    timestamp: Date.now(),
-                    isPlaying: !audioElement.paused,
-                    wasConnected: true  // 标记表示之前有活跃连接
-                };
-                
-                localStorage.setItem('currentStreamState', JSON.stringify(streamState));
-                console.log('[保存状态] 直播流状态已保存:', { 
-                    isPlaying: streamState.isPlaying, 
-                    format: streamState.format 
-                });
-            }
-        } catch (error) {
-            console.warn('[保存状态] 保存流状态失败:', error);
-        }
-    }
-
-    // 设置页面可见性监听（用于刷新后自动恢复流）
-    setupPageVisibilityListener() {
-        document.addEventListener('visibilitychange', async () => {
-            // 页面从隐藏变为可见时（页面被激活/刷新后焦点返回）
-            if (!document.hidden) {
-                console.log('%c[可见性] 页面已重新激活，检查推流状态...', 'color: #2196F3; font-weight: bold');
-                
-                // 延迟200ms确保DOM完全渲染
-                setTimeout(async () => {
-                    try {
-                        const streamActive = localStorage.getItem('streamActive') === 'true';
-                        console.log(`[可见性] streamActive: ${streamActive}`);
-                        
-                        if (!streamActive) {
-                            console.log('[可见性] 推流未启用，跳过恢复');
-                            return;
-                        }
-                        
-                        const savedStreamState = localStorage.getItem('currentStreamState');
-                        if (!savedStreamState) {
-                            console.log('[可见性] 没有保存的流状态');
-                            return;
-                        }
-                        
-                        const streamState = JSON.parse(savedStreamState);
-                        console.log('[可见性] 检查到保存的流状态:', streamState);
-                        
-                        // 检查流状态是否仍然有效（30秒内）
-                        const age = Date.now() - streamState.timestamp;
-                        if (age > 30 * 1000) {
-                            console.log(`[可见性] 流状态已过期 (${Math.round(age / 1000)}秒)，清除`);
-                            localStorage.removeItem('currentStreamState');
-                            return;
-                        }
-                        
-                        const audioElement = document.getElementById('browserStreamAudio');
-                        const isStreamActive = audioElement && audioElement.src && !audioElement.paused;
-                        const elementStatus = audioElement 
-                            ? `src=${audioElement.src ? '✓' : '✗'}, paused=${audioElement.paused}, readyState=${audioElement.readyState}`
-                            : 'element not found';
-                        
-                        console.log(`[可见性] 音频元素状态: ${elementStatus}`);
-                        
-                        // 如果流已断开，立即恢复
-                        if (!isStreamActive) {
-                            console.log('%c[可见性] 推流已断开，准备恢复...', 'color: #FF9800');
-                            
-                            const streamFormat = streamState.format || 'mp3';
-                            
-                            if (player && player.startBrowserStream) {
-                                console.log(`[可见性] 调用 player.startBrowserStream('${streamFormat}')`);
-                                await player.startBrowserStream(streamFormat);
-                                console.log('%c[可见性] ✓ 推流已恢复', 'color: #4CAF50; font-weight: bold');
-                            } else {
-                                console.error('[可见性] ❌ player 不可用');
-                            }
-                        } else {
-                            console.log('[可见性] 推流仍在运行，无需恢复');
-                        }
-                    } catch (err) {
-                        console.error('[可见性] 恢复流失败:', err);
-                    }
-                }, 200);
-            }
-        });
     }
 
     // 初始化播放列表
@@ -1675,7 +1457,6 @@ class MusicPlayerApp {
                         // 延迟刷新，确保DOM已更新
                         setTimeout(() => {
                             this.refreshDebugInfo();
-                            this.updateStreamStatus();
                         }, 100);
                     }
                 }
@@ -2186,74 +1967,6 @@ class MusicPlayerApp {
     }
 
     // 更新推流状态
-    updateStreamStatus() {
-        const streamStatusDisplay = document.getElementById('streamStatusDisplay');
-        const streamStatusText = document.getElementById('streamStatusText');
-        const streamSpeed = document.getElementById('streamSpeed');
-        const streamTotal = document.getElementById('streamTotal');
-        const streamDuration = document.getElementById('streamDuration');
-        const streamClients = document.getElementById('streamClients');
-        const streamFormat = document.getElementById('streamFormat');
-        
-        console.log('[DEBUG] updateStreamStatus 开始...');
-        
-        // 获取推流状态
-        fetch('/stream/status')
-            .then(res => res.json())
-            .then(data => {
-                console.log('[DEBUG] /stream/status 响应:', data);
-                
-                if (data.status === 'OK' && data.data) {
-                    const streamData = data.data;
-                    
-                    if (streamStatusDisplay) {
-                        streamStatusDisplay.textContent = streamData.is_active ? '●' : '●';
-                        streamStatusDisplay.style.color = streamData.is_active ? '#51cf66' : '#f44336';
-                    }
-                    
-                    if (streamStatusText) {
-                        streamStatusText.textContent = streamData.status_text || '未激活';
-                        streamStatusText.style.color = streamData.is_active ? '#51cf66' : '#f44336';
-                    }
-                    
-                    if (streamSpeed) {
-                        streamSpeed.innerHTML = `速度: <strong>${(streamData.avg_speed || 0).toFixed(2)} KB/s</strong>`;
-                        streamSpeed.style.color = '#51cf66';
-                    }
-                    if (streamTotal) {
-                        streamTotal.innerHTML = `总数据: <strong>${(streamData.total_mb || 0).toFixed(2)} MB</strong>`;
-                        streamTotal.style.color = '#51cf66';
-                    }
-                    if (streamDuration) {
-                        streamDuration.innerHTML = `用时: <strong>${streamData.duration || 0}s</strong>`;
-                        streamDuration.style.color = '#51cf66';
-                    }
-                    if (streamClients) {
-                        streamClients.innerHTML = `活跃客户端: <strong>${streamData.active_clients || 0}</strong>`;
-                        streamClients.style.color = '#51cf66';
-                    }
-                    if (streamFormat) {
-                        streamFormat.innerHTML = `格式: <strong>${streamData.format || '--'}</strong>`;
-                        streamFormat.style.color = '#51cf66';
-                    }
-                    
-                    console.log('[DEBUG] 推流状态已更新');
-                }
-            })
-            .catch(err => {
-                console.warn('[调试] 获取推流状态失败:', err);
-                if (streamStatusText) {
-                    streamStatusText.textContent = '无法获取状态';
-                    streamStatusText.style.color = '#ff9800';
-                }
-                if (streamSpeed) streamSpeed.textContent = '速度: --';
-                if (streamTotal) streamTotal.textContent = '总数据: --';
-                if (streamDuration) streamDuration.textContent = '用时: --';
-                if (streamClients) streamClients.textContent = '客户端: --';
-                if (streamFormat) streamFormat.textContent = '格式: --';
-            });
-    }
-
 }
 
 // ==========================================

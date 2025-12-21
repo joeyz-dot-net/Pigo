@@ -10,6 +10,36 @@
       "name": "默认歌单",
       "songs": [
         {
+          "url": "https://www.youtube.com/watch?v=hKkThdjHpYE",
+          "title": "JACKY ZHANG – first round (19th Chopin Competition, Warsaw)",
+          "name": "JACKY ZHANG – first round (19th Chopin Competition, Warsaw)",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766313563,
+          "thumbnail_url": "https://img.youtube.com/vi/hKkThdjHpYE/default.jpg",
+          "artist": "JACKY ZHANG – first round (19th Chopin Competition, Warsaw)"
+        },
+        {
+          "url": "Jay Chou 周杰伦/七里香.flac",
+          "title": "七里香.flac",
+          "name": "七里香.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766313518,
+          "thumbnail_url": null,
+          "artist": "七里香.flac"
+        },
+        {
+          "url": "Nana/Darkman - Nana Darkman、Booya Family、Nana.flac",
+          "title": "Darkman - Nana Darkman、Booya Family、Nana.flac",
+          "name": "Darkman - Nana Darkman、Booya Family、Nana.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766313514,
+          "thumbnail_url": null,
+          "artist": "Darkman - Nana Darkman、Booya Family、Nana.flac"
+        },
+        {
           "url": "https://www.youtube.com/watch?v=qVQvFWiBJkU",
           "title": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧",
           "name": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧",
@@ -18,6 +48,16 @@
           "ts": 1766294776,
           "thumbnail_url": "https://img.youtube.com/vi/qVQvFWiBJkU/maxresdefault.jpg",
           "artist": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧"
+        },
+        {
+          "url": "G.E.M 邓紫棋/G.E.M.X.X.X.Live/01. G.E.M.邓紫棋 - Intro   After Tonight (Live).flac",
+          "title": "01. G.E.M.邓紫棋 - Intro   After Tonight (Live).flac",
+          "name": "01. G.E.M.邓紫棋 - Intro   After Tonight (Live).flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766313438,
+          "thumbnail_url": null,
+          "artist": "01. G.E.M.邓紫棋 - Intro   After Tonight (Live).flac"
         },
         {
           "url": "ETC/5 20AM - soldier.flac",
@@ -50,26 +90,6 @@
           "artist": "Lydia.flac"
         },
         {
-          "url": "ETC/5 20AM.m4a",
-          "title": "5 20AM.m4a",
-          "name": "5 20AM.m4a",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766291611,
-          "thumbnail_url": null,
-          "artist": "5 20AM.m4a"
-        },
-        {
-          "url": "KDA/K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
-          "title": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
-          "name": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766291638,
-          "thumbnail_url": null,
-          "artist": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac"
-        },
-        {
           "url": "https://www.youtube.com/watch?v=ojA7sPQ0sqU",
           "title": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs",
           "name": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs",
@@ -90,9 +110,9 @@
           "artist": "01. G.E.M.邓紫棋 - 我的秘密 (G.E.M.重生版).flac"
         }
       ],
-      "song_count": 8,
+      "song_count": 10,
       "created_at": 1766198864.462621,
-      "updated_at": 1766294793.0818686,
+      "updated_at": 1766313563.6911852,
       "current_playing_index": -1
     },
     {
@@ -120,16 +140,6 @@
           "artist": "Darkman - Nana Darkman、Booya Family、Nana.flac"
         },
         {
-          "url": "Jay Chou 周杰伦/伟大的作品.flac",
-          "title": "伟大的作品.flac",
-          "name": "伟大的作品.flac",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766291717,
-          "thumbnail_url": null,
-          "artist": "伟大的作品.flac"
-        },
-        {
           "url": "Jay Chou 周杰伦/七里香.flac",
           "title": "七里香.flac",
           "name": "七里香.flac",
@@ -150,9 +160,9 @@
           "artist": "5 20AM.m4a"
         }
       ],
-      "song_count": 5,
+      "song_count": 4,
       "created_at": 1766203516.2184994,
-      "updated_at": 1766291863.692689,
+      "updated_at": 1766313480.4210773,
       "current_playing_index": -1
     },
     {
@@ -170,6 +180,26 @@
           "artist": "JACKY ZHANG – first round (19th Chopin Competition, Warsaw)"
         },
         {
+          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
+          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766313552,
+          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
+          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=hKkThdjHpYE",
+          "title": "JACKY ZHANG – first round (19th Chopin Competition, Warsaw)",
+          "name": "JACKY ZHANG – first round (19th Chopin Competition, Warsaw)",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766313551,
+          "thumbnail_url": "https://img.youtube.com/vi/hKkThdjHpYE/default.jpg",
+          "artist": "JACKY ZHANG – first round (19th Chopin Competition, Warsaw)"
+        },
+        {
           "url": "Jolin Tsai - Jolin Tsai Play World Tour (Live) (2018)/01 - Medusa (Play World Tour Live).flac",
           "title": "01 - Medusa (Play World Tour Live).flac",
           "name": "01 - Medusa (Play World Tour Live).flac",
@@ -178,41 +208,11 @@
           "ts": 1766292326,
           "thumbnail_url": null,
           "artist": "01 - Medusa (Play World Tour Live).flac"
-        },
-        {
-          "url": "Fayer 飞儿/Lydia.flac",
-          "title": "Lydia.flac",
-          "name": "Lydia.flac",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766292239,
-          "thumbnail_url": null,
-          "artist": "Lydia.flac"
-        },
-        {
-          "url": "KDA/K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
-          "title": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
-          "name": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766292113,
-          "thumbnail_url": null,
-          "artist": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac"
-        },
-        {
-          "url": "KDA/K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac",
-          "title": "K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac",
-          "name": "K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766292091,
-          "thumbnail_url": null,
-          "artist": "K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac"
         }
       ],
-      "song_count": 5,
+      "song_count": 4,
       "created_at": 1766291870.923414,
-      "updated_at": 1766292326.3030133,
+      "updated_at": 1766313552.8801522,
       "current_playing_index": -1
     }
   ]

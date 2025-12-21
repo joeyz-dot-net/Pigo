@@ -17,19 +17,9 @@ export class Debug {
             debugLogs: document.getElementById('debugLogs'),
             themeDarkBtn: document.getElementById('themeDarkBtn'),
             themeLightBtn: document.getElementById('themeLightBtn'),
-            startStreamBtn: document.getElementById('startStreamBtn'),
-            stopStreamBtn: document.getElementById('stopStreamBtn'),
-            streamStatusDisplay: document.getElementById('streamStatusDisplay'),
-            streamStatusText: document.getElementById('streamStatusText'),
-            logToggle: document.getElementById('logToggle'),
-            streamSpeed: document.getElementById('streamSpeed'),
-            streamTotal: document.getElementById('streamTotal'),
-            streamDuration: document.getElementById('streamDuration'),
-            streamClients: document.getElementById('streamClients'),
-            streamFormat: document.getElementById('streamFormat')
+            logToggle: document.getElementById('logToggle')
         };
         this.themeManager = themeManager;
-        this.isStreaming = false;
     }
 
     // 初始化调试面板
@@ -47,14 +37,6 @@ export class Debug {
     // 启动推流统计轮询
     startStreamStatsPolling() {
         // 清除旧的轮询
-        if (this.streamStatsInterval) {
-            clearInterval(this.streamStatsInterval);
-        }
-        
-        // 每1秒更新一次推流统计
-        this.streamStatsInterval = setInterval(() => {
-            this.updateStreamStats();
-        }, 1000);
     }
     
     // 停止推流统计轮询
@@ -130,18 +112,6 @@ export class Debug {
             });
         }
 
-        // 推流控制按钮
-        if (this.elements.startStreamBtn) {
-            this.elements.startStreamBtn.addEventListener('click', () => {
-                this.startBrowserStream();
-            });
-        }
-        if (this.elements.stopStreamBtn) {
-            this.elements.stopStreamBtn.addEventListener('click', () => {
-                this.stopBrowserStream();
-            });
-        }
-
         // 主题切换按钮
         if (this.elements.themeDarkBtn) {
             this.elements.themeDarkBtn.addEventListener('click', () => {
@@ -201,7 +171,6 @@ export class Debug {
         this.updatePlayerInfo();
         this.updatePlaylistInfo();
         this.updateStorageInfo();
-        this.updateStreamStats();
         this.updateLogs();
     }
 
@@ -273,65 +242,6 @@ export class Debug {
         }
     }
 
-    // 更新推流统计信息
-    async updateStreamStats() {
-        try {
-            const response = await fetch('/stream/status');
-            const result = await response.json();
-            
-            // 处理响应数据
-            const data = result.data || result || {};
-            
-            // 更新速度
-            if (this.elements.streamSpeed) {
-                const speed = data.avg_speed !== undefined ? data.avg_speed : data.avg_speed_kbps || 0;
-                this.elements.streamSpeed.textContent = `速度: ${speed} KB/s`;
-            }
-            
-            // 更新总数据
-            if (this.elements.streamTotal) {
-                const total = data.total_mb || 0;
-                this.elements.streamTotal.textContent = `总数据: ${total} MB`;
-            }
-            
-            // 更新用时
-            if (this.elements.streamDuration) {
-                const duration = Math.floor(data.duration || 0);
-                this.elements.streamDuration.textContent = `用时: ${duration} s`;
-            }
-            
-            // 更新活跃客户端
-            if (this.elements.streamClients) {
-                const clients = data.active_clients || 0;
-                this.elements.streamClients.textContent = `活跃客户端: ${clients}`;
-            }
-            
-            // 更新格式
-            if (this.elements.streamFormat) {
-                const format = data.format || '--';
-                this.elements.streamFormat.textContent = `格式: ${format}`;
-            }
-        } catch (err) {
-            console.error('[调试] 获取推流统计失败:', err);
-            // 显示离线状态
-            if (this.elements.streamSpeed) {
-                this.elements.streamSpeed.textContent = `速度: -- KB/s`;
-            }
-            if (this.elements.streamTotal) {
-                this.elements.streamTotal.textContent = `总数据: -- MB`;
-            }
-            if (this.elements.streamDuration) {
-                this.elements.streamDuration.textContent = `用时: -- s`;
-            }
-            if (this.elements.streamClients) {
-                this.elements.streamClients.textContent = `活跃客户端: --`;
-            }
-            if (this.elements.streamFormat) {
-                this.elements.streamFormat.textContent = `格式: --`;
-            }
-        }
-    }
-
     // 获取日志颜色
     getLogColor(type) {
         switch (type) {
@@ -376,77 +286,6 @@ export class Debug {
                 this.elements.themeDarkBtn.style.fontWeight = 'normal';
                 this.elements.themeLightBtn.style.borderColor = '#667eea';
                 this.elements.themeLightBtn.style.fontWeight = 'bold';
-            }
-        }
-    }
-
-    // 开启浏览器推流
-    startBrowserStream() {
-        if (this.isStreaming) {
-            console.log('[推流] 推流已在运行中');
-            return;
-        }
-        
-        const streamFormat = 'mp3';  // 默认格式 mp3
-        console.log(`[推流] 手动开启推流 (格式: ${streamFormat})`);
-        
-        // 调用 player 的推流方法
-        if (this.player && typeof this.player.startBrowserStream === 'function') {
-            this.isStreaming = true;
-            
-            // 绑定推流事件以更新状态
-            this.player.on('stream:connecting', () => {
-                console.log('[推流] 正在连接...');
-            });
-            
-            this.player.on('stream:ready', () => {
-                console.log('[推流] 推流已就绪');
-                this.updateStreamStatus(true);
-            });
-            
-            this.player.on('stream:playing', () => {
-                console.log('[推流] 推流播放中');
-                this.updateStreamStatus(true);
-            });
-            
-            this.player.on('stream:error', (data) => {
-                console.error('[推流] 推流错误:', data.errorMsg);
-                this.updateStreamStatus(false);
-                this.isStreaming = false;
-            });
-            
-            // 启动推流
-            this.player.startBrowserStream(streamFormat);
-            this.updateStreamStatus(true);
-        }
-    }
-
-    // 停止浏览器推流
-    stopBrowserStream() {
-        const audioElement = document.getElementById('browserStreamAudio');
-        if (audioElement && !audioElement.paused) {
-            audioElement.pause();
-            audioElement.currentTime = 0;
-            audioElement.src = '';
-            console.log('[推流] 已停止推流');
-            this.isStreaming = false;
-            this.updateStreamStatus(false);
-        }
-    }
-
-    // 更新推流状态指示器
-    updateStreamStatus(isActive) {
-        if (this.elements.streamStatusDisplay && this.elements.streamStatusText) {
-            if (isActive) {
-                this.elements.streamStatusDisplay.textContent = '●';
-                this.elements.streamStatusDisplay.style.color = '#4CAF50';
-                this.elements.streamStatusText.textContent = '激活中';
-                this.elements.streamStatusText.style.color = '#4CAF50';
-            } else {
-                this.elements.streamStatusDisplay.textContent = '●';
-                this.elements.streamStatusDisplay.style.color = '#f44336';
-                this.elements.streamStatusText.textContent = '未激活';
-                this.elements.streamStatusText.style.color = '#f44336';
             }
         }
     }
