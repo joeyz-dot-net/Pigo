@@ -92,22 +92,46 @@ class ModuleFilter(logging.Filter):
 
 
 class RouteFilter(logging.Filter):
-    """按 API 路由过滤日志"""
+    """按 API 路由过滤日志 - 对高频请求进行采样"""
     
     def __init__(self, logging_manager):
         super().__init__()
         self.logging_manager = logging_manager
     
     def filter(self, record):
-        # 检查日志消息中是否包含路由名
+        # 检查日志消息中是否包含需要采样的路由名
         message = record.getMessage()
         routes = self.logging_manager.config.get('routes', {})
         
         for route_name, should_filter in routes.items():
             if route_name in message and should_filter:
-                # 采样采用
+                # 对该路由的日志进行采样
                 sample_rate = self.logging_manager.config.get('polling_sample_rate', 0.1)
                 return random.random() < sample_rate
+        
+        return True  # 默认允许
+
+
+class UvicornAccessLogFilter(logging.Filter):
+    """Uvicorn 访问日志过滤器 - 对高频 polling 请求进行采样"""
+    
+    def __init__(self, logging_manager=None):
+        super().__init__()
+        if logging_manager is None:
+            logging_manager = LoggingManager()
+        self.logging_manager = logging_manager
+    
+    def filter(self, record):
+        message = record.getMessage()
+        
+        # 检查是否为需要采样的路由
+        routes = self.logging_manager.config.get('routes', {})
+        for route_name, should_filter in routes.items():
+            if route_name in message and should_filter:
+                # 采样：只记录 1/10 的请求
+                sample_rate = self.logging_manager.config.get('polling_sample_rate', 0.1)
+                if random.random() >= sample_rate:
+                    return False  # 过滤掉这条日志
         
         return True  # 默认允许
 

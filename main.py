@@ -23,7 +23,12 @@ def main():
     """启动 FastAPI 服务器"""
     
     # 初始化日志配置系统（可通过 settings.ini [logging] 部分自定义）
-    setup_logging()
+    logging_manager = setup_logging()
+    
+    # 设置 Uvicorn 访问日志过滤 - 对 /status 请求进行采样
+    from models.logging_config import UvicornAccessLogFilter
+    access_logger = logging.getLogger("uvicorn.access")
+    access_logger.addFilter(UvicornAccessLogFilter(logging_manager))
     
     # 读取配置文件
     config_file = "settings.ini"
@@ -43,7 +48,7 @@ def main():
     
     print(f"\n启动 FastAPI 服务器...")
     print(f"地址: http://{host}:{port}")
-    print(f"日志优化: /status 请求采样记录（每10个记录1条）")
+    print(f"日志优化: /status 和 /stream/status 请求采样记录（每10个记录1条）")
     print(f"        stream 相关请求保留完整输出（便于调试）")
     print(f"按 Ctrl+C 停止服务器\n")
     
@@ -57,7 +62,7 @@ def main():
         host=host,
         port=port,
         reload=False,
-        log_level="info",
+        log_level="debug",
         use_colors=False,  # 禁用 ANSI 彩色输出，避免乱码
         # Windows 上不支持多进程 workers，使用 asyncio 单进程处理并发
         limit_concurrency=1024,  # 最大并发连接数
