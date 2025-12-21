@@ -20,16 +20,6 @@
           "artist": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧"
         },
         {
-          "url": "ETC/5 20AM.m4a",
-          "title": "5 20AM.m4a",
-          "name": "5 20AM.m4a",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766291611,
-          "thumbnail_url": null,
-          "artist": "5 20AM.m4a"
-        },
-        {
           "url": "KDA/K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
           "title": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
           "name": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
@@ -60,9 +50,9 @@
           "artist": "01. G.E.M.邓紫棋 - 我的秘密 (G.E.M.重生版).flac"
         }
       ],
-      "song_count": 5,
+      "song_count": 4,
       "created_at": 1766198864.462621,
-      "updated_at": 1766326086.9307775,
+      "updated_at": 1766350462.345262,
       "current_playing_index": -1
     },
     {

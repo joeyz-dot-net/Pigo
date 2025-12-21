@@ -15,42 +15,15 @@ if sys.stdout.encoding != "utf-8":
 import uvicorn
 import configparser
 
-# ============================================
-# 日志配置 - 过滤高频轮询请求
-# ============================================
-
-class PollingRequestFilter(logging.Filter):
-    """过滤高频轮询请求的日志（保留 stream 完整输出用于调试）"""
-    
-    FILTERED_PATHS = {
-        "/status",
-        # "/stream/status",  # 注释：保留 stream 完整输出便于调试
-        "/static/",
-    }
-    
-    COUNTERS = {}
-    
-    def filter(self, record):
-        """只让采样的日志通过"""
-        message = record.getMessage()
-        
-        if "HTTP" in message:
-            for path in self.FILTERED_PATHS:
-                if path in message:
-                    # 采样：每10个请求记录1次
-                    self.COUNTERS[path] = self.COUNTERS.get(path, 0) + 1
-                    if self.COUNTERS[path] % 10 != 0:
-                        return False
-                    break
-        return True
-
-# 在应用启动前配置日志过滤
-logging.getLogger("uvicorn.access").addFilter(PollingRequestFilter())
-logging.getLogger("uvicorn").addFilter(PollingRequestFilter())
+# 导入新的日志配置系统
+from models.logging_config import setup_logging
 
 
 def main():
     """启动 FastAPI 服务器"""
+    
+    # 初始化日志配置系统（可通过 settings.ini [logging] 部分自定义）
+    setup_logging()
     
     # 读取配置文件
     config_file = "settings.ini"

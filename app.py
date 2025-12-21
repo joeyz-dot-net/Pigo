@@ -1737,7 +1737,18 @@ async def stream_play(request: Request, format: str = "mp3", t: str = None):
     - Safari：更频繁的心跳（300ms）
     - Chrome/Firefox/Edge：标准配置
     """
-    # 🔧 检测浏览器类型
+    # � 检查推流功能是否启用
+    try:
+        enable_stream = SETTINGS.get('enable_stream', True) if SETTINGS else True
+        if not enable_stream:
+            return JSONResponse(
+                status_code=403,
+                content={"status": "ERROR", "message": "推流功能已禁用"}
+            )
+    except Exception as e:
+        logger.warning(f"[STREAM] 检查推流配置失败: {e}")
+    
+    # �🔧 检测浏览器类型
     user_agent = request.headers.get("user-agent", "")
     browser_type = detect_browser(user_agent)
     
@@ -1903,6 +1914,18 @@ async def stream_debug_browser(request: Request):
 async def stream_control(request: Request):
     """流控制接口"""
     import models.stream as stream_module
+    
+    # 🔥 检查推流功能是否启用
+    try:
+        enable_stream = SETTINGS.get('enable_stream', True) if SETTINGS else True
+        if not enable_stream:
+            return JSONResponse(
+                status_code=403,
+                content={"status": "ERROR", "message": "推流功能已禁用"}
+            )
+    except Exception as e:
+        logger.warning(f"[STREAM] 检查推流配置失败: {e}")
+    
     try:
         form = await request.form()
         action = form.get("action", "").strip()
@@ -1992,6 +2015,27 @@ async def stream_resend(seq_id: int):
 async def stream_status():
     """推流状态 - 详细的性能和客户端统计"""
     import models.stream as stream_module
+    
+    # 🔥 检查推流功能是否启用
+    try:
+        enable_stream = SETTINGS.get('enable_stream', True) if SETTINGS else True
+        if not enable_stream:
+            return JSONResponse({
+                "status": "OK",
+                "data": {
+                    "running": False,
+                    "format": "--",
+                    "duration": 0,
+                    "total_bytes": 0,
+                    "total_mb": 0,
+                    "avg_speed": 0,
+                    "active_clients": 0,
+                    "is_active": False,
+                    "status_text": "❌ 推流功能已禁用"
+                }
+            })
+    except Exception as e:
+        logger.warning(f"[STREAM] 检查推流配置失败: {e}")
     
     stats = stream_module.get_stream_stats()
     
