@@ -182,9 +182,9 @@ def setup_logging(logging_manager=None):
     if not root_logger.handlers:
         handler = logging.StreamHandler()
         handler.setLevel(level_int)
+        # 【修改】移除日志中的时间戳显示
         formatter = logging.Formatter(
-            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            '[%(name)s] %(levelname)s: %(message)s'
         )
         handler.setFormatter(formatter)
         root_logger.addHandler(handler)

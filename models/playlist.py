@@ -4,8 +4,11 @@
 
 import json
 import os
+import logging
 from abc import ABC, abstractmethod
 from .song import Song, LocalSong, StreamSong
+
+logger = logging.getLogger(__name__)
 
 
 class BasePlaylist(ABC):
@@ -188,9 +191,9 @@ class CurrentPlaylist(BasePlaylist):
                         if song is current_song:
                             self._current_index = idx
                             break
-            print(f"[INFO] 播放列表已重排序（sort_by={sort_by}, reverse={reverse}）")
+            logger.info(f"播放列表已重排序（sort_by={sort_by}, reverse={reverse}）")
         except Exception as e:
-            print(f"[ERROR] 播放列表排序失败: {e}")
+            logger.error(f"播放列表排序失败: {e}")
             import traceback
             traceback.print_exc()
 
@@ -207,15 +210,15 @@ class CurrentPlaylist(BasePlaylist):
             if 0 <= index < len(self._items):
                 self._current_index = index
             else:
-                print(f"[ERROR] CurrentPlaylist.play: 索引 {index} 超出范围")
+                logger.error(f"CurrentPlaylist.play: 索引 {index} 超出范围")
                 return False
         song = self.get_current()
         if song is None:
-            print(f"[ERROR] CurrentPlaylist.play: 没有当前歌曲")
+            logger.error(f"CurrentPlaylist.play: 没有当前歌曲")
             return False
-        print(f"[DEBUG] CurrentPlaylist.play -> 索引={self._current_index}, 歌曲类型={type(song).__name__}")
+        logger.debug(f"CurrentPlaylist.play -> 索引={self._current_index}, 歌曲类型={type(song).__name__}")
         if isinstance(song, LocalSong):
-            print(f"[DEBUG] 调用本地歌曲播放方法")
+            logger.debug(f"调用本地歌曲播放方法")
             return song.play(
                 mpv_command_func=mpv_command_func,
                 mpv_pipe_exists_func=mpv_pipe_exists_func,
@@ -225,7 +228,7 @@ class CurrentPlaylist(BasePlaylist):
                 music_dir=music_dir,
             )
         elif isinstance(song, StreamSong):
-            print(f"[DEBUG] 调用串流歌曲播放方法")
+            logger.debug(f"调用串流歌曲播放方法")
             return song.play(
                 mpv_command_func=mpv_command_func,
                 mpv_pipe_exists_func=mpv_pipe_exists_func,
@@ -235,7 +238,7 @@ class CurrentPlaylist(BasePlaylist):
                 music_dir=music_dir,
             )
         else:
-            print(f"[ERROR] CurrentPlaylist.play: 未知的歌曲类型 {type(song)}")
+            logger.error(f"CurrentPlaylist.play: 未知的歌曲类型 {type(song)}")
             return False
 
     def play_at_index(self,
@@ -248,7 +251,7 @@ class CurrentPlaylist(BasePlaylist):
         music_dir: str = None,
     ) -> bool:
         if index < 0 or index >= len(self._items):
-            print(f"[ERROR] CurrentPlaylist.play_at_index: 索引 {index} 超出范围")
+            logger.error(f"CurrentPlaylist.play_at_index: 索引 {index} 超出范围")
             return False
         return self.play(
             index=index,
@@ -269,12 +272,12 @@ class CurrentPlaylist(BasePlaylist):
         music_dir: str = None,
     ) -> bool:
         if not self.has_next():
-            print("[INFO] 已到达播放列表末尾")
+            logger.info("已到达播放列表末尾")
             return False
         next_song = self.next()
         if next_song is None:
             return False
-        print(f"[INFO] 已自动播放列表中的下一首: {next_song.title}")
+        logger.info(f"已自动播放列表中的下一首: {next_song.title}")
         return self.play(
             save_to_history=save_to_history,
             mpv_command_func=mpv_command_func,
@@ -359,7 +362,7 @@ class PlayHistory(Playlist):
             # 将该项移动到列表头部
             self._items.pop(existing_index)
             self._items.insert(0, existing_song)
-            print(f"[DEBUG] 已更新播放历史: {name} ({existing_song.type})，播放次数: {existing_song.play_count}，时间戳: {current_timestamp}")
+            logger.debug(f"已更新播放历史: {name} ({existing_song.type})，播放次数: {existing_song.play_count}，时间戳: {current_timestamp}")
         else:
             # 如果不存在，创建新Song对象
             if is_local:
@@ -379,7 +382,7 @@ class PlayHistory(Playlist):
             # 保持列表大小限制
             if self._max_size and len(self._items) > self._max_size:
                 self._items = self._items[: self._max_size]
-            print(f"[DEBUG] 已添加播放历史: {name} ({song.type})，时间戳: {current_timestamp}")
+            logger.debug(f"已添加播放历史: {name} ({song.type})，时间戳: {current_timestamp}")
 
         # 保存到文件
         if self._file_path:
@@ -408,7 +411,7 @@ class PlayHistory(Playlist):
             with open(self._file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"[ERROR] 保存播放历史失败: {e}")
+            logger.error(f"保存播放历史失败: {e}")
 
     def load(self):
         """从文件加载历史记录"""
@@ -432,11 +435,11 @@ class PlayHistory(Playlist):
                             # 恢复每次播放的时间戳列表
                             song.timestamps = item.get('timestamps', str(song.timestamp))
                             self._items.append(song)
-                    print(f"[INFO] 已加载 {len(self._items)} 条播放历史")
+                    logger.info(f"已加载 {len(self._items)} 条播放历史")
                 else:
                     self._items = []
         except Exception as e:
-            print(f"[ERROR] 加载播放历史失败: {e}")
+            logger.error(f"加载播放历史失败: {e}")
             self._items = []
 
     def update_item(self, index: int, **kwargs):
@@ -490,5 +493,5 @@ class PlayHistory(Playlist):
         self._current_index = -1
         if self._file_path:
             self.save()
-        print("[INFO] 播放历史已清空")
+        logger.info("播放历史已清空")
 

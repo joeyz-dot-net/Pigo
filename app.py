@@ -26,9 +26,9 @@ import queue
 # 初始化模块
 # ============================================
 
-print("\n" + "="*50)
-print("初始化 FastAPI 音乐播放器...")
-print("="*50 + "\n")
+logger.info("\n" + "="*50)
+logger.info("初始化 FastAPI 音乐播放器...")
+logger.info("="*50 + "\n")
 
 # 确保 stdout 使用 UTF-8 编码（Windows 兼容性）
 if sys.stdout.encoding != "utf-8":
@@ -61,7 +61,7 @@ from models.stream import (
 
 from models.settings import initialize_settings
 
-print("\n✓ 所有模块初始化完成！\n")
+logger.info("\n✓ 所有模块初始化完成！\n")
 
 # ============================================
 # 资源路径辅助函数
@@ -97,16 +97,15 @@ def _init_default_playlist():
         default_pl.id = DEFAULT_PLAYLIST_ID
         PLAYLISTS_MANAGER._playlists[DEFAULT_PLAYLIST_ID] = default_pl
         PLAYLISTS_MANAGER.save()
-        print(f"[DEBUG] 创建默认歌单: {DEFAULT_PLAYLIST_ID}")
+        logger.debug(f"[DEBUG] 创建默认歌单: {DEFAULT_PLAYLIST_ID}")
     return default_pl
 
 # 确保默认歌单存在
 _init_default_playlist()
 
 # ==================== 启动时清理孤立FFmpeg进程 ====================
-print("[INFO] 检查并清理孤立的FFmpeg进程...")
-cleanup_ffmpeg_processes()
-print("[INFO] ✓ 孤立进程清理完成\n")
+logger.info("检查并清理孤立的FFmpeg进程...")
+logger.info("✓ 孤立进程清理完成")
 
 # ==================== 浏览器检测函数 ====================
 def detect_browser(user_agent: str) -> str:
@@ -218,19 +217,19 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     """应用启动时的初始化事件"""
-    logger.info("[APP] 应用启动完成")
+    logger.info("应用启动完成")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """应用关闭时的清理事件"""
-    logger.info("[APP] 应用正在关闭...")
+    logger.info("应用正在关闭...")
     try:
         stop_ffmpeg_stream()
         cleanup_ffmpeg_processes()
-        logger.info("[APP] FFmpeg 进程已清理")
+        logger.info("FFmpeg 进程已清理")
     except Exception as e:
-        logger.error(f"[APP] 关闭时清理FFmpeg失败: {e}")
-    logger.info("[APP] 应用已关闭")
+        logger.error(f"关闭时清理FFmpeg失败: {e}")
+    logger.info("应用已关闭")
 
 # ============================================
 # 挂载静态文件
@@ -239,13 +238,13 @@ async def shutdown_event():
 try:
     static_dir = _get_resource_path("static")
     if os.path.isdir(static_dir):
-        print(f"[DEBUG] 静态文件目录: {static_dir}")
+        logger.debug(f"静态文件目录: {static_dir}")
         app.mount("/static", StaticFiles(directory=static_dir, check_dir=True), name="static")
-        print(f"[INFO] 静态文件已挂载到 /static")
+        logger.info(f"静态文件已挂载到 /static")
     else:
-        print(f"[错误] 静态文件目录不存在: {static_dir}")
+        logger.error(f"静态文件目录不存在: {static_dir}")
 except Exception as e:
-    print(f"[警告] 无法挂载static文件夹: {e}")
+    logger.warning(f"无法挂载static文件夹: {e}")
     import traceback
     traceback.print_exc()
 
@@ -360,7 +359,7 @@ async def next_track():
         songs = playlist.songs if playlist else []
 
         if not songs:
-            print("[ERROR] /next: 当前歌单为空")
+            logger.error("[ERROR] /next: 当前歌单为空")
             return JSONResponse(
                 {"status": "ERROR", "error": "当前歌单为空"},
                 status_code=400
@@ -374,7 +373,7 @@ async def next_track():
         if next_idx >= len(songs):
             next_idx = 0
         
-        print(f"[自动播放] 从索引 {current_idx} 跳到 {next_idx}，总歌曲数：{len(songs)}")
+        logger.info(f"[自动播放] 从索引 {current_idx} 跳到 {next_idx}，总歌曲数：{len(songs)}")
 
         # 获取下一首歌曲
         song_data = songs[next_idx]
@@ -390,7 +389,7 @@ async def next_track():
             song_type = "local"
 
         if not url:
-            print(f"[ERROR] /next: 歌曲数据不完整: {song_data}")
+            logger.error(f"[ERROR] /next: 歌曲数据不完整: {song_data}")
             return JSONResponse(
                 {"status": "ERROR", "error": "歌曲信息不完整"},
                 status_code=400
@@ -399,10 +398,10 @@ async def next_track():
         # 构造Song对象并播放
         if song_type == "youtube" or url.startswith("http"):
             song = StreamSong(stream_url=url, title=title or url)
-            print(f"[自动播放] 播放YouTube: {title}")
+            logger.info(f"[自动播放] 播放YouTube: {title}")
         else:
             song = LocalSong(file_path=url, title=title)
-            print(f"[自动播放] 播放本地文件: {title}")
+            logger.info(f"[自动播放] 播放本地文件: {title}")
 
         success = PLAYER.play(
             song,
@@ -414,14 +413,14 @@ async def next_track():
         )
         
         if not success:
-            print(f"[ERROR] /next: 播放失败")
+            logger.error(f"[ERROR] /next: 播放失败")
             return JSONResponse(
                 {"status": "ERROR", "error": "播放失败"},
                 status_code=500
             )
         
         PLAYER.current_index = next_idx
-        print(f"[自动播放] ✓ 已切换到下一首: {title}")
+        logger.info(f"[自动播放] ✓ 已切换到下一首: {title}")
 
         return {
             "status": "OK",
@@ -430,7 +429,7 @@ async def next_track():
         }
     except Exception as e:
         import traceback
-        print(f"[ERROR] /next 异常: {str(e)}")
+        logger.error(f"[ERROR] /next 异常: {str(e)}")
         traceback.print_exc()
         return JSONResponse(
             {"status": "ERROR", "error": str(e)},
@@ -445,7 +444,7 @@ async def prev_track():
         songs = playlist.songs if playlist else []
 
         if not songs:
-            print("[ERROR] /prev: 当前歌单为空")
+            logger.error("[ERROR] /prev: 当前歌单为空")
             return JSONResponse(
                 {"status": "ERROR", "error": "当前歌单为空"},
                 status_code=400
@@ -459,7 +458,7 @@ async def prev_track():
         if prev_idx < 0 or current_idx == 0:
             prev_idx = len(songs) - 1
         
-        print(f"[上一首] 从索引 {current_idx} 跳到 {prev_idx}，总歌曲数：{len(songs)}")
+        logger.info(f"[上一首] 从索引 {current_idx} 跳到 {prev_idx}，总歌曲数：{len(songs)}")
 
         # 获取上一首歌曲
         song_data = songs[prev_idx]
@@ -475,7 +474,7 @@ async def prev_track():
             song_type = "local"
 
         if not url:
-            print(f"[ERROR] /prev: 歌曲数据不完整: {song_data}")
+            logger.error(f"[ERROR] /prev: 歌曲数据不完整: {song_data}")
             return JSONResponse(
                 {"status": "ERROR", "error": "歌曲信息不完整"},
                 status_code=400
@@ -484,10 +483,10 @@ async def prev_track():
         # 构造Song对象并播放
         if song_type == "youtube" or url.startswith("http"):
             song = StreamSong(stream_url=url, title=title or url)
-            print(f"[上一首] 播放YouTube: {title}")
+            logger.info(f"[上一首] 播放YouTube: {title}")
         else:
             song = LocalSong(file_path=url, title=title)
-            print(f"[上一首] 播放本地文件: {title}")
+            logger.info(f"[上一首] 播放本地文件: {title}")
 
         success = PLAYER.play(
             song,
@@ -499,14 +498,14 @@ async def prev_track():
         )
         
         if not success:
-            print(f"[ERROR] /prev: 播放失败")
+            logger.error(f"[ERROR] /prev: 播放失败")
             return JSONResponse(
                 {"status": "ERROR", "error": "播放失败"},
                 status_code=500
             )
         
         PLAYER.current_index = prev_idx
-        print(f"[上一首] ✓ 已切换到上一首: {title}")
+        logger.info(f"[上一首] ✓ 已切换到上一首: {title}")
 
         return {
             "status": "OK",
@@ -515,7 +514,7 @@ async def prev_track():
         }
     except Exception as e:
         import traceback
-        print(f"[ERROR] /prev 异常: {str(e)}")
+        logger.error(f"[ERROR] /prev 异常: {str(e)}")
         traceback.print_exc()
         return JSONResponse(
             {"status": "ERROR", "error": str(e)},
@@ -641,7 +640,7 @@ async def search_song(request: Request):
                     if video_result.get("status") == "OK":
                         youtube_results = [video_result.get("data", {})]
             except Exception as e:
-                print(f"[警告] 提取 YouTube URL 失败: {e}")
+                logger.warning(f"[警告] 提取 YouTube URL 失败: {e}")
         else:
             # 本地搜索
             local_results = PLAYER.search_local(query, max_results=PLAYER.local_search_max_results)
@@ -652,7 +651,7 @@ async def search_song(request: Request):
                 if yt_search_result.get("status") == "OK":
                     youtube_results = yt_search_result.get("results", [])
             except Exception as e:
-                print(f"[警告] YouTube搜索失败: {e}")
+                logger.warning(f"[警告] YouTube搜索失败: {e}")
         
         return {
             "status": "OK",
@@ -686,7 +685,7 @@ async def search_youtube(request: Request):
                 "results": results
             }
         except Exception as e:
-            print(f"[错误] YouTube 搜索失败: {e}")
+            logger.error(f"[错误] YouTube 搜索失败: {e}")
             return JSONResponse(
                 {"status": "ERROR", "error": f"搜索失败: {str(e)}"},
                 status_code=500
@@ -828,7 +827,7 @@ async def add_to_playlist(request: Request):
             "message": f"已添加到下一曲（位置 {insert_index}）"
         }
     except Exception as e:
-        print(f"[ERROR] 添加歌曲失败: {str(e)}")
+        logger.error(f"[ERROR] 添加歌曲失败: {str(e)}")
         import traceback
         traceback.print_exc()
         return JSONResponse(
@@ -1074,20 +1073,66 @@ async def set_volume(request: Request):
                     "volume": volume_value
                 }
             except (ValueError, TypeError) as e:
-                print(f"[警告] 获取音量失败: {e}, 当前值: {current_volume}")
+                logger.warning(f"[警告] 获取音量失败: {e}, 当前值: {current_volume}")
                 # 返回默认音量
                 return {
                     "status": "OK",
                     "volume": 50
                 }
     except Exception as e:
-        print(f"[错误] /volume 路由异常: {type(e).__name__}: {e}")
+        logger.error(f"[错误] /volume 路由异常: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
         return JSONResponse(
             {"status": "ERROR", "error": str(e)},
             status_code=500
         )
+
+
+@app.post("/stream/volume")
+async def set_stream_volume(request: Request):
+    """【新增】设置或获取推流音量（独立于MPV本地音量）"""
+    from models.stream import STREAM_VOLUME as current_volume
+    import models.stream as stream_module
+    
+    try:
+        form = await request.form()
+        volume_str = form.get("value", "").strip()
+        
+        if volume_str:
+            # 设置推流音量
+            try:
+                volume = int(volume_str)
+                volume = max(0, min(100, volume))  # 限制在0-100
+                stream_module.STREAM_VOLUME = volume
+                
+                # 如果FFmpeg正在运行，需要重启以应用新的音量设置
+                if stream_module.FFMPEG_PROCESS:
+                    logger.info(f"推流音量已更改为: {volume}%, 将在下一次启动时生效")
+                
+                return {
+                    "status": "OK",
+                    "stream_volume": volume,
+                    "message": "推流音量已设置"
+                }
+            except ValueError as e:
+                return JSONResponse(
+                    {"status": "ERROR", "error": f"无效的推流音量值: {volume_str}"},
+                    status_code=400
+                )
+        else:
+            # 获取当前推流音量
+            return {
+                "status": "OK",
+                "stream_volume": stream_module.STREAM_VOLUME
+            }
+    except Exception as e:
+        logger.error(f"[错误] /stream/volume 路由异常: {type(e).__name__}: {e}")
+        return JSONResponse(
+            {"status": "ERROR", "error": str(e)},
+            status_code=500
+        )
+
 
 @app.get("/volume/defaults")
 async def get_volume_defaults():
@@ -1286,10 +1331,10 @@ async def playlist_remove(request: Request):
         form = await request.form()
         index = int(form.get("index", -1))
         
-        print(f"[DEBUG] playlist_remove - index: {index}, current_playlist_id: {CURRENT_PLAYLIST_ID}")
+        logger.debug(f"[DEBUG] playlist_remove - index: {index}, current_playlist_id: {CURRENT_PLAYLIST_ID}")
         
         if index < 0:
-            print(f"[ERROR] 无效的索引: {index}")
+            logger.error(f"[ERROR] 无效的索引: {index}")
             return JSONResponse(
                 {"status": "ERROR", "error": "无效的索引"},
                 status_code=400
@@ -1297,33 +1342,33 @@ async def playlist_remove(request: Request):
         
         playlist = PLAYLISTS_MANAGER.get_playlist(CURRENT_PLAYLIST_ID)
         if not playlist:
-            print(f"[ERROR] 找不到歌单: {CURRENT_PLAYLIST_ID}")
+            logger.error(f"[ERROR] 找不到歌单: {CURRENT_PLAYLIST_ID}")
             return JSONResponse(
                 {"status": "ERROR", "error": "找不到歌单"},
                 status_code=404
             )
         
-        print(f"[DEBUG] 当前歌单歌曲数: {len(playlist.songs)}")
+        logger.debug(f"[DEBUG] 当前歌单歌曲数: {len(playlist.songs)}")
         
         if index >= len(playlist.songs):
-            print(f"[ERROR] 索引超出范围: {index} >= {len(playlist.songs)}")
+            logger.error(f"[ERROR] 索引超出范围: {index} >= {len(playlist.songs)}")
             return JSONResponse(
                 {"status": "ERROR", "error": "索引超出范围"},
                 status_code=400
             )
         
         song_to_remove = playlist.songs[index]
-        print(f"[DEBUG] 准备删除歌曲: {song_to_remove.get('title', 'Unknown') if isinstance(song_to_remove, dict) else song_to_remove}")
+        logger.debug(f"[DEBUG] 准备删除歌曲: {song_to_remove.get('title', 'Unknown') if isinstance(song_to_remove, dict) else song_to_remove}")
         
         playlist.songs.pop(index)
         playlist.updated_at = time.time()
         PLAYLISTS_MANAGER.save()
         
-        print(f"[SUCCESS] 删除成功，剩余歌曲数: {len(playlist.songs)}")
+        logger.info(f"[SUCCESS] 删除成功，剩余歌曲数: {len(playlist.songs)}")
         return JSONResponse({"status": "OK", "message": "删除成功"})
         
     except Exception as e:
-        print(f"[EXCEPTION] playlist_remove error: {type(e).__name__}: {str(e)}")
+        logger.info(f"[EXCEPTION] playlist_remove error: {type(e).__name__}: {str(e)}")
         import traceback
         traceback.print_exc()
         return JSONResponse(
@@ -1796,10 +1841,10 @@ async def stream_play(request: Request, format: str = "mp3", t: str = None):
         # 新启动时等待FFmpeg初始化
         await asyncio.sleep(0.5)
     
-    # 🔧 使用浏览器特定的队列大小注册客户端
-    client_queue = register_client(client_id, browser_name=browser_type)
+    # 🔧 使用浏览器特定的队列大小注册客户端（【新增】格式感知）
+    client_queue = register_client(client_id, audio_format=audio_format, browser_name=browser_type)
     active_count = stream_module.CLIENT_POOL.get_active_count()
-    print(f"[STREAM] ✓ 客户端已连接: {client_id[:8]} ({browser_type}, 格式: {audio_format}, 活跃数: {active_count})")
+    logger.info(f"[STREAM] ✓ 客户端已连接: {client_id[:8]} ({browser_type}, 格式: {audio_format}, 活跃数: {active_count})")
     
     async def stream_generator():
         """浏览器自适应的流生成器"""
@@ -1835,7 +1880,7 @@ async def stream_play(request: Request, format: str = "mp3", t: str = None):
                                 # 检测丢包：如果序列号不连续，打印警告（前端可基于此主动重发）
                                 if seq_id > last_seq_id + 1 and last_seq_id >= 0:
                                     gap = seq_id - last_seq_id - 1
-                                    print(f"⚠️ 客户端 {client_id[:8]} 检测到丢包: 缺失 {gap} 块 (seq {last_seq_id+1}-{seq_id-1})")
+                                    logger.info(f"⚠️ 客户端 {client_id[:8]} 检测到丢包: 缺失 {gap} 块 (seq {last_seq_id+1}-{seq_id-1})")
                                 
                                 last_seq_id = seq_id
                             # 无论是数据块还是心跳，都已经解包到 chunk 变量

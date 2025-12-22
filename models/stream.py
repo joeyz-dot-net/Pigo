@@ -24,26 +24,9 @@ import struct
 
 logger = logging.getLogger(__name__)
 
-# 配置日志格式 - 添加时间戳
-def _setup_logger():
-    """配置 stream 模块的日志格式"""
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            '%(asctime)s [%(levelname)s] %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
+# 【改进】移除独立的logger配置，统一使用根logger的配置
+# stream模块的logger会自动继承根logger的formatter和filter配置
 
-_setup_logger()
-
-# 时间戳辅助函数
-def _timestamp():
-    """获取当前时间戳字符串"""
-    from datetime import datetime
-    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 # ==================== 推流格式配置 ====================
 # 从 settings.ini 读取默认推流格式
@@ -59,14 +42,188 @@ def get_default_stream_format():
             if fmt.strip():
                 return fmt.strip().lower()
     except Exception as e:
-        print(f"[WARN] Failed to read default_stream_format from settings.ini: {e}")
+        logger.warning(f"Failed to read default_stream_format from settings.ini: {e}")
     return "mp3"  # 最终回退默认值
 
 DEFAULT_STREAM_FORMAT = get_default_stream_format()
 
+# ==================== 【新增】格式专用优化配置 ====================
+def load_audio_format_config():
+    """从settings.ini加载音频格式配置"""
+    try:
+        import configparser
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "settings.ini")
+        if os.path.exists(config_path):
+            config = configparser.ConfigParser()
+            config.read(config_path, encoding="utf-8")
+            
+            formats_cfg = {}
+            if config.has_section('formats'):
+                for fmt_name in config.options('formats'):
+                    try:
+                        parts = config.get('formats', fmt_name).split(',')
+                        if len(parts) >= 6:
+                            codec, bitrate, profile, chunk_kb, heartbeat, queue_mult = parts[:6]
+                            formats_cfg[fmt_name] = {
+                                'ffmpeg_codec': codec.strip(),
+                                'ffmpeg_bitrate': bitrate.strip() if bitrate.strip() else None,
+                                'ffmpeg_profile': profile.strip() if profile.strip() else None,
+                                'chunk_size': int(chunk_kb.strip()) * 1024,
+                                'heartbeat_interval': float(heartbeat.strip()),
+                                'queue_size_multiplier': float(queue_mult.strip()),
+                                'description': f'{fmt_name.upper()} ({codec.strip()})'
+                            }
+                    except Exception as e:
+                        logger.warning(f"解析格式配置失败 ({fmt_name}): {e}")
+            
+            if formats_cfg:
+                logger.info(f"从settings.ini加载了 {len(formats_cfg)} 种音频格式配置")
+                return formats_cfg
+    except Exception as e:
+        logger.warning(f"加载格式配置失败: {e}")
+    
+    # 回退到默认配置
+    return {
+        'mp3': {
+            'ffmpeg_codec': 'libmp3lame',
+            'ffmpeg_bitrate': '128k',
+            'ffmpeg_profile': None,
+            'chunk_size': 192 * 1024,
+            'heartbeat_interval': 1.0,
+            'queue_size_multiplier': 1.0,
+            'description': 'MP3 (MPEG Layer-3)'
+        },
+        'aac': {
+            'ffmpeg_codec': 'aac',
+            'ffmpeg_bitrate': '96k',
+            'ffmpeg_profile': 'aac_low',
+            'chunk_size': 128 * 1024,
+            'heartbeat_interval': 0.5,
+            'queue_size_multiplier': 1.5,
+            'description': 'AAC (Advanced Audio Coding)'
+        },
+        'flac': {
+            'ffmpeg_codec': 'flac',
+            'ffmpeg_bitrate': None,
+            'ffmpeg_profile': None,
+            'chunk_size': 256 * 1024,
+            'heartbeat_interval': 1.0,
+            'queue_size_multiplier': 0.8,
+            'description': 'FLAC (Free Lossless Audio Codec)'
+        }
+    }
+
+AUDIO_FORMAT_CONFIG = load_audio_format_config()
+
+# ==================== 【新增】浏览器 × 格式 组合配置 ====================
+def load_browser_format_config():
+    """从settings.ini加载浏览器×格式配置"""
+    try:
+        import configparser
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "settings.ini")
+        if os.path.exists(config_path):
+            config = configparser.ConfigParser()
+            config.read(config_path, encoding="utf-8")
+            
+            # 首先获取默认的浏览器配置
+            browser_defaults = {}
+            if config.has_section('browser_configs'):
+                for browser_name in config.options('browser_configs'):
+                    try:
+                        parts = config.get('browser_configs', browser_name).split(',')
+                        if len(parts) >= 4:
+                            queue_blocks, hb_ms, timeout, keepalive_size = parts[:4]
+                            browser_defaults[browser_name] = {
+                                'queue_blocks': int(queue_blocks.strip()),
+                                'heartbeat_interval_ms': int(hb_ms.strip()),
+                                'timeout': int(timeout.strip()),
+                                'keepalive_size': int(keepalive_size.strip())
+                            }
+                    except Exception as e:
+                        logger.warning(f"解析浏览器配置失败 ({browser_name}): {e}")
+            
+            # 然后构建完整的浏览器×格式矩阵
+            browser_format_cfg = {}
+            if config.has_section('browser_format_overrides'):
+                for override_key in config.options('browser_format_overrides'):
+                    try:
+                        parts = override_key.split('_')
+                        if len(parts) >= 2:
+                            browser = parts[0]
+                            fmt = '_'.join(parts[1:])  # 处理格式名中有下划线的情况
+                            
+                            values = config.get('browser_format_overrides', override_key).split(',')
+                            if len(values) >= 3:
+                                queue_blocks, chunk_kb, timeout = values[:3]
+                                
+                                if browser not in browser_format_cfg:
+                                    browser_format_cfg[browser] = {}
+                                
+                                browser_format_cfg[browser][fmt] = {
+                                    'queue_blocks': int(queue_blocks.strip()),
+                                    'chunk_size': int(chunk_kb.strip()) * 1024,
+                                    'timeout': int(timeout.strip())
+                                }
+                    except Exception as e:
+                        logger.warning(f"解析浏览器×格式覆盖失败 ({override_key}): {e}")
+            
+            if browser_format_cfg:
+                logger.info(f"从settings.ini加载了浏览器×格式配置 ({len(browser_format_cfg)} 个浏览器)")
+                return browser_format_cfg
+    except Exception as e:
+        logger.warning(f"加载浏览器×格式配置失败: {e}")
+    
+    # 回退到默认配置
+    return {
+        'safari': {
+            'mp3': {'queue_blocks': 512, 'chunk_size': 192 * 1024, 'timeout': 20},
+            'aac': {'queue_blocks': 768, 'chunk_size': 128 * 1024, 'timeout': 15},
+            'flac': {'queue_blocks': 256, 'chunk_size': 256 * 1024, 'timeout': 20}
+        },
+        'chrome': {
+            'mp3': {'queue_blocks': 64, 'chunk_size': 192 * 1024, 'timeout': 40},
+            'aac': {'queue_blocks': 96, 'chunk_size': 128 * 1024, 'timeout': 35},
+            'flac': {'queue_blocks': 32, 'chunk_size': 256 * 1024, 'timeout': 40}
+        },
+        'edge': {
+            'mp3': {'queue_blocks': 64, 'chunk_size': 192 * 1024, 'timeout': 40},
+            'aac': {'queue_blocks': 96, 'chunk_size': 128 * 1024, 'timeout': 35},
+            'flac': {'queue_blocks': 32, 'chunk_size': 256 * 1024, 'timeout': 40}
+        },
+        'firefox': {
+            'mp3': {'queue_blocks': 64, 'chunk_size': 192 * 1024, 'timeout': 40},
+            'aac': {'queue_blocks': 96, 'chunk_size': 128 * 1024, 'timeout': 35},
+            'flac': {'queue_blocks': 32, 'chunk_size': 256 * 1024, 'timeout': 40}
+        }
+    }
+
+BROWSER_FORMAT_CONFIG = load_browser_format_config()
+
 # ==================== Safari 流媒体优化配置 ====================
-KEEPALIVE_THRESHOLD = 2.0  # 无数据超过2秒才发送心跳（避免频繁干扰）
-KEEPALIVE_CHUNK_SIZE = 128  # 心跳包大小：128字节（最小可感知的数据）
+def load_stream_globals():
+    """从settings.ini加载推流全局配置"""
+    try:
+        import configparser
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "settings.ini")
+        if os.path.exists(config_path):
+            config = configparser.ConfigParser()
+            config.read(config_path, encoding="utf-8")
+            
+            if config.has_section('stream'):
+                keepalive_threshold = float(config.get('stream', 'keepalive_threshold', fallback='2.0'))
+                keepalive_chunk_size = int(config.get('stream', 'keepalive_chunk_size', fallback='128'))
+                broadcast_queue_maxsize = int(config.get('stream', 'broadcast_queue_maxsize', fallback='8192'))
+                broadcast_executor_workers = int(config.get('stream', 'broadcast_executor_workers', fallback='120'))
+                
+                logger.info(f"从settings.ini加载推流全局配置")
+                return keepalive_threshold, keepalive_chunk_size, broadcast_queue_maxsize, broadcast_executor_workers
+    except Exception as e:
+        logger.warning(f"加载推流配置失败: {e}")
+    
+    # 返回默认值
+    return 2.0, 128, 8192, 120
+
+KEEPALIVE_THRESHOLD, KEEPALIVE_CHUNK_SIZE, BROADCAST_QUEUE_MAXSIZE, BROADCAST_EXECUTOR_WORKERS = load_stream_globals()
 
 # 尝试找FFmpeg的完整路径
 def find_ffmpeg():
@@ -85,12 +242,12 @@ def find_ffmpeg():
             # 测试是否能运行
             result = subprocess.run(f'"{path}" -version', shell=True, capture_output=True, timeout=2)
             if result.returncode == 0:
-                print(f"{_timestamp()} [STREAM] 找到FFmpeg: {path}")
+                logger.info(f"找到FFmpeg: {path}")
                 return path
         except:
             pass
     
-    print(f"{_timestamp()} [STREAM] ⚠️ 找不到FFmpeg，将尝试使用 'ffmpeg'")
+    logger.warning(f"找不到FFmpeg，将尝试使用 'ffmpeg'")
     return "ffmpeg"
 
 FFMPEG_CMD = find_ffmpeg()
@@ -110,10 +267,10 @@ def find_available_audio_device():
             config.read(config_path, encoding="utf-8")
             configured_device = config.get("paths", "audio_input_device", fallback="").strip()
             if configured_device:
-                print(f"{_timestamp()} [STREAM] ✓ 使用配置的音频设备: {configured_device}")
+                logger.info(f"✓ 使用配置的音频设备: {configured_device}")
                 return configured_device
     except Exception as e:
-        print(f"{_timestamp()} [STREAM] ⚠️ 读取音频设备配置失败: {e}")
+        logger.warning(f"读取音频设备配置失败: {e}")
     
     # 🔥 自动检测可用设备
     try:
@@ -139,24 +296,24 @@ def find_available_audio_device():
                 if start != -1 and end != -1 and start < end:
                     device_name = line[start+1:end]
                     audio_devices.append(device_name)
-                    print(f"[STREAM] 检测到音频设备: {device_name}")
+                    logger.info(f"[STREAM] 检测到音频设备: {device_name}")
         
-        # 优先选择：1. CABLE Output 2. 虚拟设备 3. 第一个可用设备
+        # Prioritize: 1. CABLE Output 2. Virtual device 3. First available device
         for device in audio_devices:
             if 'CABLE' in device or 'Virtual' in device or 'Stereo Mix' in device:
-                print(f"{_timestamp()} [STREAM] 选择虚拟设备: {device}")
+                logger.info(f"选择虚拟设备: {device}")
                 return device
         
         if audio_devices:
-            print(f"{_timestamp()} [STREAM] 选择第一个可用设备: {audio_devices[0]}")
+            logger.info(f"选择第一个可用设备: {audio_devices[0]}")
             return audio_devices[0]
         
-        # 如果没有找到，使用默认设备
-        print(f"{_timestamp()} [STREAM] 未找到音频设备，尝试使用默认 loopback 设备")
+        # No device found, use default
+        logger.warning("未找到音频设备，将使用默认设备")
         return None  # 稍后会使用默认的 CABLE Output
         
     except Exception as e:
-        print(f"{_timestamp()} [STREAM] 检测音频设备失败: {e}")
+        logger.error(f"检测音频设备失败: {e}")
         return None
 
 # ==================== 浏览器特定的队列大小配置 ====================
@@ -253,11 +410,17 @@ class ClientPool:
         }
     
     def register(self, client_id: str, audio_format: str = "mp3", browser_name: str = "default") -> queue.Queue:
-        """注册客户端 - 使用浏览器特定的队列大小"""
+        """注册客户端 - 使用浏览器特定的队列大小（【新增】格式×浏览器组合优化）"""
         with self.lock:
             if client_id not in self.clients:
-                # 🔧 根据浏览器类型调整队列大小
-                queue_size = get_queue_size_for_browser(browser_name)
+                # 【新增】检查浏览器×格式组合配置
+                if browser_name in BROWSER_FORMAT_CONFIG and audio_format in BROWSER_FORMAT_CONFIG[browser_name]:
+                    format_cfg = BROWSER_FORMAT_CONFIG[browser_name][audio_format]
+                    queue_size = format_cfg['queue_blocks'] * 256  # 块转换为字节（每块256KB）
+                else:
+                    # 回退：仅使用浏览器配置
+                    queue_size = get_queue_size_for_browser(browser_name) * 256
+                
                 client_queue = queue.Queue(maxsize=queue_size)
                 self.clients[client_id] = ClientInfo(
                     client_id=client_id,
@@ -333,13 +496,12 @@ class ClientPool:
                 CLIENT_POOL.stats["total_bytes_sent"] += len(chunk)
                 CLIENT_POOL.stats["total_chunks_sent"] += 1
             except Exception as e:
-                print(f"[DEBUG-ERROR] 广播失败 {client_id[:8]}: {e}")
+                logger.error(f"广播失败 {client_id[:8]}: {e}")
                 fail_count += 1
         
-        # 当有失败的客户端时，输出警告日志
+        # When there are failures, log warning
         if fail_count > 0 and success_count > 0:
-            print(f"⚠️ 广播统计: {success_count}成功/{fail_count}失败 "
-                          f"(总客户端: {len(clients_snapshot)})")
+            logger.warning(f"广播统计: {success_count}成功/{fail_count}失败 (总客户端: {len(clients_snapshot)})")
         
         return success_count, fail_count
     
@@ -387,9 +549,44 @@ class ClientPool:
             return True
             
         except Exception as e:
-            print(f"[ERROR] 单客户端发送失败 {client_id[:8]}: {e}")
+            logger.error(f"[错误] 单客户端发送失败 {client_id[:8]}: {e}")
             return False
 
+    
+    def _split_aac_chunk(self, chunk: bytes) -> list:
+        """
+        【新增】AAC ADTS帧分割 - 保持帧完整性
+        AAC ADTS格式：
+        - 帧头：7字节（0xFFF标记 + 采样率 + 长度）
+        - 帧数据：可变长
+        - 此函数检查每个ADTS帧边界，避免分割帧头
+        """
+        if not chunk or len(chunk) < 7:
+            return [chunk]
+        
+        frames = []
+        offset = 0
+        while offset < len(chunk):
+            # 查找下一个ADTS同步字
+            if chunk[offset] == 0xFF and (chunk[offset+1] & 0xF0) == 0xF0:
+                if offset + 6 < len(chunk):
+                    # 提取帧长度（13位）
+                    frame_len = ((chunk[offset+3] & 0x03) << 11) | (chunk[offset+4] << 3) | ((chunk[offset+5] >> 5) & 0x07)
+                    if frame_len > 0 and offset + frame_len <= len(chunk):
+                        frames.append(chunk[offset:offset+frame_len])
+                        offset += frame_len
+                    else:
+                        # 不完整的帧，添加剩余部分
+                        frames.append(chunk[offset:])
+                        break
+                else:
+                    # 帧头不完整
+                    frames.append(chunk[offset:])
+                    break
+            else:
+                offset += 1
+        
+        return frames if frames else [chunk]
     
     def get_stats(self) -> dict:
         """获取池统计信息"""
@@ -420,15 +617,35 @@ class ClientPool:
 
 # 全局客户端池
 # 🔧🔧 Safari 超级优化：增加默认队列到2048（512MB缓冲，支持Safari超大缓冲）
-CLIENT_POOL = ClientPool(queue_maxsize=2048)  # 默认2048块 = 512MB
+# 队列大小从settings.ini读取
+def get_default_client_pool_size():
+    """获取默认客户端池队列大小"""
+    try:
+        import configparser
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "settings.ini")
+        if os.path.exists(config_path):
+            config = configparser.ConfigParser()
+            config.read(config_path, encoding="utf-8")
+            
+            # 尝试从[stream]或[browser_configs]读取Safari的队列大小
+            if config.has_section('browser_configs') and config.has_option('browser_configs', 'safari'):
+                parts = config.get('browser_configs', 'safari').split(',')
+                if len(parts) > 0:
+                    return int(parts[0].strip())
+    except:
+        pass
+    
+    return 2048
+
+CLIENT_POOL = ClientPool(queue_maxsize=get_default_client_pool_size())
 
 # ==================== 异步广播配置 ====================
 # 线程池用于并行向客户端发送数据
 # 🔧🔧 Safari 超级优化：增加工作线程到120，加速Safari分发
-BROADCAST_EXECUTOR = ThreadPoolExecutor(max_workers=120, thread_name_prefix="broadcast_")
+BROADCAST_EXECUTOR = ThreadPoolExecutor(max_workers=BROADCAST_EXECUTOR_WORKERS, thread_name_prefix="broadcast_")
 # 全局广播队列：FFmpeg读取线程 → 广播队列 → 分发给客户端
 # 🔧🔧 Safari 超级优化：增加到8192（512MB缓冲），支持Safari超大缓冲 + 多客户端
-BROADCAST_QUEUE = queue.Queue(maxsize=8192)
+BROADCAST_QUEUE = queue.Queue(maxsize=BROADCAST_QUEUE_MAXSIZE)
 
 # ==================== 浏览器特定的读取块大小配置 ====================
 CHUNK_SIZE_CONFIG = {
@@ -446,6 +663,7 @@ def get_chunk_size_for_browser(browser_name: str) -> int:
 # ==================== 核心流管理变量 ====================
 FFMPEG_PROCESS = None
 FFMPEG_FORMAT = None
+STREAM_VOLUME = 50  # 推流音量 (0-100)，独立于MPV本地音量
 STREAM_SHOULD_STOP = threading.Event()  # 🔥 新增：全局停止标志，控制所有流线程
 
 # 🔥 新增：丢包重发机制
@@ -526,6 +744,65 @@ def stop_stream_safely(ffmpeg_process, timeout=3):
             pass
 
 
+def get_audio_format_ffmpeg(audio_format: str) -> tuple[str, str]:
+    """
+    【新增】根据音频格式获取FFmpeg编码参数
+    返回: (编码器, 其他参数)
+    """
+    if audio_format not in AUDIO_FORMAT_CONFIG:
+        audio_format = "mp3"
+    
+    config = AUDIO_FORMAT_CONFIG[audio_format]
+    codec = config['ffmpeg_codec']
+    bitrate = config['ffmpeg_bitrate'] or '192k'
+    
+    if audio_format == 'aac':
+        return codec, f"-b:a {bitrate} -aac_coder fast -profile:a aac_low"
+    elif audio_format == 'mp3':
+        return codec, f"-b:a {bitrate} -compression_level 0"
+    elif audio_format == 'flac':
+        return codec, "-compression_level 8"
+    else:
+        return 'libmp3lame', "-b:a 128k -compression_level 0"
+
+def get_ffmpeg_cmd_for_format(device_name: str, audio_format: str) -> str:
+    """
+    【新增】为指定格式生成完整的FFmpeg命令
+    参数:
+        device_name: 音频输入设备名称
+        audio_format: 'mp3'|'aac'|'flac'
+    """
+    global STREAM_VOLUME
+    
+    if audio_format not in AUDIO_FORMAT_CONFIG:
+        audio_format = "mp3"
+    
+    config = AUDIO_FORMAT_CONFIG[audio_format]
+    codec, extra_params = get_audio_format_ffmpeg(audio_format)
+    
+    # 计算音量过滤器参数（0-100 转换为 0.0-1.0）
+    volume_factor = max(0, min(100, STREAM_VOLUME)) / 100.0
+    
+    # 基础命令
+    base_cmd = (
+        f'"{FFMPEG_CMD}" '
+        f'-rtbufsize 32M '
+        f'-fflags +genpts+igndts '
+        f'-thread_queue_size 1024 '
+        f'-f dshow -i audio="{device_name}" '
+        f'-ac 2 -ar 44100 '
+        f'-af "volume={volume_factor}" '
+        f'-c:a {codec} {extra_params} '
+    )
+    
+    # 格式特定输出
+    if audio_format == 'aac':
+        return base_cmd + '-f adts -'
+    elif audio_format == 'flac':
+        return base_cmd + '-f flac -'
+    else:  # mp3 默认
+        return base_cmd + '-f mp3 -'
+
 def start_ffmpeg_stream(device_name="CABLE Output (VB-Audio Virtual Cable)", audio_format=None):
     """
     启动FFmpeg推流进程 - 低延迟优化版本
@@ -547,10 +824,10 @@ def start_ffmpeg_stream(device_name="CABLE Output (VB-Audio Virtual Cable)", aud
             config.read(config_path, encoding="utf-8")
             enable_stream = config.get("app", "enable_stream", fallback="true").lower() in ("true", "1", "yes")
             if not enable_stream:
-                print(f"{_timestamp()} [STREAM] ℹ️ 推流功能已禁用 (enable_stream=false)")
+                logger.info("推流功能已禁用 (enable_stream=false)")
                 return False
     except Exception as e:
-        print(f"{_timestamp()} [STREAM] ⚠️ 读取推流配置失败: {e}")
+        logger.warning(f"读取推流配置失败: {e}")
     
     # 🔥 清除停止标志，准备启动新的流
     STREAM_SHOULD_STOP.clear()
@@ -558,13 +835,13 @@ def start_ffmpeg_stream(device_name="CABLE Output (VB-Audio Virtual Cable)", aud
     if audio_format is None:
         audio_format = DEFAULT_STREAM_FORMAT
     if FFMPEG_PROCESS and FFMPEG_FORMAT == audio_format:
-        print(f"{_timestamp()} ℹ️ FFmpeg 已在运行 (格式: {audio_format})")
+        logger.info(f"FFmpeg 已在运行 (格式: {audio_format})")
         return True
     
     if FFMPEG_PROCESS and FFMPEG_FORMAT != audio_format:
         active_clients = CLIENT_POOL.get_active_count()
         if active_clients > 0:
-            print(f"{_timestamp()} ⚠️ 已有{active_clients}个活跃客户端使用{FFMPEG_FORMAT}格式，"
+            logger.warning(f"已有{active_clients}个活跃客户端使用{FFMPEG_FORMAT}格式，"
                   f"新客户端请求{audio_format}格式，但不更换格式以避免中断现有连接")
             return True
     
@@ -577,59 +854,22 @@ def start_ffmpeg_stream(device_name="CABLE Output (VB-Audio Virtual Cable)", aud
         if detected_device:
             device_name = detected_device
         else:
-            # ❌ 如果检测失败，使用默认设备
+            # No device auto-detected, use default
             default_device = "CABLE Output (VB-Audio Virtual Cable)"
-            print(f"{_timestamp()} [STREAM] ⚠️ 未能检测到任何音频设备，将尝试使用默认: {default_device}")
+            logger.warning(f"未能检测到任何音频设备，将尝试使用默认: {default_device}")
             device_name = default_device
         
-        # ✅ 验证设备名称不为空
+        # Check device name is not empty
         if not device_name or device_name.strip() == "":
-            print(f"{_timestamp()} [STREAM] ❌ 错误：音频设备名称为空，无法启动FFmpeg")
+            logger.error("错误：音频设备名称为空，无法启动FFmpeg")
             return False
         
-        bitrate = 192
-        print(f"{_timestamp()} 🎯 固定比特率: {bitrate}kbps，低延迟模式")
-        print(f"{_timestamp()} 🎤 音频设备: {device_name}")
-        
-        # 🔧 防爆音激进的FFmpeg参数：更大缓冲
-        common_options = (
-            f'"{FFMPEG_CMD}" '
-            f'-rtbufsize 32M '
-            f'-fflags +genpts+igndts '
-            f'-thread_queue_size 1024 '
-            f'-f dshow -i audio="{device_name}" '
-            f'-ac 2 -ar 44100 '
-        )
-        
-        if audio_format == "aac":
-            cmd = (
-                f'{common_options}'
-                f'-c:a aac -b:a {bitrate}k '
-                f'-aac_coder fast '
-                f'-f adts -'
-            )
-        elif audio_format == "aac-raw":
-            cmd = (
-                f'{common_options}'
-                f'-c:a aac -b:a {bitrate}k '
-                f'-aac_coder fast '
-                f'-f null -'
-            )
-        elif audio_format == "mp3":
-            # 🔧 MP3优化：固定192kbps + 快速编码
-            cmd = (
-                f'{common_options}'
-                f'-c:a libmp3lame -b:a 192k '
-                f'-compression_level 0 '
-                f'-f mp3 -'
-            )
-        else:  # pcm
-            cmd = (
-                f'{common_options}'
-                f'-f s16le -'
-            )
-        
-        print(f"{_timestamp()} 启动FFmpeg: {cmd[:100]}...")
+        # Use format-specific config to generate FFmpeg command
+        config = AUDIO_FORMAT_CONFIG.get(audio_format, AUDIO_FORMAT_CONFIG['mp3'])
+        cmd = get_ffmpeg_cmd_for_format(device_name, audio_format)
+        logger.info(f"音频格式: {audio_format} ({config['description']}), 比特率: {config['ffmpeg_bitrate']}")
+        logger.info(f"音频设备: {device_name}")
+        logger.info(f"启动FFmpeg: {cmd[:100]}...")
         
         # 🔧 Safari优化版本：增加Python缓冲到512K（防止缓冲区枯竭）
         # 重要：使用 CREATE_NEW_PROCESS_GROUP 将FFmpeg放在独立进程组，避免继承主线程状态
@@ -644,22 +884,15 @@ def start_ffmpeg_stream(device_name="CABLE Output (VB-Audio Virtual Cable)", aud
         )
         
         FFMPEG_FORMAT = audio_format
-        print(f"{_timestamp()} ✓ FFmpeg 已启动 (进程ID: {FFMPEG_PROCESS.pid}, 终极防断音模式)")
-        print(f"{_timestamp()}   - 格式: {audio_format}")
-        print(f"{_timestamp()}   - rtbufsize: 32M")
-        print(f"{_timestamp()}   - thread_queue_size: 1024")
-        print(f"{_timestamp()}   - Python bufsize: 256KB")
-        print(f"{_timestamp()}   - 广播队列: 2048块 (128MB)")
-        print(f"{_timestamp()}   - 客户端队列: 512块 (128MB)")
-        print(f"{_timestamp()}   - 心跳间隔: 20ms")
-        print(f"{_timestamp()}   - 并发线程: 40")
+        logger.info(f"FFmpeg 已启动 (进程 ID: {FFMPEG_PROCESS.pid})")
+        logger.debug(f"格式: {audio_format}, rtbufsize: 32M, thread_queue_size: 1024")
         
         # 立即检查进程是否存活
         time.sleep(0.5)
         poll_result = FFMPEG_PROCESS.poll()
         if poll_result is not None:
-            # ❌ 进程已退出
-            print(f"{_timestamp()} ✗ FFmpeg 进程已退出! (退出码: {poll_result})")
+            # FFmpeg already exited
+            logger.error(f"FFmpeg 进程已退出 (退出码: {poll_result})")
             
             # 立即读取可用的错误数据
             stderr_data = ""
@@ -672,15 +905,15 @@ def start_ffmpeg_stream(device_name="CABLE Output (VB-Audio Virtual Cable)", aud
                 pass
             
             if stderr_data:
-                print(f"{_timestamp()} FFmpeg 标准错误:")
-                for line in stderr_data.split('\n')[:30]:  # 显示前30行
+                logger.error(f"FFmpeg 标准错误:")
+                for line in stderr_data.split('\n')[:30]:  # Show first 30 lines
                     if line.strip():
-                        print(f"{_timestamp()}   {line}")
+                        logger.error(f"  {line}")
             else:
-                print(f"{_timestamp()} (没有捕获到标准错误 - FFmpeg 立即退出)")
+                logger.warning("未捕获标准错误 - FFmpeg 立即退出")
             
-            # 🔍 立即诊断：列出可用的音频设备
-            print(f"{_timestamp()} 🔍 自动检测系统可用的音频设备...")
+            # Auto-detect available audio devices
+            logger.info("自动检测系统可用的音频设备...")
             try:
                 result = subprocess.run(
                     f'"{FFMPEG_CMD}" -list_devices true -f dshow -i dummy 2>&1',
@@ -700,35 +933,35 @@ def start_ffmpeg_stream(device_name="CABLE Output (VB-Audio Virtual Cable)", aud
                             audio_devices.append(dev_name)
                 
                 if audio_devices:
-                    print(f"{_timestamp()} ✅ 发现 {len(audio_devices)} 个音频设备:")
+                    logger.info(f"发现 {len(audio_devices)} 个音频设备:")
                     for i, dev in enumerate(audio_devices, 1):
-                        print(f"{_timestamp()}    {i}. {dev}")
-                    print(f"{_timestamp()} ✅ 请在 settings.ini 中将其中一个设备名复制到 [paths] audio_input_device")
+                        logger.info(f"  {i}. {dev}")
+                    logger.info("请在 settings.ini 中将其中一个设备名复制到 [paths] audio_input_device")
                 else:
-                    print(f"{_timestamp()} ❌ 未检测到任何音频设备!")
-                    print(f"{_timestamp()} 可能原因:")
-                    print(f"{_timestamp()}    - 虚拟音频设备（VB-Cable）未安装")
-                    print(f"{_timestamp()}    - 系统音频设备未启用")
-                    print(f"{_timestamp()} 下载 VB-Cable: https://vb-audio.com/Cable/")
+                    logger.error("未检测到任何音频设备!")
+                    logger.error("可能原因:")
+                    logger.error("  - 虚拟音频设备（VB-Cable）未安装")
+                    logger.error("  - 系统音频设备未启用")
+                    logger.error("下载 VB-Cable: https://vb-audio.com/Cable/")
             except Exception as e:
-                print(f"{_timestamp()} (设备检测异常: {e})")
+                logger.warning(f"设备检测异常: {e}")
             
-            print(f"{_timestamp()} 📝 配置步骤:")
-            print(f"{_timestamp()}    1. 编辑 settings.ini 文件")
-            print(f"{_timestamp()}    2. 找到 [paths] 部分的 audio_input_device = ")
-            print(f"{_timestamp()}    3. 设置为上面列出的设备名")
-            print(f"{_timestamp()}    4. 重启应用")
+            logger.info("配置步骤:")
+            logger.info("  1. 编辑 settings.ini 文件")
+            logger.info("  2. 找到 [paths] 部分的 audio_input_device = ")
+            logger.info("  3. 设置为上面列出的设备名")
+            logger.info("  4. 重新启动应用")
             return False
         
-        # 🔥 重新清除停止标志，因为 stop_ffmpeg_stream() 已经设置过了
+        # Clear stop flag since stop_ffmpeg_stream() has set it
         STREAM_SHOULD_STOP.clear()
-        print(f"{_timestamp()} ✓ 停止标志已清除，准备启动读取线程")
+        logger.info("停止标志已清除，准备启动读取线程")
         
         start_stream_reader_thread()
         return True
         
     except Exception as e:
-        print(f"{_timestamp()} ✗ FFmpeg 启动异常: {e}")
+        logger.error(f"FFmpeg 启动异常: {e}")
         import traceback
         traceback.print_exc()
         FFMPEG_PROCESS = None
@@ -754,7 +987,7 @@ def stop_ffmpeg_stream():
     if FFMPEG_PROCESS:
         stop_stream_safely(FFMPEG_PROCESS, timeout=3)
         FFMPEG_PROCESS = None
-        print(f"{_timestamp()} ✓ FFmpeg 已停止")
+        logger.info("FFmpeg 已停止")
 
 
 def start_stream_reader_thread():
@@ -771,7 +1004,7 @@ def start_stream_reader_thread():
         
         # � 检查FFmpeg进程是否成功启动
         if not FFMPEG_PROCESS:
-            print(f"{_timestamp()} ✗ FFmpeg 进程未启动，读取线程无法运行")
+            logger.error("FFmpeg 进程未启动，读取线程无法运行")
             STREAM_SHOULD_STOP.set()
             return
         
@@ -788,26 +1021,26 @@ def start_stream_reader_thread():
         STREAM_STATS["chunks_broadcasted"] = 0
         STREAM_STATS["broadcast_fails"] = 0
         
-        print(f"{_timestamp()} 📖 FFmpeg 读取线程启动，进程ID: {FFMPEG_PROCESS.pid}")
-        print(f"{_timestamp()} 📡 异步广播模式启用 (Safari 缓冲: 64MB, 默认缓冲: 256MB, 心跳: 差异化)")
+        logger.info(f"FFmpeg 读取线程启动，进程 ID: {FFMPEG_PROCESS.pid}")
+        logger.info("异步广播模式启用")
         
         # 🔍 检查进程是否已经在读取时退出
         poll_check = FFMPEG_PROCESS.poll()
         if poll_check is not None:
-            print(f"{_timestamp()} ❌ FFmpeg 进程已在读取开始时退出! (退出码: {poll_check})")
-            print(f"{_timestamp()} 🔍 这通常表示音频设备不存在或不可用")
+            logger.error(f"FFmpeg 进程已在读取开始时退出 (退出码: {poll_check})")
+            logger.error("这通常表示音频设备不存在或不可用")
             try:
                 if FFMPEG_PROCESS.stderr:
                     errs = FFMPEG_PROCESS.stderr.read(4096).decode('utf-8', errors='ignore')
                     if errs.strip():
-                        print(f"{_timestamp()} FFmpeg 错误: {errs[:300]}")
+                        logger.error(f"FFmpeg 错误: {errs[:300]}")
             except:
                 pass
             STREAM_SHOULD_STOP.set()
             return
         
-        # 检查 while 循环条件
-        print(f"{_timestamp()} [DEBUG] 检查 while 循环条件: FFMPEG_PROCESS={bool(FFMPEG_PROCESS)}, poll()={FFMPEG_PROCESS.poll()}, STREAM_SHOULD_STOP.is_set()={STREAM_SHOULD_STOP.is_set()}")
+        # Check while loop condition
+        logger.debug(f"while 条件: FFMPEG_PROCESS={bool(FFMPEG_PROCESS)}, poll()={FFMPEG_PROCESS.poll()}, STOP={STREAM_SHOULD_STOP.is_set()}")
         
         while FFMPEG_PROCESS and FFMPEG_PROCESS.poll() is None and not STREAM_SHOULD_STOP.is_set():
             try:
@@ -830,20 +1063,20 @@ def start_stream_reader_thread():
                 else:
                     consecutive_empty_reads += 1
                     if consecutive_empty_reads == 1:
-                        # 第一次读到空数据，立即诊断
-                        print(f"{_timestamp()} ⚠️ FFmpeg 未返回数据，进行诊断...")
+                        # First empty read, diagnose immediately
+                        logger.warning("FFmpeg 未返回数据，进行诊断...")
                         if FFMPEG_PROCESS.poll() is not None:
-                            print(f"{_timestamp()} ❌ FFmpeg 进程已退出! (退出码: {FFMPEG_PROCESS.poll()})")
-                            print(f"{_timestamp()} 🔍 音频设备问题 - 执行自动诊断...")
+                            logger.error(f"FFmpeg 进程已退出 (退出码: {FFMPEG_PROCESS.poll()})")
+                            logger.error("音频设备问题 - 执行自动诊断...")
                             try:
                                 if FFMPEG_PROCESS.stderr:
                                     errs = FFMPEG_PROCESS.stderr.read(4096).decode('utf-8', errors='ignore')
                                     if errs.strip():
-                                        print(f"{_timestamp()} FFmpeg 错误: {errs[:500]}")
+                                        logger.error(f"FFmpeg 错误: {errs[:500]}")
                             except:
                                 pass
-                            # 自动列出可用设备
-                            print(f"{_timestamp()} 🔍 自动检测系统可用的音频设备...")
+                            # Auto-detect available devices
+                            logger.info("自动检测系统可用的音频设备...")
                             try:
                                 result = subprocess.run(
                                     f'"{FFMPEG_CMD}" -list_devices true -f dshow -i dummy 2>&1',
@@ -863,18 +1096,18 @@ def start_stream_reader_thread():
                                             audio_devices.append(dev_name)
                                 
                                 if audio_devices:
-                                    print(f"{_timestamp()} ✅ 发现 {len(audio_devices)} 个音频设备:")
+                                    logger.info(f"发现 {len(audio_devices)} 个音频设备:")
                                     for i, dev in enumerate(audio_devices, 1):
-                                        print(f"{_timestamp()}    {i}. {dev}")
-                                    print(f"{_timestamp()} ✅ 请在 settings.ini 中将其中一个设备名复制到 [paths] audio_input_device")
+                                        logger.info(f"  {i}. {dev}")
+                                    logger.info("请在 settings.ini 中将其中一个设备名复制到 [paths] audio_input_device")
                                 else:
-                                    print(f"{_timestamp()} ❌ 未检测到任何音频设备!")
-                                    print(f"{_timestamp()} 下载 VB-Cable: https://vb-audio.com/Cable/")
+                                    logger.error("未检测到任何音频设备!")
+                                    logger.error("下载 VB-Cable: https://vb-audio.com/Cable/")
                             except:
                                 pass
                             break
                     elif consecutive_empty_reads > 10:
-                        print(f"{_timestamp()} ⚠️ FFmpeg 输出停止 (连续空读 {consecutive_empty_reads} 次)")
+                        logger.warning(f"FFmpeg 输出停止 (连续空读 {consecutive_empty_reads} 次)")
                         break
                 
                 # 每3秒日志
@@ -897,16 +1130,16 @@ def start_stream_reader_thread():
                         avg_queue_depth = sum(c.queue.qsize() for c in safari_clients) / len(safari_clients)
                         safari_info = f" | Safari队列深度: {avg_queue_depth:.1f}"
                     
-                    print(f"🚀 速率: {speed:.1f}KB/s | 已读: {total_bytes/1024:.1f}KB | "
-                          f"客户端: {active} {status} | 块大小: {chunk_size_kb}KB{safari_info}")
+                    logger.info(f"速率: {speed:.1f}KB/s | 已读: {total_bytes/1024:.1f}KB | "
+                          f"客户端: {active} | 块大小: {chunk_size_kb}KB{safari_info}")
                     last_log_time = now
                     total_bytes = 0
                     
             except Exception as e:
-                print(f"✗ 读取错误: {type(e).__name__}: {e}")
+                logger.error(f"读取错误: {type(e).__name__}: {e}")
                 time.sleep(0.1)
         
-        print(f"{_timestamp()} 📤 FFmpeg 读取线程退出")
+        logger.info("FFmpeg 读取线程退出")
         # 🔥 当读取线程退出时，设置停止标志通知其他线程也退出
         STREAM_SHOULD_STOP.set()
     
@@ -931,7 +1164,7 @@ def start_stream_reader_thread():
                     empty_read_count += 1
                     # 🔥 如果停止标志已设置且连续2次空读，说明队列已清空，可以退出
                     if STREAM_SHOULD_STOP.is_set() and empty_read_count >= 2:
-                        print(f"📊 广播线程检测到停止信号，准备退出")
+                        logger.info("广播线程检测到停止信号，准备退出")
                         break
                     # 定期清理死亡客户端
                     now = time.time()
@@ -1032,7 +1265,7 @@ def start_stream_reader_thread():
                         CLIENT_POOL.stats["total_chunks_sent"] += 1
                     
                     except Exception as e:
-                        print(f"[ERROR] 发送失败 {client_id[:8]}: {e}")
+                        logger.error(f"发送失败 {client_id[:8]}: {e}")
                         fail_count += 1
                         failed_clients.add(client_id)
                 
@@ -1048,12 +1281,12 @@ def start_stream_reader_thread():
                     
                     if has_safari or fail_count > 0:
                         queue_depth = BROADCAST_QUEUE.qsize()
-                        print(f"📊 广播: {success_count}/{len(clients_snapshot)} 成功 | 队列深度: {queue_depth} | 失败: {len(failed_clients)}")
+                        logger.info(f"广播: {success_count}/{len(clients_snapshot)} 成功 | 队列深度: {queue_depth}")
                     
                     log_interval = now
                 
             except Exception as e:
-                print(f"{_timestamp()} ❌ 广播线程异常: {e}")
+                logger.error(f"广播线程异常: {e}")
                 time.sleep(0.5)
     
     def send_heartbeats():
@@ -1122,7 +1355,7 @@ def start_stream_reader_thread():
                     # 只在没有停止时才输出错误，避免关闭时的日志干扰
                     time.sleep(0.5)
         
-        print(f"{_timestamp()} ♥️ 心跳线程检测到停止信号，准备退出")
+        logger.info("心跳线程检测到停止信号，准备退出")
     
     # 启动三个线程
     read_thread = threading.Thread(target=read_stream, daemon=True, name="stream_reader")
@@ -1134,12 +1367,13 @@ def start_stream_reader_thread():
     heartbeat_thread = threading.Thread(target=send_heartbeats, daemon=True, name="heartbeat_safari")
     heartbeat_thread.start()
     
-    print(f"{_timestamp()} ✓ 三线程架构已启动: 读取线程 + 异步广播线程 + 心跳线程")
+    logger.info("三线程架构已启动: 读取线程 + 异步广播线程 + 心跳线程")
 
 
-def register_client(client_id, browser_name: str = "default"):
-    """注册客户端 - 使用客户端池管理，支持浏览器特定配置"""
-    audio_format = FFMPEG_FORMAT or "mp3"
+def register_client(client_id, audio_format: str = None, browser_name: str = "default"):
+    """注册客户端 - 使用客户端池管理，支持浏览器特定配置（【新增】格式参数）"""
+    if audio_format is None:
+        audio_format = FFMPEG_FORMAT or "mp3"
     client_queue = CLIENT_POOL.register(client_id, audio_format, browser_name)
     return client_queue
 

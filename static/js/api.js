@@ -79,6 +79,19 @@ export class MusicAPI {
         return this.postForm('/volume', formData);
     }
 
+    async setStreamVolume(value) {
+        // 【新增】设置推流音量（独立于MPV本地音量）
+        const formData = new FormData();
+        formData.append('value', value);
+        return this.postForm('/stream/volume', formData);
+    }
+
+    async getStreamVolume() {
+        // 【新增】获取当前推流音量
+        const formData = new FormData();
+        return this.postForm('/stream/volume', formData);
+    }
+
     async seek(percent) {
         const formData = new FormData();
         formData.append('percent', percent);

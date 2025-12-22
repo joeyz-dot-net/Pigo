@@ -16,6 +16,7 @@ import { localFiles } from './local.js';
 import { settingsManager } from './settingsManager.js';
 import { navManager } from './navManager.js';
 import { i18n } from './i18n.js';
+import { streamManager } from './stream.js'; // 【新增】推流格式管理器
 
 // ==========================================
 // 应用初始化
