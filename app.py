@@ -357,6 +357,27 @@ async def monitor_playback_progress():
 # 挂载静态文件
 # ============================================
 
+# 🔥 优先处理 preview.png：如果程序运行目录有此文件，优先使用
+@app.get("/static/images/preview.png")
+async def get_preview_image():
+    """
+    获取预览图片
+    优先级：
+    1. 程序运行目录的 preview.png
+    2. static/images/preview.png
+    """
+    # 检查程序运行目录
+    local_preview = os.path.join(os.getcwd(), "preview.png")
+    if os.path.isfile(local_preview):
+        return FileResponse(local_preview, media_type="image/png")
+    
+    # 回退到静态目录
+    static_preview = _get_resource_path("static/images/preview.png")
+    if os.path.isfile(static_preview):
+        return FileResponse(static_preview, media_type="image/png")
+    
+    raise HTTPException(status_code=404, detail="Preview image not found")
+
 try:
     static_dir = _get_resource_path("static")
     if os.path.isdir(static_dir):

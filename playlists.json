@@ -19,14 +19,34 @@
           "artist": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧"
         },
         {
-          "url": "ETC/Lament of the Highborne.wav",
-          "title": "Lament of the Highborne.wav",
-          "name": "Lament of the Highborne.wav",
+          "url": "KDA/K DA, Madison Beer, Kim Petras, 英雄联盟 - VILLAIN.flac",
+          "title": "K DA, Madison Beer, Kim Petras, 英雄联盟 - VILLAIN.flac",
+          "name": "K DA, Madison Beer, Kim Petras, 英雄联盟 - VILLAIN.flac",
           "type": "local",
           "duration": 0,
-          "ts": 1766480204,
+          "ts": 1766492882,
           "thumbnail_url": null,
-          "artist": "Lament of the Highborne.wav"
+          "artist": "K DA, Madison Beer, Kim Petras, 英雄联盟 - VILLAIN.flac"
+        },
+        {
+          "url": "KDA/K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac",
+          "title": "K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac",
+          "name": "K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766492882,
+          "thumbnail_url": null,
+          "artist": "K DA, Madison Beer, i-dle, Lexie Liu, Jaira Burns, Seraphine, 英雄联盟 - MORE.flac"
+        },
+        {
+          "url": "KDA/K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
+          "title": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
+          "name": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766492880,
+          "thumbnail_url": null,
+          "artist": "K DA, Madison Beer, i-dle, Jaira Burns - POP STARS.flac"
         },
         {
           "url": "ETC/5 20AM.mp3",
@@ -79,9 +99,9 @@
           "artist": "孫燕姿 Sun Yanzi TOP25 Video 必聽經典25首 [情歌療癒系MV] 串燒 無間斷 完整聆聽 KTV必唱 經典K歌 回憶殺 我懷念的 無敵孫式情歌 我不難過 開始懂了 遇見 天黑黑"
         }
       ],
-      "song_count": 7,
+      "song_count": 9,
       "created_at": 1766369731.0493586,
-      "updated_at": 1766484751.0893605,
+      "updated_at": 1766492882.8817174,
       "current_playing_index": -1
     },
     {

@@ -22,12 +22,12 @@ export class Toast {
         const toast = createElement('div', `toast toast-${type}`);
         toast.textContent = message;
         
-        // 样式 ✅ bottom 增加到 90px，不遮挡导航栏（导航栏高度 64px，再加距离）
+        // 样式 ✅ 垂直水平居中
         Object.assign(toast.style, {
             position: 'fixed',
-            bottom: '90px',
+            top: '50%',
             left: '50%',
-            transform: 'translateX(-50%)',
+            transform: 'translate(-50%, -50%)',
             padding: '12px 24px',
             borderRadius: '4px',
             backgroundColor: type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3',
