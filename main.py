@@ -392,12 +392,22 @@ def main():
     # 【第二步】交互式选择推流模式（默认不启用）
     enable_streaming = interactive_select_streaming_mode(timeout=10)
     
-    # 根据推流选择更新 enable_stream
-    config.set("app", "enable_stream", "true" if enable_streaming else "false")
-    
-    # 【重要】在导入 app 之前，通过环境变量告诉 stream.py 是否启用推流
-    # 这样 stream.py 在模块导入时就能读到正确的值
+    # 【重要】通过环境变量传递运行时推流选择，app.py 根据此值决定是否加载推流模块
     os.environ["ENABLE_STREAMING"] = "true" if enable_streaming else "false"
+    
+    # 【第三步】如果启用推流，执行推流初始化
+    if enable_streaming:
+        try:
+            from models.stream import initialize_streaming
+            print("\n" + "=" * 60)
+            print("🎙️  正在初始化推流功能...")
+            print("=" * 60)
+            # 传入已选择的音频设备ID
+            initialize_streaming(audio_device_id=selected_device)
+            print("✅ 推流初始化完成\n")
+        except Exception as e:
+            print(f"❌ 推流初始化失败: {e}")
+            print("⚠️  将继续启动，但推流功能不可用\n")
     
     # 显示完整设备名称和设备ID
     device_display = '系统默认 (auto)'
@@ -441,7 +451,7 @@ def main():
         port=server_port,
         reload=False,  # 禁用自动重载（settings.ini 需要手动重启）
         log_config=None,  # 使用自定义日志配置
-        access_log=False  # 禁用访问日志
+        access_log=True  # 禁用访问日志
     )
 
 

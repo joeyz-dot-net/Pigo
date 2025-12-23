@@ -222,10 +222,10 @@ def load_stream_globals():
 
 KEEPALIVE_THRESHOLD, KEEPALIVE_CHUNK_SIZE, BROADCAST_QUEUE_MAXSIZE, BROADCAST_EXECUTOR_WORKERS = load_stream_globals()
 
-# ==================== FFmpeg 初始化 ====================
-logger.info("🎙️ 推流模块已加载，初始化 FFmpeg...")
+# ==================== FFmpeg 初始化函数 ====================
+# 全局变量（初始化后设置）
+FFMPEG_CMD = None
 
-# 尝试找FFmpeg的完整路径
 def find_ffmpeg():
     """查找FFmpeg可执行文件（支持打包环境）"""
     import sys
@@ -263,8 +263,6 @@ def find_ffmpeg():
     
     logger.warning(f"找不到FFmpeg，将尝试使用 'ffmpeg'")
     return "ffmpeg"
-
-FFMPEG_CMD = find_ffmpeg()
 
 def find_available_audio_device():
     """
@@ -317,6 +315,30 @@ def find_available_audio_device():
     except Exception as e:
         logger.error(f"检测音频设备失败: {e}")
         return None
+
+def initialize_streaming(audio_device_id=None):
+    """
+    初始化推流功能
+    由 main.py 在用户选择启用推流后调用
+    
+    参数:
+        audio_device_id: 已选择的音频设备ID（从 main.py 传入）
+    """
+    global FFMPEG_CMD
+    
+    logger.info("🎙️ 开始初始化推流功能...")
+    
+    # 1. 查找 FFmpeg
+    FFMPEG_CMD = find_ffmpeg()
+    
+    # 2. 使用传入的音频设备ID
+    if audio_device_id and audio_device_id != 'auto':
+        logger.info(f"✅ 使用已选择的音频设备: {audio_device_id}")
+    else:
+        logger.info("ℹ️  使用默认音频配置")
+    
+    logger.info("✅ 推流功能初始化完成")
+    return True
 
 # ==================== 浏览器特定的队列大小配置 ====================
 QUEUE_SIZE_CONFIG = {
