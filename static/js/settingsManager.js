@@ -642,13 +642,13 @@ export const settingsManager = {
         const themeLabel = document.querySelectorAll('.settings-label')[0];
         if (themeLabel) themeLabel.textContent = i18n.t('settings.theme', language);
         
-        // 更新主题选项
+        // 更新主题选项 (HTML顺序: auto, dark, light)
         const themeSelect = document.getElementById('themeSetting');
         if (themeSelect) {
             const options = themeSelect.querySelectorAll('option');
-            if (options[0]) options[0].textContent = i18n.t('settings.theme.dark', language);
-            if (options[1]) options[1].textContent = i18n.t('settings.theme.light', language);
-            if (options[2]) options[2].textContent = i18n.t('settings.theme.auto', language);
+            if (options[0]) options[0].textContent = i18n.t('settings.theme.auto', language);
+            if (options[1]) options[1].textContent = i18n.t('settings.theme.dark', language);
+            if (options[2]) options[2].textContent = i18n.t('settings.theme.light', language);
         }
         
         // 更新语言标签

@@ -124,20 +124,7 @@
         height: 56px;
     }
     
-    /* 迷你播放器 */
-    .mini-player-cover {
-        width: 40px;
-        height: 40px;
-    }
-    .mini-player-title { font-size: 12px; }
-    .mini-player-artist { font-size: 11px; }
-    .mini-player-subtitle { font-size: 10px; }
-    .mini-control-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
-        gap: 10px;
-    }
+    /* Mini Player 代码已移除 */
     
     /* 搜索框 */
     .search-modal-input {

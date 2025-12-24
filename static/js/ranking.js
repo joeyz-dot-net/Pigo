@@ -146,11 +146,18 @@ export class RankingManager {
                         
                         if (response.status === 'OK') {
                             Toast.success(i18n.t('ranking.addedToPlaylist') + ': ' + title);
+                        } else if (response.duplicate) {
+                            Toast.warning(title + ' 已在播放列表中');
                         } else {
-                            Toast.error(i18n.t('ranking.addFailed') + ': ' + (response.message || '未知错误'));
+                            Toast.error(i18n.t('ranking.addFailed') + ': ' + (response.error || response.message || '未知错误'));
                         }
                     } catch (err) {
-                        Toast.error(i18n.t('ranking.addFailed') + ': ' + err.message);
+                        // 检查是否是重复歌曲的错误
+                        if (err.duplicate) {
+                            Toast.warning(title + ' 已在播放列表中');
+                        } else {
+                            Toast.error(i18n.t('ranking.addFailed') + ': ' + (err.error || err.message));
+                        }
                     }
                 }
             });

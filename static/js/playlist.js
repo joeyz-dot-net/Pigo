@@ -298,12 +298,18 @@ export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
     }
 
     if (titleEl) {
-        let titleText = `${playlistName} (${playlist.length} 首)`;
+        let titleText = playlistName;
         // ✅ 如果当前选择不是默认歌单，添加标识
         if (selectedPlaylistId !== 'default') {
             titleText += ' (当前选择)';
         }
         titleEl.textContent = titleText;
+    }
+
+    // 更新歌曲数量显示
+    const countEl = document.getElementById('playListCount');
+    if (countEl) {
+        countEl.textContent = `${playlist.length} 首歌曲`;
     }
 
     container.innerHTML = '';
@@ -329,14 +335,27 @@ export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
         
         if (isCurrentPlaying) {
             item.classList.add('current-playing');
+            
+            // 添加垂直进度条
+            const progressBar = document.createElement('div');
+            progressBar.className = 'track-progress-bar';
+            progressBar.innerHTML = '<div class="track-progress-fill" id="currentTrackProgress"></div>';
+            item.appendChild(progressBar);
         }
         
         item.dataset.index = index;
 
+        // 为本地歌曲生成封面URL
+        let coverUrl = song.thumbnail_url || '';
+        if (!coverUrl && song.type !== 'youtube' && song.url) {
+            // 本地歌曲：使用 /cover/ 接口获取封面
+            coverUrl = `/cover/${encodeURIComponent(song.url)}`;
+        }
+
         const cover = document.createElement('div');
         cover.className = 'track-cover';
         cover.innerHTML = `
-            <img src="${song.thumbnail_url || ''}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <img src="${coverUrl}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
             <div class="track-cover-placeholder">🎵</div>
         `;
 
@@ -436,6 +455,18 @@ export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
             if (e.target.closest('.drag-handle')) return;
             // 如果点击的是删除按钮，不触发播放
             if (e.target.closest('.track-menu-btn')) return;
+            
+            // 如果点击的是当前正在播放的歌曲，打开全屏播放器
+            if (isCurrentPlaying) {
+                const fullPlayer = document.getElementById('fullPlayer');
+                if (fullPlayer) {
+                    fullPlayer.style.display = 'flex';
+                    setTimeout(() => {
+                        fullPlayer.classList.add('show');
+                    }, 10);
+                }
+                return;
+            }
             
             // ✅ 点击歌曲：移动到队列顶部并播放
             await moveToTopAndPlay(song, index, onPlay, { container, titleEl, onPlay, currentMeta });

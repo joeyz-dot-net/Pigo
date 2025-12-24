@@ -193,6 +193,229 @@ button:active { transform: scale(0.98); }
     cursor: default;
 }
 
+/* 本地专辑卡片网格（目录显示） */
+.local-album-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    padding: 12px 0;
+}
+
+.local-album-grid.sub-grid {
+    padding-left: 20px;
+}
+
+.local-album-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary, #1e1e1e);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.local-album-card:hover {
+    border-color: var(--accent-color, #1e90ff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.local-album-card.expanded {
+    border-color: var(--accent-color, #1e90ff);
+    box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
+}
+
+.local-album-cover {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--bg-tertiary, #2a2a2a);
+    position: relative;
+    overflow: hidden;
+}
+
+.local-album-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.local-album-cover-placeholder {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    background: var(--bg-tertiary, #2a2a2a);
+}
+
+.local-album-info {
+    padding: 10px;
+}
+
+.local-album-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 4px;
+}
+
+.local-album-count {
+    font-size: 11px;
+    color: var(--text-secondary, #888);
+}
+
+.local-album-expand-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #fff;
+}
+
+.local-album-content {
+    margin: 12px 0;
+    padding: 12px;
+    background: var(--bg-tertiary, #1a1a1a);
+    border-radius: 8px;
+}
+
+/* 面包屑导航 */
+.local-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px 0;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--text-secondary, #888);
+    border-bottom: 1px solid var(--border-color, #333);
+}
+
+.breadcrumb-home,
+.breadcrumb-item {
+    color: var(--accent-color, #1e90ff);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.breadcrumb-home:hover,
+.breadcrumb-item:hover {
+    background: var(--bg-secondary, #1e1e1e);
+    color: var(--text-primary, #fff);
+}
+
+.breadcrumb-sep {
+    color: var(--text-muted, #555);
+    font-size: 12px;
+}
+
+/* 本地歌曲列表（播放列表样式） */
+.local-songs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 0;
+}
+
+.local-song-item {
+    cursor: pointer;
+}
+
+.local-song-item:hover {
+    border-color: var(--accent-color, #1e90ff) !important;
+}
+
+/* 兼容旧版本的卡片样式 */
+.local-song-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 12px 0;
+}
+
+.local-song-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary, #1e1e1e);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.local-song-card:hover {
+    border-color: var(--accent-color, #1e90ff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.local-song-cover {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--bg-tertiary, #2a2a2a);
+    position: relative;
+    overflow: hidden;
+}
+
+.local-song-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.local-song-cover-placeholder {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    background: var(--bg-tertiary, #2a2a2a);
+}
+
+.local-song-info {
+    padding: 12px;
+}
+
+.local-song-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 4px;
+}
+
+.local-song-type {
+    font-size: 11px;
+    color: var(--text-secondary, #888);
+}
+
 /* 本地文件卡片 */
 .local-card-grid {
     display: grid;
@@ -279,7 +502,7 @@ button:active { transform: scale(0.98); }
     position: relative;
 }
 .playlist-track-item.current-playing { 
-    border-left: 3px solid;
+    border-left: none;
     position: sticky;
     top: 0;
     left: 0;
@@ -294,6 +517,34 @@ button:active { transform: scale(0.98); }
     padding-left: 12px;
     padding-right: 12px;
     width: calc(100% + 24px);
+    overflow: visible;
+}
+
+/* 当前播放歌曲的水平进度条（底部） */
+.track-progress-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: rgba(128, 128, 128, 0.2);
+    z-index: 30;
+}
+
+.track-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    height: 100%;
+    background: #1e90ff;
+    transition: width 0.3s linear;
+}
+
+/* 移除之前的margin-left */
+.playlist-track-item.current-playing .track-left {
+    margin-left: 0;
 }
 
 .track-cover {
@@ -1204,217 +1455,85 @@ button:active { transform: scale(0.98); }
 }
 
 .play-list-header {
-    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 16px;
     margin-bottom: 0;
-    border-bottom: 1px solid;
+    border-bottom: 1px solid var(--border-color, #333);
+    background: linear-gradient(135deg, var(--bg-secondary, #1a1a1a) 0%, var(--bg-tertiary, #0d0d0d) 100%);
+}
+
+.play-list-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.play-list-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-color, #1e90ff) 0%, #6366f1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+}
+
+.play-list-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .play-list-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary, #fff);
+}
+
+.play-list-count {
+    font-size: 13px;
+    color: var(--text-secondary, #888);
+}
+
+.play-list-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.play-list-action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-tertiary, #2a2a2a);
+    color: var(--text-primary, #fff);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.play-list-action-btn:hover {
+    background: var(--accent-color, #1e90ff);
+    transform: scale(1.05);
+}
+
+.play-list-action-btn:active {
+    transform: scale(0.95);
 }
 
 .play-list-container {
     padding: 16px;
 }
 
-/* Mini Player */
-.mini-player {
-    position: fixed;
-    bottom: 64px;
-    left: 0;
-    right: 0;
-    border-top: 1px solid;
-    border-bottom: 1px solid;
-    z-index: 50;
-    cursor: pointer;
-    transition: background 0.3s ease, border-color 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.mini-player-collapse-btn {
-    flex-shrink: 0;
-    width: 36px;
-    height: 100%;
-    min-height: 64px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s ease, background 0.2s ease;
-    align-self: stretch;
-}
-
-.mini-player-collapse-btn:hover {
-    background: var(--card-hover-bg);
-    color: var(--text-primary);
-}
-
-.mini-player.collapsed {
-    bottom: 64px;
-    right: auto;
-    left: 0;
-    width: auto;
-}
-
-.mini-player.collapsed .mini-player-content {
-    display: none;
-}
-
-.mini-player.collapsed .mini-player-progress {
-    display: none;
-}
-
-.mini-player-content-wrapper {
-    display: flex;
-    align-items: center;
-    flex: 1;
-}
-
-.mini-player-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    flex: 1;
-    min-width: 0;
-}
-
-.mini-player-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
-}
-
-.mini-player-cover {
-    width: 48px;
-    height: 48px;
-    border-radius: 6px;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.mini-player-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.mini-player-cover-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.mini-player-text {
-    flex: 1;
-    min-width: 0;
-}
-
-.mini-player-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.mini-player-status {
-    font-size: 12px;
-    color: #4CAF50;
-    opacity: 0;
-    transition: opacity 0.3s;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.mini-player-status.show {
-    opacity: 1;
-}
-
-.mini-player-artist {
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.mini-player-subtitle {
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.mini-player-separator {
-    opacity: 0.5;
-    margin: 0 2px;
-}
-
-.mini-player-playlist {
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 0;
-}
-
-.mini-player-controls {
-    display: flex;
-    gap: 12px;
-}
-
-.mini-control-btn {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border: 1px solid;
-    border-radius: 50%;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.mini-control-btn:hover {
-    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
-    transform: scale(1.05);
-}
-
-.mini-control-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.mini-player-progress {
-    height: 2px;
-    width: 100%;
-    overflow: hidden;
-}
-
-.mini-player-progress-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.1s;
-}
+/* Mini Player 代码已移除 */
 
 /* Full Screen Player */
 .full-player {

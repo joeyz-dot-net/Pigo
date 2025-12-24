@@ -462,58 +462,7 @@ button:hover { background: var(--button-hover-bg); border-color: var(--button-ho
     color: var(--text-primary);
 }
 
-.mini-player {
-    background: var(--bg-primary);
-    border-top-color: var(--border-color);
-    border-bottom-color: var(--border-color);
-}
-
-.mini-player:hover {
-    background: var(--bg-secondary);
-}
-
-.mini-player:active {
-    background: var(--bg-primary);
-}
-
-.mini-player-cover {
-    background: #1a1a1a;
-}
-
-.mini-player-title {
-    color: var(--text-primary);
-}
-
-.mini-player-artist {
-    color: #888;
-}
-
-.mini-player-subtitle {
-    color: #666;
-}
-
-.mini-player-playlist {
-    color: #4a9eff;
-}
-
-.mini-control-btn {
-    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
-    border-color: #333;
-    color: #fff;
-}
-
-.mini-control-btn:hover {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border-color: #555;
-}
-
-.mini-player-progress {
-    background: #222;
-}
-
-.mini-player-progress-fill {
-    background: #fff;
-}
+/* Mini Player 代码已移除 */
 
 .full-player {
     background: linear-gradient(to bottom, var(--bg-secondary) 0%, var(--bg-primary) 100%);

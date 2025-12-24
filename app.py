@@ -10,7 +10,9 @@ import time
 import logging
 import hashlib
 import random
+import subprocess
 from pathlib import Path
+from urllib.parse import unquote
 
 logger = logging.getLogger(__name__)
 
@@ -392,6 +394,100 @@ except Exception as e:
     traceback.print_exc()
 
 # ============================================
+# 常见封面文件名
+# ============================================
+COVER_FILENAMES = [
+    "cover.jpg", "cover.png", "cover.jpeg",
+    "folder.jpg", "folder.png", "folder.jpeg",
+    "album.jpg", "album.png", "album.jpeg",
+    "front.jpg", "front.png", "front.jpeg",
+    "albumart.jpg", "albumart.png", "albumart.jpeg",
+    "Cover.jpg", "Cover.png", "Folder.jpg", "Folder.png",
+]
+
+def _get_cover_from_directory(file_path: str) -> str:
+    """从音频文件所在目录查找封面文件"""
+    directory = os.path.dirname(file_path)
+    for cover_name in COVER_FILENAMES:
+        cover_path = os.path.join(directory, cover_name)
+        if os.path.isfile(cover_path):
+            return cover_path
+    return None
+
+def _extract_embedded_cover_bytes(file_path: str) -> bytes:
+    """使用 FFmpeg 提取音频文件内嵌封面，返回字节数据（不保存文件）"""
+    try:
+        ffmpeg_path = SETTINGS.get("ffmpeg_path", "ffmpeg")
+        cmd = [
+            ffmpeg_path,
+            "-i", file_path,
+            "-an",  # 不处理音频
+            "-vcodec", "mjpeg",  # 输出为JPEG
+            "-vf", "scale=500:-1",  # 限制宽度为500px
+            "-f", "image2pipe",  # 输出到管道
+            "-"  # 输出到 stdout
+        ]
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            timeout=10,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+        )
+        
+        if result.returncode == 0 and result.stdout:
+            return result.stdout
+    except Exception as e:
+        logger.debug(f"提取内嵌封面失败: {e}")
+    return None
+
+@app.get("/cover/{file_path:path}")
+async def get_cover(file_path: str):
+    """获取本地歌曲封面
+    
+    1. 优先提取音频文件内嵌封面（不保存，直接返回）
+    2. 回退到目录中的 cover.jpg/folder.jpg 等
+    """
+    try:
+        from fastapi.responses import Response
+        
+        # URL 解码
+        decoded_path = unquote(file_path)
+        
+        # 构建绝对路径
+        if os.path.isabs(decoded_path):
+            abs_path = decoded_path
+        else:
+            abs_path = os.path.join(PLAYER.music_dir, decoded_path)
+        
+        if not os.path.isfile(abs_path):
+            raise HTTPException(status_code=404, detail="音频文件不存在")
+        
+        # 1. 尝试提取内嵌封面（直接返回字节流，不保存）
+        cover_bytes = _extract_embedded_cover_bytes(abs_path)
+        if cover_bytes:
+            return Response(content=cover_bytes, media_type="image/jpeg")
+        
+        # 2. 尝试目录封面文件
+        cover_path = _get_cover_from_directory(abs_path)
+        if cover_path and os.path.isfile(cover_path):
+            ext = os.path.splitext(cover_path)[1].lower()
+            media_type = {
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".png": "image/png",
+                ".webp": "image/webp",
+            }.get(ext, "image/jpeg")
+            return FileResponse(cover_path, media_type=media_type)
+        
+        raise HTTPException(status_code=404, detail="未找到封面")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"获取封面失败: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
 # HTML 路由
 # ============================================
 
@@ -698,9 +794,36 @@ async def get_status():
             f"音量: {int(volume)}%"
         )
     
+    # 为本地歌曲添加封面 URL（仅当封面存在时）
+    current_meta = dict(PLAYER.current_meta) if PLAYER.current_meta else {}
+    if current_meta.get("type") == "local" and not current_meta.get("thumbnail_url"):
+        url = current_meta.get("url", "")
+        if url:
+            # 先检查封面是否存在
+            if os.path.isabs(url):
+                abs_path = url
+            else:
+                abs_path = os.path.join(PLAYER.music_dir, url)
+            
+            # 检查内嵌封面或目录封面
+            has_cover = False
+            if os.path.isfile(abs_path):
+                # 检查目录封面
+                if _get_cover_from_directory(abs_path):
+                    has_cover = True
+                else:
+                    # 快速检查是否有内嵌封面（检查FFmpeg能否提取）
+                    cover_bytes = _extract_embedded_cover_bytes(abs_path)
+                    if cover_bytes:
+                        has_cover = True
+            
+            if has_cover:
+                from urllib.parse import quote
+                current_meta["thumbnail_url"] = f"/cover/{quote(url, safe='')}"
+    
     return {
         "status": "OK",
-        "current_meta": PLAYER.current_meta,
+        "current_meta": current_meta,
         "current_playlist_id": CURRENT_PLAYLIST_ID,
         "current_playlist_name": playlist.name if playlist else "--",
         "loop_mode": PLAYER.loop_mode,
@@ -950,7 +1073,17 @@ async def add_to_playlist(request: Request):
                 status_code=404
             )
         
-        # ✅ 如果未指定 insert_index，计算默认位置
+        # ✅ 检查歌曲是否已存在于歌单中
+        song_url = song_data.get("url", "")
+        for existing_song in playlist.songs:
+            existing_url = existing_song.get("url", "")
+            if existing_url and existing_url == song_url:
+                return JSONResponse(
+                    {"status": "ERROR", "error": "该歌曲已存在于当前播放序列", "duplicate": True},
+                    status_code=409
+                )
+        
+        # ✅ 如果未指定 insert_index，插入到当前播放歌曲的下一个位置（插队）
         if insert_index is None:
             current_index = playlist.current_playing_index if hasattr(playlist, 'current_playing_index') else -1
             # 如果有当前播放的歌曲，则插入到下一个位置；否则插入到第一首之后
@@ -1026,6 +1159,15 @@ async def add_song_to_playlist_next(playlist_id: str, request: Request):
                 {"status": "ERROR", "error": f"歌单 {playlist_id} 不存在"},
                 status_code=404
             )
+        
+        # ✅ 检查歌曲是否已存在于歌单中
+        for existing_song in playlist.songs:
+            existing_url = existing_song.get("url", "")
+            if existing_url and existing_url == url:
+                return JSONResponse(
+                    {"status": "ERROR", "error": "该歌曲已存在于当前播放序列", "duplicate": True},
+                    status_code=409
+                )
         
         # 如果是 YouTube 歌曲且没有缩略图，自动生成
         if song_type == "youtube" and not thumbnail_url:

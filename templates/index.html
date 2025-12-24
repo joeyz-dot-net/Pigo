@@ -84,7 +84,16 @@
 		
 		<div class="play-list-section" id="playListSection">
 			<div class="play-list-header">
-				<h3 class="play-list-title" id="playListTitle">当前播放列表</h3>
+				<div class="play-list-header-left">
+					<div class="play-list-icon">🎵</div>
+					<div class="play-list-header-info">
+						<h3 class="play-list-title" id="playListTitle">当前播放列表</h3>
+						<span class="play-list-count" id="playListCount">0 首歌曲</span>
+					</div>
+				</div>
+				<div class="play-list-header-actions">
+					<button class="play-list-action-btn" id="playlistSelectBtn" title="选择歌单">📋</button>
+				</div>
 			</div>
 			<div id="playListContainer" class="play-list-container"></div>
 		</div>
@@ -167,7 +176,8 @@
 					<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
 				</svg>
 				<div class="full-player-volume-slider">
-						<input type="range" id="fullPlayerVolumeSlider" min="1" max="50" value="25" />					<div id="fullPlayerVolumeDisplay" class="volume-display" style="display:none;">
+						<input type="range" id="fullPlayerVolumeSlider" min="1" max="100" value="50" />	
+						<div id="fullPlayerVolumeDisplay" class="volume-display" style="display:none;">
 						<span class="volume-value">50</span>
 					</div>				</div>
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -178,29 +188,7 @@
 		</div>
 	</div>
 
-	<!-- Mini Player -->
-	<div id="miniPlayer" class="mini-player">
-		<div class="mini-player-content-wrapper">
-			<button id="miniPlayerCollapseBtn" class="mini-player-collapse-btn" title="折叠播放器">◀</button>
-			<div class="mini-player-content">
-				<div class="mini-player-info">
-					<div class="mini-player-cover">
-						<img id="miniPlayerCover" src="" alt="" style="display:none;" />
-						<div class="mini-player-cover-placeholder">🎵</div>
-					</div>
-					<div class="mini-player-text">
-						<div class="mini-player-title" id="miniPlayerTitle">未播放</div>				<div class="mini-player-status" id="miniPlayerStatus"></div>				</div>
-				</div>
-				<div class="mini-player-controls">
-					<button id="miniPlayPauseBtn" class="mini-control-btn" title="播放/暂停">▶</button>
-					<button id="miniNextBtn" class="mini-control-btn" title="下一首">⏭</button>
-				</div>
-			</div>
-		</div>
-		<div class="mini-player-progress">
-			<div id="miniPlayerProgressFill" class="mini-player-progress-fill"></div>
-		</div>
-	</div>
+	<!-- Mini Player 已移除 -->
 	
 	<!-- Bottom Navigation -->
 	<nav id="bottomNav" class="bottom-nav">

@@ -99,7 +99,7 @@ export class SearchManager {
                 // 延迟搜索（防抖）
                 this.searchTimeout = setTimeout(async () => {
                     await this.performSearch(query);
-                }, 800);
+                }, 3000);
             });
             
             // 按下回车搜索
@@ -322,7 +322,13 @@ export class SearchManager {
                             document.dispatchEvent(new CustomEvent('playlist:refresh'));
                         }
                     } else {
-                        throw new Error('添加失败');
+                        const error = await response.json();
+                        // 重复歌曲使用警告提示
+                        if (error.duplicate) {
+                            Toast.warning(`${songData.title} 已在播放列表中`);
+                        } else {
+                            throw new Error(error.error || '添加失败');
+                        }
                     }
                 } catch (error) {
                     console.error('添加歌曲失败:', error);

@@ -22,6 +22,14 @@ export class Toast {
         const toast = createElement('div', `toast toast-${type}`);
         toast.textContent = message;
         
+        // 颜色映射
+        const bgColors = {
+            error: '#f44336',
+            success: '#4caf50',
+            warning: '#ff9800',
+            info: '#2196f3'
+        };
+        
         // 样式 ✅ 垂直水平居中
         Object.assign(toast.style, {
             position: 'fixed',
@@ -30,7 +38,7 @@ export class Toast {
             transform: 'translate(-50%, -50%)',
             padding: '12px 24px',
             borderRadius: '4px',
-            backgroundColor: type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3',
+            backgroundColor: bgColors[type] || bgColors.info,
             color: 'white',
             zIndex: '10000',
             boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
@@ -60,6 +68,10 @@ export class Toast {
 
     static info(message, duration) {
         this.show(message, 'info', duration);
+    }
+
+    static warning(message, duration) {
+        this.show(message, 'warning', duration);
     }
 }
 

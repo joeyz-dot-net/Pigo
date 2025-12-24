@@ -209,7 +209,7 @@ def interactive_select_streaming_mode(timeout: int = 10) -> bool:
     
     print("\n请选择音频输出模式:\n")
     print(f"  [1] 本地播放 - 播放到本机音频设备")
-    print(f"      {CYAN}✓ 直接播放，无延迟{RESET}")
+    print(f"       直接播放，无延迟")
     print("")
     print(f"  {GREEN}{BOLD}► [2] 推流模式 - 通过 VB-Cable + FFmpeg 推流到浏览器 ✓{RESET}")
     print(f"      {CYAN}✓ 支持浏览器播放{RESET}")

@@ -31,12 +31,31 @@ body.theme-light {
 #playlist.theme-light .play-list-header {
     border-bottom-color: #e0e0e0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    background: #f9f9f9;
+    background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+}
+
+#playlist.theme-light .play-list-icon {
+    background: transparent;
+    box-shadow: none;
 }
 
 #playlist.theme-light .play-list-title {
     color: #1a1a1a;
     text-shadow: none;
+}
+
+#playlist.theme-light .play-list-count {
+    color: #666666;
+}
+
+#playlist.theme-light .play-list-action-btn {
+    background: #e8e8e8;
+    color: #333333;
+}
+
+#playlist.theme-light .play-list-action-btn:hover {
+    background: #0066cc;
+    color: #ffffff;
 }
 
 #playlist.theme-light .playlist-track-item {
@@ -192,63 +211,7 @@ body.theme-light {
     color: #888888;
 }
 
-/* Mini Player - 亮色主题液态玻璃效果 */
-.mini-player {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top-color: rgba(221, 221, 221, 0.5);
-    border-bottom-color: rgba(221, 221, 221, 0.5);
-}
-
-.mini-player:hover {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-.mini-player-cover {
-    background: #f0f0f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.mini-player-title {
-    color: #1a1a1a;
-}
-
-.mini-player-artist {
-    color: #888888;
-}
-
-.mini-player-subtitle {
-    color: #aaaaaa;
-}
-
-.mini-player-playlist {
-    color: #0066cc;
-    font-weight: 600;
-}
-
-.mini-control-btn {
-    background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
-    border-color: #d0d0d0;
-    color: #333333;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.mini-control-btn:hover {
-    background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
-    border-color: #bbb;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.mini-player-progress {
-    background: rgba(221, 221, 221, 0.5);
-}
-
-.mini-player-progress-fill {
-    background: #0066cc;
-}
+/* Mini Player 代码已移除 */
 
 /* Full Player - 亮色主题 */
 .full-player {
@@ -574,6 +537,24 @@ body.theme-light {
 .youtube-search-modal-body {
     background: rgba(255, 255, 255, 0.5);
     color: #1a1a1a;
+}
+
+/* 全屏播放器进度条 - 亮色主题 */
+.full-player-progress-bar {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.full-player-progress-fill {
+    background: linear-gradient(90deg, #0066cc 0%, #0052a3 100%);
+}
+
+.full-player-progress-thumb {
+    background: #0066cc;
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.4);
+}
+
+.full-player-time {
+    color: #666;
 }
 
 /* 标签页背景 - 亮色主题 */
