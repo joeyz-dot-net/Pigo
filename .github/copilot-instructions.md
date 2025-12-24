@@ -15,6 +15,7 @@ python main.py  # Interactive prompts for audio device + streaming
 2. **FormData not JSON**: Player routes (`/play`, `/seek`, `/volume`) use `await request.form()`, NOT JSON body
 3. **Global Singletons**: Use `PLAYER`, `PLAYLISTS_MANAGER`, `RANK_MANAGER` directly (line ~100 in app.py)—never instantiate new ones
 4. **Config Reload**: `settings.ini` is cached at startup—restart `python main.py` for changes
+5. **Path Detection**: All executable paths (ffmpeg, mpv, yt-dlp) must use `sys.frozen` check for PyInstaller support—never hardcode `__file__` paths
 
 ## Architecture
 
@@ -81,6 +82,30 @@ Add to BOTH `zh` and `en` objects in [static/js/i18n.js](../static/js/i18n.js):
 | `[browser_configs]` | Safari/Chrome/Firefox: `queue_blocks,heartbeat_ms,timeout,keepalive` |
 | `[formats]` | Per-codec: `codec,bitrate,profile,chunk_kb,heartbeat,queue_mult` |
 | `[logging]` | `level`, `polling_sample_rate` (0.1 = 10% of /status requests logged) |
+
+## Executable Path Detection
+
+**PyInstaller Support**: All modules use `sys.frozen` detection:
+```python
+if getattr(sys, 'frozen', False):
+    app_dir = os.path.dirname(sys.executable)  # Packaged exe
+else:
+    app_dir = os.path.dirname(os.path.abspath(__file__))  # Development
+```
+
+**Directory Structure**:
+```
+MusicPlayer.exe (or main.py)
+settings.ini
+bin/
+  ├─ ffmpeg.exe
+  ├─ mpv.exe
+  └─ yt-dlp.exe
+```
+
+**Affected Files**: `models/stream.py`, `models/player.py`, `models/song.py`, `main.py`
+
+All executables are expected in the `bin/` subdirectory relative to the main program directory.
 
 ## Debugging
 

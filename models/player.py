@@ -26,28 +26,6 @@ from models import Song, LocalSong, StreamSong, Playlist, PlayHistory
 logger = logging.getLogger(__name__)
 
 
-def _read_bin_dir_from_config(app_dir: str) -> str:
-    """从配置文件读取 bin_dir
-    
-    参数:
-        app_dir: 应用程序根目录
-    
-    返回:
-        bin_dir 路径名称（相对路径或绝对路径）
-    """
-    bin_dir = "bin"  # 默认值
-    try:
-        config_path = os.path.join(app_dir, "settings.ini")
-        if os.path.exists(config_path):
-            config = configparser.ConfigParser()
-            config.read(config_path, encoding="utf-8")
-            if config.has_section('paths') and config.has_option('paths', 'bin_dir'):
-                bin_dir = config.get('paths', 'bin_dir')
-    except Exception as e:
-        logger.debug(f"读取 bin_dir 配置失败: {e}")
-    return bin_dir
-
-
 class MusicPlayer:
     """音乐播放器类 - 包含所有播放器配置和状态"""
 
@@ -67,9 +45,18 @@ class MusicPlayer:
 
     @staticmethod
     def _get_app_dir():
-        """获取应用程序目录"""
-        # 使用统一的路径解析方式（从 __file__ 推导）
-        return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        """获取应用程序目录（主程序目录）
+        
+        支持两种情况：
+        1. 开发环境：从 models/player.py 推导到主程序目录
+        2. PyInstaller 打包后的 exe：使用 exe 文件所在目录作为主程序目录
+        """
+        if getattr(sys, 'frozen', False):
+            # 打包后的 exe：使用 exe 文件所在目录
+            return os.path.dirname(sys.executable)
+        else:
+            # 开发环境：从 models/player.py 推导到主程序目录
+            return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     @staticmethod
     def _normalize_mpv_cmd(mpv_cmd: str, app_dir: str = None) -> str:
@@ -117,10 +104,9 @@ class MusicPlayer:
     def _get_default_mpv_cmd():
         """获取默认的 MPV 命令"""
         app_dir = MusicPlayer._get_app_dir()
-        bin_dir = _read_bin_dir_from_config(app_dir)
         
-        # 从配置文件读取的 bin 目录下构建 mpv.exe 路径
-        mpv_path = os.path.join(app_dir, bin_dir, "mpv.exe")
+        # 主程序目录下的 bin 子目录中的 mpv.exe 路径
+        mpv_path = os.path.join(app_dir, "bin", "mpv.exe")
         return (
             f'"{mpv_path}" '
             "--input-ipc-server=\\\\.\\\pipe\\\\mpv-pipe "
@@ -630,15 +616,14 @@ class MusicPlayer:
 
         logger.info(f"尝试启动 mpv: {self.mpv_cmd}")
         try:
-            # 从配置文件读取 bin 目录并查找 yt-dlp
+            # 主程序目录下的 bin 子目录中查找 yt-dlp
             app_dir = MusicPlayer._get_app_dir()
-            bin_dir = _read_bin_dir_from_config(app_dir)
             yt_dlp_path = None
             
-            bin_yt_dlp = os.path.join(app_dir, bin_dir, "yt-dlp.exe")
+            bin_yt_dlp = os.path.join(app_dir, "bin", "yt-dlp.exe")
             if os.path.exists(bin_yt_dlp):
                 yt_dlp_path = bin_yt_dlp
-                logger.info(f"在 {bin_dir} 目录找到 yt-dlp: {bin_yt_dlp}")
+                logger.info(f"在主程序目录 {app_dir}\\bin 找到 yt-dlp: {bin_yt_dlp}")
             
             # 构建完整的启动命令
             mpv_launch_cmd = self.mpv_cmd
@@ -1270,10 +1255,9 @@ class MusicPlayer:
             actual_url = url
             if "youtube.com" in url or "youtu.be" in url:
                 logger.info(f"🎬 检测到 YouTube URL，尝试通过 yt-dlp 获取直链...")
-                # 从配置文件读取 bin 目录
+                # 主程序目录下的 bin 子目录
                 app_dir = MusicPlayer._get_app_dir()
-                bin_dir = _read_bin_dir_from_config(app_dir)
-                bin_yt_dlp = os.path.join(app_dir, bin_dir, "yt-dlp.exe")
+                bin_yt_dlp = os.path.join(app_dir, "bin", "yt-dlp.exe")
                 
                 if os.path.exists(bin_yt_dlp):
                     yt_dlp_exe = bin_yt_dlp

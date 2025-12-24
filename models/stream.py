@@ -13,6 +13,7 @@ import threading
 import queue
 import time
 import os
+import sys
 import platform
 import logging
 from pathlib import Path
@@ -226,39 +227,18 @@ KEEPALIVE_THRESHOLD, KEEPALIVE_CHUNK_SIZE, BROADCAST_QUEUE_MAXSIZE, BROADCAST_EX
 # 全局变量（初始化后设置）
 FFMPEG_CMD = None
 
-def _read_bin_dir_from_config(app_dir: str) -> str:
-    """从配置文件读取 bin_dir
-    
-    参数:
-        app_dir: 应用程序根目录
-    
-    返回:
-        bin_dir 路径名称
-    """
-    bin_dir = "bin"  # 默认值
-    try:
-        import configparser
-        config_path = os.path.join(app_dir, "settings.ini")
-        if os.path.exists(config_path):
-            config = configparser.ConfigParser()
-            config.read(config_path, encoding="utf-8")
-            if config.has_section('paths') and config.has_option('paths', 'bin_dir'):
-                bin_dir = config.get('paths', 'bin_dir')
-    except Exception as e:
-        logger.debug(f"读取 bin_dir 配置失败: {e}")
-    return bin_dir
-
-
 def find_ffmpeg():
     """查找FFmpeg可执行文件"""
-    # 使用统一的路径解析方式（从 __file__ 推导）
-    app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # 获取主程序目录（支持 PyInstaller 打包后的 exe）
+    if getattr(sys, 'frozen', False):
+        # 打包后的 exe：使用 exe 文件所在目录
+        app_dir = os.path.dirname(sys.executable)
+    else:
+        # 开发环境：从 models/stream.py 推导到主程序目录
+        app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     
-    # 从配置文件读取 bin_dir
-    bin_dir = _read_bin_dir_from_config(app_dir)
-    
-    # 使用配置的 bin 目录下的 ffmpeg.exe
-    bin_ffmpeg = os.path.join(app_dir, bin_dir, "ffmpeg.exe")
+    # 使用主程序目录下的 bin 子目录中的 ffmpeg.exe
+    bin_ffmpeg = os.path.join(app_dir, "bin", "ffmpeg.exe")
     
     # 验证文件是否存在
     if os.path.exists(bin_ffmpeg):
@@ -266,7 +246,7 @@ def find_ffmpeg():
         return bin_ffmpeg
     
     # 如果 bin 目录不存在，尝试系统 PATH
-    logger.warning(f"未在 {bin_dir} 目录找到 ffmpeg.exe，尝试使用系统 PATH")
+    logger.warning(f"未在主程序目录 {app_dir}\\bin 找到 ffmpeg.exe，尝试使用系统 PATH")
     return "ffmpeg"
 
 def find_available_audio_device():

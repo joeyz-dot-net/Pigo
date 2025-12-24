@@ -13,25 +13,17 @@ import os
 
 def find_ffmpeg():
     """查找 FFmpeg 可执行文件"""
-    # 方案1: 使用配置文件中的 FFmpeg 路径
+    # 方案1: 检查 bin 目录
     try:
-        import configparser
         from pathlib import Path
         
-        config_path = Path(__file__).parent / "settings.ini"
-        if config_path.exists():
-            config = configparser.ConfigParser()
-            config.read(config_path, encoding="utf-8")
-            
-            # 从配置文件读取 bin_dir
-            bin_dir = config.get("paths", "bin_dir", fallback="bin")
-            ffmpeg_path = Path(__file__).parent / bin_dir / "ffmpeg.exe"
-            
-            if ffmpeg_path.exists():
-                print(f"✅ 在 {bin_dir} 目录找到 FFmpeg: {ffmpeg_path}")
-                return str(ffmpeg_path)
+        ffmpeg_path = Path(__file__).parent / "bin" / "ffmpeg.exe"
+        
+        if ffmpeg_path.exists():
+            print(f"✅ 在 bin 目录找到 FFmpeg: {ffmpeg_path}")
+            return str(ffmpeg_path)
     except Exception as e:
-        print(f"⚠️  读取配置文件失败: {e}")
+        print(f"⚠️  检查 bin 目录失败: {e}")
     
     # 方案2: 使用系统 PATH
     try:

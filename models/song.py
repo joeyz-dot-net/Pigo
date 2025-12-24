@@ -329,18 +329,22 @@ class StreamSong(Song):
                 import subprocess
                 logger.info(f"🎬 检测到 YouTube URL，尝试通过 yt-dlp 获取直链...")
                 
-                # 获取应用程序目录（统一路径解析方式）
-                app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                # 获取主程序目录（支持 PyInstaller 打包后的 exe）
+                if getattr(sys, 'frozen', False):
+                    # 打包后的 exe：使用 exe 文件所在目录作为主程序目录
+                    app_dir = os.path.dirname(sys.executable)
+                else:
+                    # 开发环境：从 models/song.py 推导到主程序目录
+                    app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 
-                # 从配置文件读取 bin 目录
-                bin_dir = _read_bin_dir_from_config(app_dir)
-                bin_yt_dlp = os.path.join(app_dir, bin_dir, "yt-dlp.exe")
+                # 使用主程序目录下的 bin 子目录
+                bin_yt_dlp = os.path.join(app_dir, "bin", "yt-dlp.exe")
                 
                 if os.path.exists(bin_yt_dlp):
                     yt_dlp_exe = bin_yt_dlp
                     logger.info(f"   📦 使用 yt-dlp: {bin_yt_dlp}")
                 else:
-                    logger.info(f"   📦 yt-dlp.exe 不在 {bin_dir} 目录，使用系统 PATH")
+                    logger.info(f"   📦 yt-dlp.exe 不在 bin 目录，使用系统 PATH")
                     yt_dlp_exe = "yt-dlp"
                 
                 try:
