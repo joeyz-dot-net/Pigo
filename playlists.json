@@ -10,14 +10,24 @@
       "name": "正在播放",
       "songs": [
         {
-          "url": "Fayer 飞儿/千年之恋.flac",
-          "title": "千年之恋.flac",
-          "name": "千年之恋.flac",
+          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
+          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766639096,
+          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
+          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 一千个伤心的理由.flac",
+          "title": "张学友 - 一千个伤心的理由",
+          "name": "张学友 - 一千个伤心的理由",
           "type": "local",
           "duration": 0,
-          "ts": 1766633135,
-          "thumbnail_url": null,
-          "artist": "千年之恋.flac"
+          "ts": 1766639091,
+          "thumbnail_url": "",
+          "artist": "张学友 - 一千个伤心的理由"
         },
         {
           "url": "Faye Wang 王菲/影子.flac",
@@ -50,35 +60,15 @@
           "artist": "Spotify Hits 2026 ❄️  ｜ Winter 2025⧸2026 ｜ Best Spotify Trending Playlist"
         }
       ],
-      "song_count": 4,
+      "song_count": 5,
       "created_at": 1766369731.0493586,
-      "updated_at": 1766633236.7754693,
+      "updated_at": 1766639133.1435528,
       "current_playing_index": -1
     },
     {
       "id": "1766634940529",
       "name": "323s",
       "songs": [
-        {
-          "url": "Black Myth - Wukong FLAC/03. Nonsense!.flac",
-          "title": "03. Nonsense!.flac",
-          "name": "03. Nonsense!.flac",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766635107,
-          "thumbnail_url": null,
-          "artist": "03. Nonsense!.flac"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=cn2TOTSPIjc",
-          "title": "ShanYichun单依纯 - Lil sis《纯妹妹》Official Music Video",
-          "name": "ShanYichun单依纯 - Lil sis《纯妹妹》Official Music Video",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766635231,
-          "thumbnail_url": "https://img.youtube.com/vi/cn2TOTSPIjc/default.jpg",
-          "artist": "ShanYichun单依纯 - Lil sis《纯妹妹》Official Music Video"
-        },
         {
           "url": "https://www.youtube.com/watch?v=PisAtilDIis",
           "title": "【歌手2025·纯享】 #单依纯《君》“经典传承”！创新串烧改编 传递跨越时空的怀念 |《歌手2025》| SINGER 2025｜MangoTV",
@@ -110,35 +100,15 @@
           "artist": "单依纯 - 不值得 (Live)"
         }
       ],
-      "song_count": 5,
+      "song_count": 3,
       "created_at": 1766634940.5293915,
-      "updated_at": 1766635231.3344026,
+      "updated_at": 1766638793.1203935,
       "current_playing_index": -1
     },
     {
       "id": "1766634943229",
       "name": "sdadsasdasd",
       "songs": [
-        {
-          "url": "Black Myth - Wukong FLAC/01. I See.flac",
-          "title": "01. I See.flac",
-          "name": "01. I See.flac",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766635096,
-          "thumbnail_url": null,
-          "artist": "01. I See.flac"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
-          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
-          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766635222,
-          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
-          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
-        },
         {
           "url": "Jacky Cheung 张学友/张学友 - 一千个伤心的理由.flac",
           "title": "张学友 - 一千个伤心的理由",
@@ -148,11 +118,21 @@
           "ts": 1766635221,
           "thumbnail_url": "",
           "artist": "张学友 - 一千个伤心的理由"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/01. I See.flac",
+          "title": "01. I See.flac",
+          "name": "01. I See.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766635096,
+          "thumbnail_url": null,
+          "artist": "01. I See.flac"
         }
       ],
-      "song_count": 3,
+      "song_count": 2,
       "created_at": 1766634943.2290564,
-      "updated_at": 1766635222.3229992,
+      "updated_at": 1766639282.4951391,
       "current_playing_index": -1
     }
   ]

@@ -174,16 +174,10 @@
 
 	<!-- Mini Player 已移除 -->
 	
-	<!-- Bottom Navigation -->
+	<!-- Bottom Navigation (简化版：队列、搜索、设置) -->
 	<nav id="bottomNav" class="bottom-nav">
 		<button class="nav-item active" data-tab="playlists">
 			<span class="nav-icon">🎵</span>
-		</button>
-		<button class="nav-item" data-tab="local">
-			<span class="nav-icon">📂</span>
-		</button>
-		<button class="nav-item" data-tab="ranking">
-			<span class="nav-icon">🏆</span>
 		</button>
 		<button class="nav-item" data-tab="search">
 			<span class="nav-icon">🔍</span>
@@ -438,6 +432,21 @@
 							<input type="range" id="streamVolumeSetting" class="volume-slider" min="0" max="100" value="50">
 							<span id="streamVolumeValue" class="volume-value">50%</span>
 						</div>
+					</div>
+				</div>
+				
+				<!-- 功能入口 -->
+				<div class="settings-section">
+					<h3 class="section-title">📁 功能入口</h3>
+					<div style="display: flex; gap: 12px; margin-bottom: 12px;">
+						<button id="localFilesBtn" data-tab="local" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(67, 233, 123, 0.3);">
+							<span style="font-size: 18px;">📂</span>
+							<span>本地歌曲</span>
+						</button>
+						<button id="rankingBtn" data-tab="ranking" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(250, 112, 154, 0.3);">
+							<span style="font-size: 18px;">🏆</span>
+							<span>播放排行</span>
+						</button>
 					</div>
 				</div>
 				
