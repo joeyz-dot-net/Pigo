@@ -1478,6 +1478,58 @@ async def delete_playlist(playlist_id: str):
             status_code=500
         )
 
+@app.post("/playlists/{playlist_id}/remove")
+async def remove_song_from_playlist(playlist_id: str, request: Request):
+    """从指定歌单中移除歌曲"""
+    try:
+        form = await request.form()
+        index = int(form.get("index", -1))
+        
+        logger.debug(f"remove_song_from_playlist - playlist_id: {playlist_id}, index: {index}")
+        
+        if index < 0:
+            logger.error(f"[ERROR] 无效的索引: {index}")
+            return JSONResponse(
+                {"status": "ERROR", "error": "无效的索引"},
+                status_code=400
+            )
+        
+        playlist = PLAYLISTS_MANAGER.get_playlist(playlist_id)
+        if not playlist:
+            logger.error(f"[ERROR] 找不到歌单: {playlist_id}")
+            return JSONResponse(
+                {"status": "ERROR", "error": "找不到歌单"},
+                status_code=404
+            )
+        
+        logger.debug(f"目标歌单歌曲数: {len(playlist.songs)}")
+        
+        if index >= len(playlist.songs):
+            logger.error(f"[ERROR] 索引超出范围: {index} >= {len(playlist.songs)}")
+            return JSONResponse(
+                {"status": "ERROR", "error": "索引超出范围"},
+                status_code=400
+            )
+        
+        song_to_remove = playlist.songs[index]
+        logger.debug(f"准备删除歌曲: {song_to_remove.get('title', 'Unknown') if isinstance(song_to_remove, dict) else song_to_remove}")
+        
+        playlist.songs.pop(index)
+        playlist.updated_at = time.time()
+        PLAYLISTS_MANAGER.save()
+        
+        logger.info(f"[SUCCESS] 从歌单 {playlist_id} 删除成功，剩余歌曲数: {len(playlist.songs)}")
+        return JSONResponse({"status": "OK", "message": "删除成功"})
+        
+    except Exception as e:
+        logger.error(f"[EXCEPTION] remove_song_from_playlist error: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            {"status": "ERROR", "error": str(e)},
+            status_code=500
+        )
+
 @app.put("/playlists/{playlist_id}")
 async def update_playlist(playlist_id: str, data: dict):
     """更新歌单信息（如名称）"""

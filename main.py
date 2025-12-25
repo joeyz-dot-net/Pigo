@@ -221,12 +221,12 @@ def interactive_select_streaming_mode(timeout: int = 10) -> bool:
     RESET = '\033[0m'
     
     print("\n请选择音频输出模式:\n")
-    print(f"  [1] 本地播放 - 播放到本机音频设备")
-    print(f"       直接播放，无延迟")
+    print(f"  {GREEN}{BOLD}► [1] 本地播放 - 播放到本机音频设备 ✓{RESET}")
+    print(f"      {CYAN}直接播放，无延迟{RESET}")
     print("")
-    print(f"  {GREEN}{BOLD}► [2] 推流模式 - 通过 VB-Cable + FFmpeg 推流到浏览器 ✓{RESET}")
-    print(f"      {CYAN}✓ 支持浏览器播放{RESET}")
-    print(f"\n⏱️  {timeout}秒后自动选择: 推流模式{RESET}")
+    print(f"  [2] 推流模式 - 通过 VB-Cable + FFmpeg 推流到浏览器")
+    print(f"       ✓ 支持浏览器播放")
+    print(f"\n⏱️  {timeout}秒后自动选择: 本地播放模式{RESET}")
     print("─" * 60)
     
     # 使用线程实现超时输入和倒计时显示
@@ -243,12 +243,12 @@ def interactive_select_streaming_mode(timeout: int = 10) -> bool:
     
     def get_input():
         try:
-            user_input = input(f"\n请选择 [2]: ").strip()
+            user_input = input(f"\n请选择 [1]: ").strip()
             countdown_active[0] = False
-            selected[0] = user_input if user_input else "2"
+            selected[0] = user_input if user_input else "1"
         except EOFError:
             countdown_active[0] = False
-            selected[0] = "2"
+            selected[0] = "1"
     
     countdown_thread = threading.Thread(target=show_countdown, daemon=True)
     countdown_thread.start()
@@ -258,7 +258,7 @@ def interactive_select_streaming_mode(timeout: int = 10) -> bool:
     input_thread.join(timeout=timeout)
     
     # 解析用户选择
-    choice = selected[0] if selected[0] is not None else "2"
+    choice = selected[0] if selected[0] is not None else "1"
     
     try:
         choice_num = int(choice)
@@ -278,6 +278,10 @@ def interactive_select_streaming_mode(timeout: int = 10) -> bool:
             print(f"\n{GREEN}{BOLD}✅ 已选择: 本地播放模式{RESET}")
             print(f"   {CYAN}音频仅播放到本机音频设备{RESET}")
             return False
+    except ValueError:
+        # 解析失败，使用默认
+        print(f"\n❌ 无效选择 '{choice}'，使用默认: 本地播放模式")
+        return False
     except ValueError:
         print(f"\n❌ 无效选择 '{choice}'，默认推流模式")
         return True

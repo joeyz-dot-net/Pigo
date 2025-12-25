@@ -135,6 +135,12 @@ export class MusicAPI {
         return this.postForm('/playlist_remove', formData);
     }
 
+    async removeFromSpecificPlaylist(playlistId, index) {
+        const formData = new FormData();
+        formData.append('index', index);
+        return this.postForm(`/playlists/${playlistId}/remove`, formData);
+    }
+
     async reorderPlaylist(playlistId, fromIndex, toIndex) {
         return this.post('/playlist_reorder', {
             playlist_id: playlistId,

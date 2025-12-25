@@ -55,6 +55,9 @@ export class PlaylistsManagement {
     show() {
         if (this.modal) {
             this.modal.style.display = 'block';
+            setTimeout(() => {
+                this.modal.classList.add('modal-visible');
+            }, 10);
             this.render();
         }
     }
@@ -62,7 +65,10 @@ export class PlaylistsManagement {
     // 隐藏模态框
     hide() {
         if (this.modal) {
-            this.modal.style.display = 'none';
+            this.modal.classList.remove('modal-visible');
+            setTimeout(() => {
+                this.modal.style.display = 'none';
+            }, 300);
         }
     }
 
@@ -145,16 +151,32 @@ export class PlaylistsManagement {
             // 点击歌单切换
             item.querySelector('.playlist-info').addEventListener('click', async () => {
                 try {
-                    await playlistManager.switch(playlist.id);
-                    // ✅ 同时设置当前选择的歌单
+                    console.log('[歌单管理] 开始切换歌单:', playlist.id, playlist.name);
+                    
+                    // 第一步：调用后端切换API，更新服务器的CURRENT_PLAYLIST_ID
+                    console.log('[歌单管理] 步骤1: 调用后端切换API');
+                    const switchResult = await playlistManager.switch(playlist.id);
+                    console.log('[歌单管理] 后端切换结果:', switchResult);
+                    
+                    // 第二步：更新前端本地状态
+                    console.log('[歌单管理] 步骤2: 更新前端本地状态');
                     playlistManager.setSelectedPlaylist(playlist.id);
+                    
+                    // 第三步：重新加载数据确保同步
+                    console.log('[歌单管理] 步骤3: 重新加载所有歌单数据');
+                    await playlistManager.loadAll();
+                    
+                    console.log('[歌单管理] ✅ 歌单切换完成:', playlist.name);
                     Toast.success(`已切换到：${playlist.name}`);
                     this.hide();
+                    
                     // 通知外部需要刷新播放列表
                     if (this.onPlaylistSwitchCallback && typeof this.onPlaylistSwitchCallback === 'function') {
-                        this.onPlaylistSwitchCallback();
+                        console.log('[歌单管理] 步骤4: 触发回调函数');
+                        this.onPlaylistSwitchCallback(playlist.id, playlist.name);
                     }
                 } catch (error) {
+                    console.error('[歌单管理] 切换失败:', error);
                     Toast.error('切换失败: ' + error.message);
                 }
             });

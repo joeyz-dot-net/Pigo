@@ -105,11 +105,42 @@ export class PlaylistManager {
 
     // 从当前播放列表删除指定索引的歌曲
     async removeAt(index) {
-        const result = await api.removeFromPlaylist(index);
-        if (result.status === 'OK') {
-            await this.loadCurrent();
+        // 索引验证
+        if (typeof index !== 'number' || index < 0) {
+            throw new Error(`无效的索引: ${index}`);
         }
-        return result;
+        
+        // 检查当前播放列表长度
+        if (!this.currentPlaylist || index >= this.currentPlaylist.length) {
+            throw new Error(`索引超出范围: ${index} >= ${this.currentPlaylist?.length || 0}`);
+        }
+        
+        const songTitle = this.currentPlaylist[index]?.title || '未知歌曲';
+        console.log(`[删除歌曲] 歌单: ${this.selectedPlaylistId}, 索引: ${index}, 歌曲: ${songTitle}`);
+        
+        // 根据当前选择的歌单使用不同的API
+        let result;
+        try {
+            if (this.selectedPlaylistId === 'default') {
+                // 默认歌单使用旧的API (针对当前播放的歌单)
+                result = await api.removeFromPlaylist(index);
+            } else {
+                // 非默认歌单使用新的API (针对特定歌单)
+                result = await api.removeFromSpecificPlaylist(this.selectedPlaylistId, index);
+            }
+            
+            if (result.status === 'OK') {
+                console.log(`[删除成功] ${songTitle} 已从歌单删除`);
+                await this.loadCurrent();
+            } else {
+                throw new Error(result.error || result.message || '删除操作失败');
+            }
+            
+            return result;
+        } catch (error) {
+            console.error(`[删除失败] 歌单: ${this.selectedPlaylistId}, 索引: ${index}`, error);
+            throw error;
+        }
     }
 
     // 调整当前播放列表顺序
@@ -433,13 +464,32 @@ export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
             `;
             deleteBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
+                
+                // 防止重复点击
+                if (deleteBtn.disabled) {
+                    return;
+                }
+                
                 if (confirm(`确定删除《${song.title}》吗？`)) {
                     try {
+                        // 禁用按钮防止重复点击
+                        deleteBtn.disabled = true;
+                        deleteBtn.style.opacity = '0.5';
+                        
                         await playlistManager.removeAt(index);
+                        
+                        // 确保所有歌单数据都是最新的
+                        await playlistManager.loadAll();
+                        
                         Toast.success('已删除');
                         renderPlaylistUI({ container, titleEl, onPlay, currentMeta });
                     } catch (err) {
-                        Toast.error('删除失败');
+                        console.error(`删除歌曲失败 (索引: ${index}):`, err);
+                        Toast.error('删除失败: ' + (err.message || err));
+                        
+                        // 删除失败时重新启用按钮
+                        deleteBtn.disabled = false;
+                        deleteBtn.style.opacity = '1';
                     }
                 }
             });
