@@ -1,14 +1,214 @@
 {
   "order": [
     "default",
-    "1766621957749",
-    "1766621964281"
+    "1766625904391",
+    "1766625918078"
   ],
   "playlists": [
     {
       "id": "default",
-      "name": "默认歌单",
+      "name": "正在播放",
       "songs": [
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 只想一生跟你走.flac",
+          "title": "张学友 - 只想一生跟你走",
+          "name": "张学友 - 只想一生跟你走",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630835,
+          "thumbnail_url": "",
+          "artist": "张学友 - 只想一生跟你走"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/13. 英雄气概等时休.flac",
+          "title": "13. 英雄气概等时休.flac",
+          "name": "13. 英雄气概等时休.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630978,
+          "thumbnail_url": null,
+          "artist": "13. 英雄气概等时休.flac"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/14. 胜景赛娑婆.flac",
+          "title": "14. 胜景赛娑婆.flac",
+          "name": "14. 胜景赛娑婆.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630975,
+          "thumbnail_url": null,
+          "artist": "14. 胜景赛娑婆.flac"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 听海 (live).flac",
+          "title": "张学友 - 听海 (live)",
+          "name": "张学友 - 听海 (live)",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630831,
+          "thumbnail_url": "",
+          "artist": "张学友 - 听海 (live)"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 回头太难.flac",
+          "title": "张学友 - 回头太难",
+          "name": "张学友 - 回头太难",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630827,
+          "thumbnail_url": "",
+          "artist": "张学友 - 回头太难"
+        },
+        {
+          "url": "Eason 陈奕迅/因为爱情-陈奕迅、王菲.flac",
+          "title": "因为爱情-陈奕迅、王菲.flac",
+          "name": "因为爱情-陈奕迅、王菲.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630305,
+          "thumbnail_url": null,
+          "artist": "因为爱情-陈奕迅、王菲.flac"
+        },
+        {
+          "url": "[object Object]",
+          "title": "undefined",
+          "name": "undefined",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630359,
+          "thumbnail_url": null,
+          "artist": "undefined"
+        },
+        {
+          "url": "ETC/R3hab&蔡依林-Stars Align.flac",
+          "title": "R3hab&蔡依林-Stars Align.flac",
+          "name": "R3hab&蔡依林-Stars Align.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630359,
+          "thumbnail_url": null,
+          "artist": "R3hab&蔡依林-Stars Align.flac"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=kzZ7Jc8C4wA",
+          "title": "孫燕姿 Sun Yanzi TOP25 Video 必聽經典25首 [情歌療癒系MV] 串燒 無間斷 完整聆聽 KTV必唱 經典K歌 回憶殺 我懷念的 無敵孫式情歌 我不難過 開始懂了 遇見 天黑黑",
+          "name": "孫燕姿 Sun Yanzi TOP25 Video 必聽經典25首 [情歌療癒系MV] 串燒 無間斷 完整聆聽 KTV必唱 經典K歌 回憶殺 我懷念的 無敵孫式情歌 我不難過 開始懂了 遇見 天黑黑",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766630356,
+          "thumbnail_url": "https://img.youtube.com/vi/kzZ7Jc8C4wA/maxresdefault.jpg",
+          "artist": "孫燕姿 Sun Yanzi TOP25 Video 必聽經典25首 [情歌療癒系MV] 串燒 無間斷 完整聆聽 KTV必唱 經典K歌 回憶殺 我懷念的 無敵孫式情歌 我不難過 開始懂了 遇見 天黑黑"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=ojA7sPQ0sqU",
+          "title": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs",
+          "name": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766630345,
+          "thumbnail_url": "https://img.youtube.com/vi/ojA7sPQ0sqU/maxresdefault.jpg",
+          "artist": "Spotify Pop Hits 2026 ❄️ Chill Pop Playlist 🌙 Winter 2025/2026 ~ Best New Pop Songs"
+        },
+        {
+          "url": "ETC/5 20AM.m4a",
+          "title": "5 20AM.m4a",
+          "name": "5 20AM.m4a",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630343,
+          "thumbnail_url": null,
+          "artist": "5 20AM.m4a"
+        },
+        {
+          "url": "Stefanie Sun 孫燕姿/2000台北演唱会/01. 孙燕姿 - 天黑黑 (CD Version).flac",
+          "title": "01. 孙燕姿 - 天黑黑 (CD Version)",
+          "name": "01. 孙燕姿 - 天黑黑 (CD Version)",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630341,
+          "thumbnail_url": null,
+          "artist": "01. 孙燕姿 - 天黑黑 (CD Version)"
+        },
+        {
+          "url": "Fayer 飞儿/Lydia.flac",
+          "title": "Lydia.flac",
+          "name": "Lydia.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630341,
+          "thumbnail_url": null,
+          "artist": "Lydia.flac"
+        },
+        {
+          "url": "ETC/5 20AM - soldier.flac",
+          "title": "5 20AM - soldier.flac",
+          "name": "5 20AM - soldier.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630336,
+          "thumbnail_url": null,
+          "artist": "5 20AM - soldier.flac"
+        },
+        {
+          "url": "Eason 陈奕迅/富士山下-陈奕迅.flac",
+          "title": "富士山下-陈奕迅.flac",
+          "name": "富士山下-陈奕迅.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630304,
+          "thumbnail_url": null,
+          "artist": "富士山下-陈奕迅.flac"
+        },
+        {
+          "url": "Eason 陈奕迅/好久不见-陈奕迅.flac",
+          "title": "好久不见-陈奕迅.flac",
+          "name": "好久不见-陈奕迅.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630303,
+          "thumbnail_url": null,
+          "artist": "好久不见-陈奕迅.flac"
+        },
+        {
+          "url": "Eason 陈奕迅/你的背包-陈奕迅.flac",
+          "title": "你的背包-陈奕迅.flac",
+          "name": "你的背包-陈奕迅.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630303,
+          "thumbnail_url": null,
+          "artist": "你的背包-陈奕迅.flac"
+        },
+        {
+          "url": "Fayer 飞儿/你的微笑.flac",
+          "title": "你的微笑.flac",
+          "name": "你的微笑.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630299,
+          "thumbnail_url": null,
+          "artist": "你的微笑.flac"
+        },
+        {
+          "url": "Eason 陈奕迅/孤勇者.flac",
+          "title": "孤勇者.flac",
+          "name": "孤勇者.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630297,
+          "thumbnail_url": null,
+          "artist": "孤勇者.flac"
+        },
+        {
+          "url": "Bruno Mars - Greatest Songs (2018)/05 - Grenade.mp3",
+          "title": "05 - Grenade.mp3",
+          "name": "05 - Grenade.mp3",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766628133,
+          "thumbnail_url": null,
+          "artist": "05 - Grenade.mp3"
+        },
         {
           "url": "https://www.youtube.com/watch?v=qVQvFWiBJkU",
           "title": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧",
@@ -18,6 +218,116 @@
           "ts": 1766370098,
           "thumbnail_url": "https://img.youtube.com/vi/qVQvFWiBJkU/maxresdefault.jpg",
           "artist": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/06. Listen Not.flac",
+          "title": "06. Listen Not.flac",
+          "name": "06. Listen Not.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627569,
+          "thumbnail_url": null,
+          "artist": "06. Listen Not.flac"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/05. The Web.flac",
+          "title": "05. The Web.flac",
+          "name": "05. The Web.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627567,
+          "thumbnail_url": null,
+          "artist": "05. The Web.flac"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/12. 称王称圣任纵横.flac",
+          "title": "12. 称王称圣任纵横.flac",
+          "name": "12. 称王称圣任纵横.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627177,
+          "thumbnail_url": null,
+          "artist": "12. 称王称圣任纵横.flac"
+        },
+        {
+          "url": "Elva Hsiao 萧亚轩/明天 2001/06. 萧亚轩 - 我爱你那么多.flac",
+          "title": "06. 萧亚轩 - 我爱你那么多.flac",
+          "name": "06. 萧亚轩 - 我爱你那么多.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625876,
+          "thumbnail_url": null,
+          "artist": "06. 萧亚轩 - 我爱你那么多.flac"
+        },
+        {
+          "url": "Elva Hsiao 萧亚轩/明天 2001/03. 萧亚轩, 黄立行 - Let It Go.flac",
+          "title": "03. 萧亚轩, 黄立行 - Let It Go.flac",
+          "name": "03. 萧亚轩, 黄立行 - Let It Go.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625875,
+          "thumbnail_url": null,
+          "artist": "03. 萧亚轩, 黄立行 - Let It Go.flac"
+        },
+        {
+          "url": "Elva Hsiao 萧亚轩/明天 2001/04. 萧亚轩 - 天使暂时离开.flac",
+          "title": "04. 萧亚轩 - 天使暂时离开.flac",
+          "name": "04. 萧亚轩 - 天使暂时离开.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625874,
+          "thumbnail_url": null,
+          "artist": "04. 萧亚轩 - 天使暂时离开.flac"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 慢慢.flac",
+          "title": "张学友 - 慢慢.flac",
+          "name": "张学友 - 慢慢.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625485,
+          "thumbnail_url": null,
+          "artist": "张学友 - 慢慢.flac"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 小城大事.flac",
+          "title": "张学友 - 小城大事.flac",
+          "name": "张学友 - 小城大事.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625485,
+          "thumbnail_url": null,
+          "artist": "张学友 - 小城大事.flac"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/11. Unfinished.flac",
+          "title": "11. Unfinished.flac",
+          "name": "11. Unfinished.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625476,
+          "thumbnail_url": null,
+          "artist": "11. Unfinished.flac"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/10. It Will Fit Me Just As Well (Special Edition).flac",
+          "title": "10. It Will Fit Me Just As Well (Special Edition).flac",
+          "name": "10. It Will Fit Me Just As Well (Special Edition).flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625475,
+          "thumbnail_url": null,
+          "artist": "10. It Will Fit Me Just As Well (Special Edition).flac"
+        },
+        {
+          "url": "Black Myth - Wukong FLAC/02. The Yellow Wind Rises.flac",
+          "title": "02. The Yellow Wind Rises.flac",
+          "name": "02. The Yellow Wind Rises.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625474,
+          "thumbnail_url": null,
+          "artist": "02. The Yellow Wind Rises.flac"
         },
         {
           "url": "Black Myth - Wukong FLAC/01. I See.flac",
@@ -70,16 +380,6 @@
           "artist": "03. Nonsense!.flac"
         },
         {
-          "url": "ETC/5 20AM.mp3",
-          "title": "5 20AM.mp3",
-          "name": "5 20AM.mp3",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766542370,
-          "thumbnail_url": null,
-          "artist": "5 20AM.mp3"
-        },
-        {
           "url": "Spotify/Top Music Playlist 2026 ~ Top Songs 2026 🎶🎧 Top Hits 2026 ~ Spotify Playlist 2026.flac",
           "title": "Top Music Playlist 2026 ~ Top Songs 2026 🎶🎧 Top Hits 2026 ~ Spotify Playlist 2026",
           "name": "Top Music Playlist 2026 ~ Top Songs 2026 🎶🎧 Top Hits 2026 ~ Spotify Playlist 2026",
@@ -88,16 +388,6 @@
           "ts": 1766533903,
           "thumbnail_url": "",
           "artist": "Top Music Playlist 2026 ~ Top Songs 2026 🎶🎧 Top Hits 2026 ~ Spotify Playlist 2026"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=kzZ7Jc8C4wA",
-          "title": "孫燕姿 Sun Yanzi TOP25 Video 必聽經典25首 [情歌療癒系MV] 串燒 無間斷 完整聆聽 KTV必唱 經典K歌 回憶殺 我懷念的 無敵孫式情歌 我不難過 開始懂了 遇見 天黑黑",
-          "name": "孫燕姿 Sun Yanzi TOP25 Video 必聽經典25首 [情歌療癒系MV] 串燒 無間斷 完整聆聽 KTV必唱 經典K歌 回憶殺 我懷念的 無敵孫式情歌 我不難過 開始懂了 遇見 天黑黑",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766370887,
-          "thumbnail_url": "https://img.youtube.com/vi/kzZ7Jc8C4wA/maxresdefault.jpg",
-          "artist": "孫燕姿 Sun Yanzi TOP25 Video 必聽經典25首 [情歌療癒系MV] 串燒 無間斷 完整聆聽 KTV必唱 經典K歌 回憶殺 我懷念的 無敵孫式情歌 我不難過 開始懂了 遇見 天黑黑"
         },
         {
           "url": "Spotify/Spotify Hits 2026 ❄️  ｜ Winter 2025⧸2026 ｜ Best Spotify Trending Playlist.flac",
@@ -110,27 +400,289 @@
           "artist": "Spotify Hits 2026 ❄️  ｜ Winter 2025⧸2026 ｜ Best Spotify Trending Playlist"
         }
       ],
-      "song_count": 10,
+      "song_count": 39,
       "created_at": 1766369731.0493586,
-      "updated_at": 1766622326.2673204,
+      "updated_at": 1766630978.249653,
       "current_playing_index": -1
     },
     {
-      "id": "1766621957749",
+      "id": "1766625904391",
       "name": "2nd",
-      "songs": [],
-      "song_count": 0,
-      "created_at": 1766621957.7490792,
-      "updated_at": 1766622359.6343436,
+      "songs": [
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 吻别.flac",
+          "title": "张学友 - 吻别",
+          "name": "张学友 - 吻别",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630699,
+          "thumbnail_url": "",
+          "artist": "张学友 - 吻别"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 回头太难.flac",
+          "title": "张学友 - 回头太难",
+          "name": "张学友 - 回头太难",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630699,
+          "thumbnail_url": "",
+          "artist": "张学友 - 回头太难"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 听海 (live).flac",
+          "title": "张学友 - 听海 (live)",
+          "name": "张学友 - 听海 (live)",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630697,
+          "thumbnail_url": "",
+          "artist": "张学友 - 听海 (live)"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 只想一生跟你走.flac",
+          "title": "张学友 - 只想一生跟你走",
+          "name": "张学友 - 只想一生跟你走",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630695,
+          "thumbnail_url": "",
+          "artist": "张学友 - 只想一生跟你走"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 偷心.flac",
+          "title": "张学友 - 偷心",
+          "name": "张学友 - 偷心",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630694,
+          "thumbnail_url": "",
+          "artist": "张学友 - 偷心"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 一千个伤心的理由.flac",
+          "title": "张学友 - 一千个伤心的理由",
+          "name": "张学友 - 一千个伤心的理由",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630694,
+          "thumbnail_url": "",
+          "artist": "张学友 - 一千个伤心的理由"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 一路上有你.flac",
+          "title": "张学友 - 一路上有你",
+          "name": "张学友 - 一路上有你",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766630693,
+          "thumbnail_url": "",
+          "artist": "张学友 - 一路上有你"
+        },
+        {
+          "url": "Eason 陈奕迅/富士山下-陈奕迅.flac",
+          "title": "富士山下-陈奕迅.flac",
+          "name": "富士山下-陈奕迅.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627581,
+          "thumbnail_url": null,
+          "artist": "富士山下-陈奕迅.flac"
+        },
+        {
+          "url": "Eason 陈奕迅/好久不见-陈奕迅.flac",
+          "title": "好久不见-陈奕迅.flac",
+          "name": "好久不见-陈奕迅.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627580,
+          "thumbnail_url": null,
+          "artist": "好久不见-陈奕迅.flac"
+        },
+        {
+          "url": "Eason 陈奕迅/你的背包-陈奕迅.flac",
+          "title": "你的背包-陈奕迅.flac",
+          "name": "你的背包-陈奕迅.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627578,
+          "thumbnail_url": null,
+          "artist": "你的背包-陈奕迅.flac"
+        },
+        {
+          "url": "Fayer 飞儿/千年之恋.flac",
+          "title": "千年之恋.flac",
+          "name": "千年之恋.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627194,
+          "thumbnail_url": null,
+          "artist": "千年之恋.flac"
+        },
+        {
+          "url": "Fayer 飞儿/你的微笑.flac",
+          "title": "你的微笑.flac",
+          "name": "你的微笑.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627191,
+          "thumbnail_url": null,
+          "artist": "你的微笑.flac"
+        },
+        {
+          "url": "Eason 陈奕迅/孤勇者.flac",
+          "title": "孤勇者.flac",
+          "name": "孤勇者.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766625924,
+          "thumbnail_url": null,
+          "artist": "孤勇者.flac"
+        }
+      ],
+      "song_count": 13,
+      "created_at": 1766625904.3919802,
+      "updated_at": 1766630751.8716435,
       "current_playing_index": -1
     },
     {
-      "id": "1766621964281",
+      "id": "1766625918078",
       "name": "3st",
-      "songs": [],
-      "song_count": 0,
-      "created_at": 1766621964.2816844,
-      "updated_at": 1766622336.6507792,
+      "songs": [
+        {
+          "url": "ETC/Take a Bow-Madonna.flac",
+          "title": "Take a Bow-Madonna.flac",
+          "name": "Take a Bow-Madonna.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627278,
+          "thumbnail_url": null,
+          "artist": "Take a Bow-Madonna.flac"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=-avAw7V5KRM",
+          "title": "【张学友】经典好听的高品质音乐合集（二）",
+          "name": "【张学友】经典好听的高品质音乐合集（二）",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766630716,
+          "thumbnail_url": "https://img.youtube.com/vi/-avAw7V5KRM/default.jpg",
+          "artist": "【张学友】经典好听的高品质音乐合集（二）"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=Qj2aSallqxI",
+          "title": "从《只想一生跟你走》开始听张学友Jacky Cheung 30分钟精选歌单 |《华语金曲串烧》中国音乐电视 Music TV",
+          "name": "从《只想一生跟你走》开始听张学友Jacky Cheung 30分钟精选歌单 |《华语金曲串烧》中国音乐电视 Music TV",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766630716,
+          "thumbnail_url": "https://img.youtube.com/vi/Qj2aSallqxI/default.jpg",
+          "artist": "从《只想一生跟你走》开始听张学友Jacky Cheung 30分钟精选歌单 |《华语金曲串烧》中国音乐电视 Music TV"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=mMgpzyPCtlQ",
+          "title": "#張學友 演唱會2025 香港終站｜分手總要在雨天｜ 23.12.2025 頭場",
+          "name": "#張學友 演唱會2025 香港終站｜分手總要在雨天｜ 23.12.2025 頭場",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766630715,
+          "thumbnail_url": "https://img.youtube.com/vi/mMgpzyPCtlQ/default.jpg",
+          "artist": "#張學友 演唱會2025 香港終站｜分手總要在雨天｜ 23.12.2025 頭場"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=V51lvMylpNA",
+          "title": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
+          "name": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766630714,
+          "thumbnail_url": "https://img.youtube.com/vi/V51lvMylpNA/default.jpg",
+          "artist": "Jophia版-張學友 活出生命live演唱會2004全集 高清"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=AdQp6RwABTU",
+          "title": "#張學友 演唱會2025 香港終站｜情書｜23.12.2025 頭場",
+          "name": "#張學友 演唱會2025 香港終站｜情書｜23.12.2025 頭場",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766630713,
+          "thumbnail_url": "https://img.youtube.com/vi/AdQp6RwABTU/default.jpg",
+          "artist": "#張學友 演唱會2025 香港終站｜情書｜23.12.2025 頭場"
+        },
+        {
+          "url": "ETC/5 20AM - soldier.flac",
+          "title": "5 20AM - soldier.flac",
+          "name": "5 20AM - soldier.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627604,
+          "thumbnail_url": null,
+          "artist": "5 20AM - soldier.flac"
+        },
+        {
+          "url": "ETC/5 20AM.m4a",
+          "title": "5 20AM.m4a",
+          "name": "5 20AM.m4a",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627596,
+          "thumbnail_url": null,
+          "artist": "5 20AM.m4a"
+        },
+        {
+          "url": "ETC/5 20AM.mp3",
+          "title": "5 20AM.mp3",
+          "name": "5 20AM.mp3",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627596,
+          "thumbnail_url": null,
+          "artist": "5 20AM.mp3"
+        },
+        {
+          "url": "ETC/三拜红尘凉 (Live) - 张碧晨、孟佳.flac",
+          "title": "三拜红尘凉 (Live) - 张碧晨、孟佳.flac",
+          "name": "三拜红尘凉 (Live) - 张碧晨、孟佳.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627595,
+          "thumbnail_url": null,
+          "artist": "三拜红尘凉 (Live) - 张碧晨、孟佳.flac"
+        },
+        {
+          "url": "ETC/Lament of the Highborne.wav",
+          "title": "Lament of the Highborne.wav",
+          "name": "Lament of the Highborne.wav",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627592,
+          "thumbnail_url": null,
+          "artist": "Lament of the Highborne.wav"
+        },
+        {
+          "url": "ETC/ラブ・ストーリーは突然に-小田和正.mp3",
+          "title": "ラブ・ストーリーは突然に-小田和正.mp3",
+          "name": "ラブ・ストーリーは突然に-小田和正.mp3",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627280,
+          "thumbnail_url": null,
+          "artist": "ラブ・ストーリーは突然に-小田和正.mp3"
+        },
+        {
+          "url": "ETC/R3hab&蔡依林-Stars Align.flac",
+          "title": "R3hab&蔡依林-Stars Align.flac",
+          "name": "R3hab&蔡依林-Stars Align.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766627279,
+          "thumbnail_url": null,
+          "artist": "R3hab&蔡依林-Stars Align.flac"
+        }
+      ],
+      "song_count": 13,
+      "created_at": 1766625918.0788667,
+      "updated_at": 1766630716.5179946,
       "current_playing_index": -1
     }
   ]

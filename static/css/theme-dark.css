@@ -454,14 +454,6 @@ button:hover { background: var(--button-hover-bg); border-color: var(--button-ho
     background: #0a0a0a;
 }
 
-.play-list-header {
-    border-bottom-color: var(--border-color);
-}
-
-.play-list-title {
-    color: var(--text-primary);
-}
-
 /* Mini Player 代码已移除 */
 
 .full-player {

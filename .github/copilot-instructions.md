@@ -16,6 +16,8 @@ python main.py  # Interactive prompts for audio device + streaming
 3. **Global Singletons**: Use `PLAYER`, `PLAYLISTS_MANAGER`, `RANK_MANAGER` directly (line ~100 in app.py)—never instantiate new ones
 4. **Config Reload**: `settings.ini` is cached at startup—restart `python main.py` for changes
 5. **Path Detection**: All executable paths (ffmpeg, mpv, yt-dlp) must use `sys.frozen` check for PyInstaller support—never hardcode `__file__` paths
+6. **UTF-8 Stdout**: Always wrap `sys.stdout` with UTF-8 encoding in entry points for Windows compatibility (see main.py lines 11-13)
+7. **Module Init Order**: `models/__init__.py` prints load status—never change import order without testing
 
 ## Architecture
 
@@ -32,6 +34,16 @@ StreamingResponse ←────── FFmpeg 3-thread ←── VB-Cable ←�
 | Player | [models/player.py](../models/player.py) | MPV IPC via named pipe, playback state, config from settings.ini |
 | Stream | [models/stream.py](../models/stream.py) | FFmpeg broadcast: `read_stream` → `broadcast_worker` → `send_heartbeats` |
 | Frontend | [static/js/main.js](../static/js/main.js) | `MusicPlayerApp` class, 500ms status polling, ES6 module imports |
+
+### Frontend Module Structure
+All frontend code uses ES6 modules with explicit exports/imports:
+- **player.js**: `Player` class - playback control, stream management
+- **api.js**: `MusicAPI` class - HTTP request wrapper matching backend routes
+- **playlist.js**: `PlaylistManager` class - current playlist state
+- **playlists-management.js**: `PlaylistsManagement` class - multi-playlist UI
+- **i18n.js**: `i18n` object - bilingual zh/en translations (add BOTH languages when adding strings)
+- **settingsManager.js**: User preferences stored in localStorage (not backend)
+- **stream.js**: `streamManager` object - browser audio element lifecycle
 
 ## Adding Features
 
@@ -77,11 +89,14 @@ Add to BOTH `zh` and `en` objects in [static/js/i18n.js](../static/js/i18n.js):
 
 | Section | Key Settings |
 |---------|-------------|
-| `[app]` | `mpv_cmd` (with audio-device GUID), `music_dir`, `default_stream_format` (aac/mp3/flac) |
+| `[paths]` | `bin_dir` - Relative or absolute path to executables (ffmpeg, mpv, yt-dlp) |
+| `[app]` | `mpv_cmd` (with audio-device GUID), `music_dir`, `default_stream_format` (aac/mp3/flac), `audio_input_format` (wasapi/dshow) |
 | `[stream]` | `broadcast_queue_maxsize`, `broadcast_executor_workers` (120 for ~20 clients) |
 | `[browser_configs]` | Safari/Chrome/Firefox: `queue_blocks,heartbeat_ms,timeout,keepalive` |
 | `[formats]` | Per-codec: `codec,bitrate,profile,chunk_kb,heartbeat,queue_mult` |
 | `[logging]` | `level`, `polling_sample_rate` (0.1 = 10% of /status requests logged) |
+
+**Important**: `enable_stream` removed from config—now controlled by interactive prompt at startup.
 
 ## Executable Path Detection
 

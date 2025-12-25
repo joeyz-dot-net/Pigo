@@ -253,7 +253,7 @@ export async function playSongFromSelectedPlaylist(song, onPlay) {
             // 获取默认歌单
             const defaultPlaylist = playlistManager.playlists.find(p => p.id === 'default');
             if (!defaultPlaylist) {
-                Toast.error('默认歌单不存在');
+                Toast.error('❌ 默认歌单不存在');
                 return;
             }
             
@@ -289,8 +289,8 @@ export async function playSongFromSelectedPlaylist(song, onPlay) {
                 console.log('[播放列表] 歌曲已在默认歌单，跳过添加');
             }
             
-            // 通知用户，但不播放
-            Toast.success(`✅ 已添加 "${song.title}" 到队列`);
+            // 通知用户，但不播放（显示完整的歌单名称）
+            Toast.success(`✅ 已添加到「队列」: ${song.title}`);
             console.log('[播放列表] ⚠️ 歌曲已添加，但未播放（非默认歌单）');
         }
         
@@ -301,7 +301,7 @@ export async function playSongFromSelectedPlaylist(song, onPlay) {
 }
 
 // UI 渲染：当前播放列表
-export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
+export function renderPlaylistUI({ container, onPlay, currentMeta }) {
     if (!container) return;
 
     const selectedPlaylistId = playlistManager.getSelectedPlaylistId();
@@ -328,20 +328,21 @@ export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
         }
     }
 
-    if (titleEl) {
-        let titleText = playlistName;
-        // ✅ 如果当前选择不是默认歌单，添加标识
-        if (selectedPlaylistId !== 'default') {
-            titleText += ' (当前选择)';
-        }
-        titleEl.textContent = titleText;
-    }
+    // 更新选中歌单名称显示（已移除playlist header，不再需要）
+    // if (titleEl) {
+    //     let titleText = playlistName;
+    //     // ✅ 如果当前选择不是默认歌单，添加标识
+    //     if (selectedPlaylistId !== 'default') {
+    //         titleText += ' (当前选择)';
+    //     }
+    //     titleEl.textContent = titleText;
+    // }
 
-    // 更新歌曲数量显示
-    const countEl = document.getElementById('playListCount');
-    if (countEl) {
-        countEl.textContent = `${playlist.length} 首歌曲`;
-    }
+    // 更新歌曲数量显示（已移除playlist header，不再需要）
+    // const countEl = document.getElementById('playListCount');
+    // if (countEl) {
+    //     countEl.textContent = `${playlist.length} 首歌曲`;
+    // }
 
     container.innerHTML = '';
 
@@ -482,7 +483,7 @@ export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
                         await playlistManager.loadAll();
                         
                         Toast.success('已删除');
-                        renderPlaylistUI({ container, titleEl, onPlay, currentMeta });
+                        renderPlaylistUI({ container, onPlay, currentMeta });
                     } catch (err) {
                         console.error(`删除歌曲失败 (索引: ${index}):`, err);
                         Toast.error('删除失败: ' + (err.message || err));
@@ -519,15 +520,21 @@ export function renderPlaylistUI({ container, titleEl, onPlay, currentMeta }) {
                 return;
             }
             
-            // ✅ 点击歌曲：移动到队列顶部并播放
-            await moveToTopAndPlay(song, index, onPlay, { container, titleEl, onPlay, currentMeta });
+            // ✅ 点击歌曲：根据当前选择的歌单决定行为
+            if (selectedPlaylistId === 'default') {
+                // 默认歌单：移动到顶部并播放
+                await moveToTopAndPlay(song, index, onPlay, { container, onPlay, currentMeta });
+            } else {
+                // 非默认歌单：添加到默认歌单但不播放
+                await playSongFromSelectedPlaylist(song, onPlay);
+            }
         });
 
         container.appendChild(item);
     });
 
     // 初始化触摸拖拽排序
-    initTouchDragSort(container, renderPlaylistUI, { container, titleEl, onPlay, currentMeta });
+    initTouchDragSort(container, renderPlaylistUI, { container, onPlay, currentMeta });
 }
 
 // 触摸拖拽排序 - 移动端优化

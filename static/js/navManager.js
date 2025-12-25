@@ -20,26 +20,12 @@ export const navManager = {
 
     /**
      * 更新导航栏文本标签
+     * 注意：导航栏按钮已移除文字标签，仅显示图标
      */
     updateNavLabels() {
-        const navItems = document.querySelectorAll('.nav-item .nav-label');
-        const navMappings = {
-            0: 'nav.queue',      // 队列
-            1: 'nav.local',      // 本地
-            2: 'nav.ranking',    // 排行
-            3: 'nav.search',     // 搜索
-            4: 'nav.settings',   // 设置
-            5: 'nav.debug'       // 调试
-        };
-
-        navItems.forEach((label, index) => {
-            const key = navMappings[index];
-            if (key) {
-                label.textContent = i18n.t(key);
-            }
-        });
-
-        console.log('[导航] 导航栏标签已更新');
+        // 导航栏不再显示文字标签，仅保留图标
+        // 此方法保留供将来扩展使用
+        console.log('[导航] 导航栏已初始化（仅显示图标）');
     },
 
     /**

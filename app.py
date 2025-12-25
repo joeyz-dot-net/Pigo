@@ -125,7 +125,7 @@ def _init_default_playlist():
     """初始化系统默认歌单"""
     default_pl = PLAYLISTS_MANAGER.get_playlist(DEFAULT_PLAYLIST_ID)
     if not default_pl:
-        default_pl = PLAYLISTS_MANAGER.create_playlist("我的音乐")
+        default_pl = PLAYLISTS_MANAGER.create_playlist("正在播放")
         default_pl.id = DEFAULT_PLAYLIST_ID
         PLAYLISTS_MANAGER._playlists[DEFAULT_PLAYLIST_ID] = default_pl
         PLAYLISTS_MANAGER.save()

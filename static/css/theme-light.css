@@ -28,26 +28,6 @@ body.theme-light {
     background: #ffffff;
 }
 
-#playlist.theme-light .play-list-header {
-    border-bottom-color: #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
-}
-
-#playlist.theme-light .play-list-icon {
-    background: transparent;
-    box-shadow: none;
-}
-
-#playlist.theme-light .play-list-title {
-    color: #1a1a1a;
-    text-shadow: none;
-}
-
-#playlist.theme-light .play-list-count {
-    color: #666666;
-}
-
 #playlist.theme-light .play-list-action-btn {
     background: #e8e8e8;
     color: #333333;

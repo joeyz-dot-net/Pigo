@@ -69,10 +69,6 @@
 <body>
 	<script id="boot-data" type="application/json">{{ {'tree': tree, 'musicDir': music_dir}|tojson }}</script>
 	<main id="tree" class="tab-content local-tab bright-theme" aria-label="文件列表">
-		<div class="local-header">
-			<h2 class="local-title">本地歌曲</h2>
-			<input type="text" id="localSearchInput" class="local-search-input" placeholder="搜索歌曲或文件夹...">
-		</div>
 		<div id="localContent" class="local-content"></div>
 	</main>
 	<div id="playlist" class="tab-content playlist-tab" aria-label="播放列表">
@@ -83,18 +79,6 @@
 		</div>
 		
 		<div class="play-list-section" id="playListSection">
-			<div class="play-list-header">
-				<div class="play-list-header-left">
-					<div class="play-list-icon">🎵</div>
-					<div class="play-list-header-info">
-						<h3 class="play-list-title" id="playListTitle">当前播放列表</h3>
-						<span class="play-list-count" id="playListCount">0 首歌曲</span>
-					</div>
-				</div>
-				<div class="play-list-header-actions">
-					<button class="play-list-action-btn" id="playlistSelectBtn" title="选择歌单">📋</button>
-				</div>
-			</div>
 			<div id="playListContainer" class="play-list-container"></div>
 		</div>
 		<!-- YouTube搜索结果模态框 -->
@@ -126,7 +110,7 @@
 			<div class="full-player-info">
 				<div class="full-player-title" id="fullPlayerTitle">未播放</div>
 				
-				<div class="full-player-playlist" id="fullPlayerPlaylist">默认歌单</div>
+				<div class="full-player-playlist" id="fullPlayerPlaylist">正在播放</div>
 			</div>
 
 			<!-- Progress Bar -->
@@ -193,29 +177,24 @@
 	<!-- Bottom Navigation -->
 	<nav id="bottomNav" class="bottom-nav">
 		<button class="nav-item active" data-tab="playlists">
-			<span class="nav-icon">📋</span>
-			<span class="nav-label">队列</span>
+			<span class="nav-icon">🎵</span>
 		</button>
 		<button class="nav-item" data-tab="local">
-			<span class="nav-icon">🎵</span>
-			<span class="nav-label">本地</span>
+			<span class="nav-icon">📂</span>
 		</button>
 		<button class="nav-item" data-tab="ranking">
 			<span class="nav-icon">🏆</span>
-			<span class="nav-label">排行</span>
 		</button>
 		<button class="nav-item" data-tab="search">
 			<span class="nav-icon">🔍</span>
-			<span class="nav-label">搜索</span>
 		</button>
 		<button class="nav-item" id="settingsNavBtn" title="设置">
 			<span class="nav-icon">⚙️</span>
-			<span class="nav-label">设置</span>
 		</button>
 	</nav>
 	
 	<!-- 推流状态指示器 -->
-	<div id="streamStatusIndicator" class="stream-status-indicator" title="点击启动推流" style="cursor: pointer;">
+	<div id="streamStatusIndicator" class="stream-status-indicator" title="点击启动推流" style="cursor: pointer; display: none;">
 		<div class="stream-status-dot stream-status-disabled"></div>
 		<span class="stream-status-text">点击启动推流</span>
 	</div>

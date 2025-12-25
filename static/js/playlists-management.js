@@ -26,10 +26,10 @@ export class PlaylistsManagement {
                 if (name && name.trim()) {
                     try {
                         await playlistManager.create(name.trim());
-                        Toast.success('歌单创建成功');
+                        Toast.success('✅ 歌单创建成功');
                         this.render();
                     } catch (error) {
-                        Toast.error('创建失败: ' + error.message);
+                        Toast.error('❌ 创建失败: ' + error.message);
                     }
                 }
             });
@@ -167,7 +167,7 @@ export class PlaylistsManagement {
                     await playlistManager.loadAll();
                     
                     console.log('[歌单管理] ✅ 歌单切换完成:', playlist.name);
-                    Toast.success(`已切换到：${playlist.name}`);
+                    Toast.success(`📋 已切换到：${playlist.name}`);
                     this.hide();
                     
                     // 通知外部需要刷新播放列表
@@ -177,7 +177,7 @@ export class PlaylistsManagement {
                     }
                 } catch (error) {
                     console.error('[歌单管理] 切换失败:', error);
-                    Toast.error('切换失败: ' + error.message);
+                    Toast.error('❌ 切换失败: ' + error.message);
                 }
             });
 
@@ -192,10 +192,10 @@ export class PlaylistsManagement {
                         if (newName !== null && newName.trim() && newName.trim() !== playlist.name) {
                             try {
                                 await playlistManager.update(playlist.id, { name: newName.trim() });
-                                Toast.success('歌单已重命名');
+                                Toast.success('✏️ 歌单已重命名');
                                 this.render(onPlaylistSwitch);
                             } catch (error) {
-                                Toast.error('重命名失败: ' + error.message);
+                                Toast.error('❌ 重命名失败: ' + error.message);
                             }
                         }
                     });
@@ -224,12 +224,12 @@ export class PlaylistsManagement {
                                 
                                 await new Promise(resolve => setTimeout(resolve, 300));
                                 await playlistManager.delete(playlist.id);
-                                Toast.success('歌单已删除');
+                                Toast.success('🗑️ 歌单已删除');
                                 this.render(onPlaylistSwitch);
                             } catch (error) {
                                 item.style.opacity = '1';
                                 item.style.transform = 'translateX(0)';
-                                Toast.error('删除失败: ' + error.message);
+                                Toast.error('❌ 删除失败: ' + error.message);
                             }
                         }
                     });

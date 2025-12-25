@@ -145,7 +145,7 @@ export class RankingManager {
                         });
                         
                         if (response.status === 'OK') {
-                            Toast.success(i18n.t('ranking.addedToPlaylist') + ': ' + title);
+                            Toast.success('➕ ' + i18n.t('ranking.addedToPlaylist') + ': ' + title);
                         } else if (response.duplicate) {
                             Toast.warning(title + ' 已在播放列表中');
                         } else {

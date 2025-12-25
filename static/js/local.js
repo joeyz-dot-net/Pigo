@@ -53,6 +53,9 @@ const buildBreadcrumbHTML = (path) => {
         html += `<span class="breadcrumb-item" data-nav-to="${navPath}">${name}</span>`;
     });
     
+    // 添加返回按钮
+    html += '<button class="local-return-btn" id="localCloseBtn" title="返回歌单">✕</button>';
+    
     html += '</div>';
     return html;
 };
@@ -61,10 +64,8 @@ const buildBreadcrumbHTML = (path) => {
 const buildCurrentDirHTML = (node, path) => {
     let html = '';
     
-    // 如果有路径，始终显示面包屑导航（包括空目录时）
-    if (path.length > 0) {
-        html += buildBreadcrumbHTML(path);
-    }
+    // 始终显示面包屑导航（包括根目录和空目录时）
+    html += buildBreadcrumbHTML(path);
 
     if (!node) {
         return html + '<div class="local-empty">暂无本地文件</div>';
@@ -248,6 +249,21 @@ export const localFiles = {
     bindClicks() {
         if (!this.contentEl) return;
         
+        // 绑定返回按钮（关闭本地歌曲页面，返回歌单）
+        const localCloseBtn = this.contentEl.querySelector('#localCloseBtn');
+        if (localCloseBtn) {
+            localCloseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 触发导航到歌单页面
+                const playlistNavBtn = document.querySelector('.nav-item[data-tab="playlists"]');
+                if (playlistNavBtn) {
+                    playlistNavBtn.click();
+                }
+            });
+        }
+        
         // 绑定面包屑导航点击
         this.contentEl.querySelectorAll('.breadcrumb-home, .breadcrumb-item').forEach(el => {
             el.addEventListener('click', (e) => {
@@ -311,7 +327,17 @@ export const localFiles = {
             });
 
             if (response.ok) {
-                Toast.success(`已添加: ${fileName}`);
+                // 获取歌单名称以显示在toast中
+                let playlistName = '队列';
+                if (playlistId === 'default') {
+                    playlistName = '队列';
+                } else if (window.app && window.app.modules && window.app.modules.playlistManager) {
+                    const playlist = window.app.modules.playlistManager.playlists.find(p => p.id === playlistId);
+                    if (playlist) {
+                        playlistName = playlist.name;
+                    }
+                }
+                Toast.success(`➕ 已添加到「${playlistName}」: ${fileName}`);
                 if (this.onSongAdded && typeof this.onSongAdded === 'function') {
                     setTimeout(() => {
                         this.onSongAdded();

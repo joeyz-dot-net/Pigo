@@ -311,7 +311,17 @@ export class SearchManager {
                     });
                     
                     if (response.ok) {
-                        Toast.success(`已添加: ${songData.title}`);
+                        // 获取歌单名称以显示在toast中
+                        let playlistName = '队列';
+                        if (playlistId === 'default') {
+                            playlistName = '队列';
+                        } else if (window.app && window.app.modules && window.app.modules.playlistManager) {
+                            const playlist = window.app.modules.playlistManager.playlists.find(p => p.id === playlistId);
+                            if (playlist) {
+                                playlistName = playlist.name;
+                            }
+                        }
+                        Toast.success(`➕ 已添加到「${playlistName}」: ${songData.title}`);
                         btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
                         btn.disabled = true;
                         

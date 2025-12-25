@@ -80,7 +80,7 @@
     
     /* 底部导航栏 */
     .bottom-nav { height: 56px; }
-    .nav-icon { font-size: 20px; }
+    .nav-icon { font-size: 28px; }
     .nav-label { font-size: 9px; }
     
     /* 按钮 */
@@ -190,7 +190,7 @@
     /* 底部导航 */
     .bottom-nav { height: 52px; padding: 0 4px; }
     .nav-item { padding: 4px; gap: 2px; }
-    .nav-icon { font-size: 18px; }
+    .nav-icon { font-size: 26px; }
     .nav-label { font-size: 8px; }
     
     /* 播放栏控制 */
@@ -308,11 +308,11 @@
     
     /* 底部导航 - iPhone 安全区域 */
     .bottom-nav { 
-        height: 50px;
+        height: 54px;
         padding-bottom: max(0px, env(safe-area-inset-bottom));
     }
     .nav-item { padding: 4px 2px; }
-    .nav-icon { font-size: 16px; }
+    .nav-icon { font-size: 30px; }
     .nav-label { font-size: 8px; }
     
     /* 播放栏 */
@@ -396,7 +396,7 @@
     /* 底部导航与安全区域 */
     .bottom-nav { height: 60px; padding-bottom: max(0px, env(safe-area-inset-bottom)); }
     .nav-item { padding: 4px; gap: 3px; }
-    .nav-icon { font-size: 18px; }
+    .nav-icon { font-size: 26px; }
     .nav-label { font-size: 9px; }
 
     /* 播放栏 */

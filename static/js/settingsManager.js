@@ -118,10 +118,17 @@ export const settingsManager = {
                 
                 // 停止任何正在运行的推流
                 this.stopStream();
-                this.showNotification('⚠️ 服务器已禁用推流功能', 'warning');
+                // 注意：不再显示 toast 提示，因为按钮已被隐藏，避免每次刷新都提示
                 
                 // 更新指示器为禁止状态
                 this.updateStreamStatusIndicator('disabled');
+                
+                // 同时隐藏导航栏的推流按钮
+                const streamNavBtn = document.getElementById('streamNavBtn');
+                if (streamNavBtn) {
+                    streamNavBtn.style.display = 'none';
+                    console.log('[推流] 已隐藏导航栏推流按钮');
+                }
             }
         } catch (error) {
             console.warn('[推流] 检查服务器推流状态失败:', error);
@@ -154,24 +161,28 @@ export const settingsManager = {
                 dot.classList.add('stream-status-disabled');
                 text.textContent = '点击启动推流';
                 indicator.title = '推流状态：点击手动启动';
-                console.log('[推流指示器] 状态更新为：待启动（可点击）');
+                indicator.style.display = 'none'; // 禁用时隐藏
+                console.log('[推流指示器] 状态更新为：待启动（已隐藏）');
                 break;
             case 'closed':
                 dot.classList.add('stream-status-closed');
                 text.textContent = '点击启动推流';
                 indicator.title = '推流状态：已关闭，点击手动启动';
+                indicator.style.display = 'flex'; // 关闭时显示，允许用户点击重新启动
                 console.log('[推流指示器] 状态更新为：关闭（可点击启动）');
                 break;
             case 'buffering':
                 dot.classList.add('stream-status-buffering');
                 text.textContent = '推流缓冲';
                 indicator.title = '推流状态：正在缓冲';
+                indicator.style.display = 'flex'; // 缓冲时显示
                 console.log('[推流指示器] 状态更新为：缓冲');
                 break;
             case 'playing':
                 dot.classList.add('stream-status-playing');
                 text.textContent = '推流播放';
                 indicator.title = '推流状态：正在播放';
+                indicator.style.display = 'flex'; // 播放时显示
                 console.log('[推流指示器] 状态更新为：播放');
                 break;
         }

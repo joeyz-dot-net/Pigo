@@ -174,6 +174,9 @@ class MusicPlayerApp {
                 console.log('[主应用] 步骤3: 渲染播放列表UI');
                 this.renderPlaylist();
                 
+                // 动态更新队列按钮图标
+                this.updateQueueNavIcon();
+                
                 console.log('[主应用] ✅ 歌单切换回调完成，当前歌单:', playlistId);
                 
                 // 显示歌单内容区域（确保用户能看到选择的歌单）
@@ -198,13 +201,7 @@ class MusicPlayerApp {
             // 6.5 应用初始主题
             this.applyPlaylistTheme();
 
-            // 6.7 歌单标题点击打开歌单管理
-            if (this.elements.playListTitle) {
-                this.elements.playListTitle.style.cursor = 'pointer';
-                this.elements.playListTitle.addEventListener('click', () => {
-                    playlistsManagement.show();
-                });
-            }
+            // 6.7 歌单标题点击功能已移除（playlist header已移除）
             
             // 7. 立即获取一次播放状态
             try {
@@ -224,6 +221,9 @@ class MusicPlayerApp {
             
             // 7.7 初始化导航栏
             navManager.init();
+            
+            // 7.75 检查服务器推流状态，决定是否显示推流按钮
+            await this.checkServerStreamingStatus();
             
             // 7.8 完整的状态恢复（备用，以防快速恢复失败）
             this.restorePlayState();
@@ -284,7 +284,6 @@ class MusicPlayerApp {
             
             // 播放列表
             playListContainer: document.getElementById('playListContainer'),
-            playListTitle: document.getElementById('playListTitle'),
             playerBar: document.getElementById('playerBar'),
             footerExpandBtn: document.getElementById('footerExpandBtn'),
             footerContent: document.getElementById('footerContent'),
@@ -363,6 +362,8 @@ class MusicPlayerApp {
                 if (this.currentPlaylistId !== status.current_playlist_id) {
                     this.currentPlaylistId = status.current_playlist_id;
                     console.log('📂 当前歌单已切换:', this.currentPlaylistId);
+                    // 歌单切换时更新队列按钮图标
+                    this.updateQueueNavIcon();
                 } else {
                     this.currentPlaylistId = status.current_playlist_id;
                 }
@@ -866,6 +867,10 @@ class MusicPlayerApp {
             }
             
             this.renderPlaylist();
+            
+            // 初始化队列按钮图标
+            this.updateQueueNavIcon();
+            
             console.log('✅ 播放列表初始化完成');
         } catch (error) {
             console.error('加载播放列表失败:', error);
@@ -1446,7 +1451,6 @@ class MusicPlayerApp {
         const status = player.getStatus();
         renderPlaylistUI({
             container: this.elements.playListContainer,
-            titleEl: this.elements.playListTitle,
             onPlay: (song) => this.playSong(song),
             currentMeta: status?.current_meta || null
         });
@@ -1455,15 +1459,15 @@ class MusicPlayerApp {
         this.applyPlaylistTheme();
     }
 
-    // 更新歌单歌曲数量显示
-    updatePlaylistCount() {
-        const countEl = document.getElementById('playListCount');
-        if (countEl) {
-            const songs = playlistManager.getSongs();
-            const count = songs ? songs.length : 0;
-            countEl.textContent = `${count} 首歌曲`;
-        }
-    }
+    // 更新歌单歌曲数量显示（已移除playlist header，此方法不再需要）
+    // updatePlaylistCount() {
+    //     const countEl = document.getElementById('playListCount');
+    //     if (countEl) {
+    //         const songs = playlistManager.getSongs();
+    //         const count = songs ? songs.length : 0;
+    //         countEl.textContent = `${count} 首歌曲`;
+    //     }
+    // }
 
     // ✅ 新增：切换选择歌单
     async switchSelectedPlaylist(playlistId) {
@@ -1477,11 +1481,14 @@ class MusicPlayerApp {
             // 刷新播放列表 UI
             this.renderPlaylist();
             
+            // 动态更新队列按钮图标
+            this.updateQueueNavIcon();
+            
             console.log('[应用] ✓ 已切换到歌单:', playlistId);
             
         } catch (error) {
             console.error('[应用] 切换失败:', error);
-            Toast.error('切换歌单失败: ' + error.message);
+            Toast.error('❌ 切换歌单失败: ' + error.message);
         }
     }
 
@@ -1558,6 +1565,61 @@ class MusicPlayerApp {
             loading.hide();
             Toast.error('播放失败: ' + error.message);
         }
+    }
+
+    // 动态更新队列按钮图标
+    updateQueueNavIcon() {
+        const queueNavIcon = document.querySelector('[data-tab="playlists"] .nav-icon');
+        if (!queueNavIcon) return;
+        
+        // 获取当前歌单信息
+        const playlists = playlistManager.playlists || [];
+        
+        // 图标数组（与歌单管理页面保持一致）
+        const icons = ['🎵', '🎧', '🎸', '🎹', '🎤', '🎼', '🎺', '🥁'];
+        
+        // 渐变色数组（与歌单列表保持一致）
+        const gradients = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)'
+        ];
+        
+        let icon;
+        let gradient;
+        let playlistIndex = -1;
+        
+        if (this.currentPlaylistId === 'default') {
+            // 默认歌单使用星星图标和第一个渐变色
+            icon = '⭐';
+            gradient = gradients[0];
+        } else {
+            // 【修正】使用forEach的index，与歌单管理页面逻辑完全一致
+            playlists.forEach((playlist, index) => {
+                if (playlist.id === this.currentPlaylistId) {
+                    playlistIndex = index;
+                }
+            });
+            icon = playlistIndex >= 0 ? icons[playlistIndex % icons.length] : '🎵';
+            gradient = playlistIndex >= 0 ? gradients[playlistIndex % gradients.length] : gradients[0];
+        }
+        
+        // 更新图标和背景
+        queueNavIcon.textContent = icon;
+        queueNavIcon.style.background = gradient;
+        queueNavIcon.style.borderRadius = '12px';
+        queueNavIcon.style.padding = '8px';
+        queueNavIcon.style.display = 'flex';
+        queueNavIcon.style.alignItems = 'center';
+        queueNavIcon.style.justifyContent = 'center';
+        
+        const currentPlaylist = playlists.find(p => p.id === this.currentPlaylistId);
+        console.log(`[队列图标] 已更新为: ${icon} (歌单: ${currentPlaylist?.name || '未知'}, 索引: ${playlistIndex >= 0 ? playlistIndex : 'N/A'})`);  
     }
 
     // 设置音频格式
@@ -1938,6 +2000,9 @@ class MusicPlayerApp {
             });
         }
         
+        // 绑定本地歌曲关闭按钮
+        this.setupLocalCloseButton(navItems);
+        
         // 绑定模态框关闭事件
         this.setupModalClosing();
     }
@@ -2014,17 +2079,60 @@ class MusicPlayerApp {
         }
     }
 
+    // 设置本地歌曲关闭按钮
+    setupLocalCloseButton(navItems) {
+        const localCloseBtn = document.getElementById('localCloseBtn');
+        if (!localCloseBtn) return;
+        
+        localCloseBtn.addEventListener('click', () => {
+            console.log('🔙 关闭本地歌曲页面，返回当前选择的歌单');
+            
+            // 隐藏本地歌曲页面
+            if (this.elements.tree) {
+                this.elements.tree.classList.remove('tab-visible');
+                setTimeout(() => {
+                    if (this.elements.tree) {
+                        this.elements.tree.style.display = 'none';
+                    }
+                }, 300);
+            }
+            
+            // 显示歌单页面
+            if (this.elements.playlist) {
+                this.elements.playlist.style.display = 'flex';
+                setTimeout(() => {
+                    if (this.elements.playlist) {
+                        this.elements.playlist.classList.add('tab-visible');
+                    }
+                }, 10);
+            }
+            
+            // 更新导航按钮状态：激活队列按钮，取消本地按钮
+            navItems.forEach(item => item.classList.remove('active'));
+            const playlistsNavItem = Array.from(navItems).find(item => 
+                item.getAttribute('data-tab') === 'playlists'
+            );
+            if (playlistsNavItem) {
+                playlistsNavItem.classList.add('active');
+            }
+            
+            // 刷新当前歌单显示
+            this.renderPlaylist();
+        });
+    }
+
     // 设置模态框关闭事件
     setupModalClosing() {
-        // 歌单选择按钮点击 - 打开歌单选择模态框
-        const playlistSelectBtn = document.getElementById('playlistSelectBtn');
+        // 歌单选择按钮已随playlist header移除
+        // const playlistSelectBtn = document.getElementById('playlistSelectBtn');
         const playlistsModal = document.getElementById('playlistsModal');
-        if (playlistSelectBtn && playlistsModal) {
-            playlistSelectBtn.addEventListener('click', () => {
-                console.log('📋 打开歌单选择');
-                playlistsManagement.show();
-            });
-        }
+        // playlistSelectBtn功能已移至导航栏队列按钮
+        // if (playlistSelectBtn && playlistsModal) {
+        //     playlistSelectBtn.addEventListener('click', () => {
+        //         console.log('📋 打开歌单选择');
+        //         playlistsManagement.show();
+        //     });
+        // }
 
         // 歌单模态框关闭 - 支持点击背景关闭
         if (playlistsModal) {
@@ -2267,6 +2375,36 @@ class MusicPlayerApp {
     }
 
     // 刷新调试信息
+    // 检查服务器推流状态
+    async checkServerStreamingStatus() {
+        try {
+            const response = await fetch('/config/streaming-enabled');
+            const data = await response.json();
+            const streamingEnabled = data.streaming_enabled;
+            
+            const streamNavBtn = document.getElementById('streamNavBtn');
+            
+            if (!streamNavBtn) return;
+            
+            if (streamingEnabled) {
+                // 服务器启用推流，显示按钮
+                streamNavBtn.style.display = 'flex';
+                console.log('[初始化] 服务器已启用推流，显示推流按钮');
+            } else {
+                // 服务器禁用推流，隐藏按钮
+                streamNavBtn.style.display = 'none';
+                console.log('[初始化] 服务器已禁用推流，隐藏推流按钮');
+            }
+        } catch (error) {
+            console.warn('[初始化] 检查服务器推流状态失败:', error);
+            // 发生错误时默认隐藏推流按钮
+            const streamNavBtn = document.getElementById('streamNavBtn');
+            if (streamNavBtn) {
+                streamNavBtn.style.display = 'none';
+            }
+        }
+    }
+    
     // 更新推流按钮外观
     updateStreamNavButton(isActive) {
         const streamNavBtn = document.getElementById('streamNavBtn');
