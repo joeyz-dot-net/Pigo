@@ -10,14 +10,124 @@
       "name": "正在播放",
       "songs": [
         {
-          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
-          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
-          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "url": "Jacky Cheung 张学友/张学友 - 一路上有你.flac",
+          "title": "张学友 - 一路上有你",
+          "name": "张学友 - 一路上有你",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766712686,
+          "thumbnail_url": "",
+          "artist": "张学友 - 一路上有你"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=qVQvFWiBJkU",
+          "title": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧",
+          "name": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧",
           "type": "youtube",
           "duration": 0,
-          "ts": 1766639096,
-          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
-          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
+          "ts": 1766717467,
+          "thumbnail_url": "https://img.youtube.com/vi/qVQvFWiBJkU/maxresdefault.jpg",
+          "artist": "Top Hits 2026 ~ Trending Music 2026 🎶 Spotify Hits 2026 ~ Top Songs 2026 🎧"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=w58oQuijN8Y",
+          "title": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质",
+          "name": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766713926,
+          "thumbnail_url": "https://img.youtube.com/vi/w58oQuijN8Y/default.jpg",
+          "artist": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 小城大事.flac",
+          "title": "张学友 - 小城大事",
+          "name": "张学友 - 小城大事",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715429,
+          "thumbnail_url": "",
+          "artist": "张学友 - 小城大事"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 如果这都不算爱.flac",
+          "title": "张学友 - 如果这都不算爱",
+          "name": "张学友 - 如果这都不算爱",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715429,
+          "thumbnail_url": "",
+          "artist": "张学友 - 如果这都不算爱"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 天黑黑 (live).flac",
+          "title": "张学友 - 天黑黑 (live)",
+          "name": "张学友 - 天黑黑 (live)",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715427,
+          "thumbnail_url": "",
+          "artist": "张学友 - 天黑黑 (live)"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 夕阳醉了(Live).flac",
+          "title": "张学友 - 夕阳醉了(Live)",
+          "name": "张学友 - 夕阳醉了(Live)",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715427,
+          "thumbnail_url": "",
+          "artist": "张学友 - 夕阳醉了(Live)"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 回头太难.flac",
+          "title": "张学友 - 回头太难",
+          "name": "张学友 - 回头太难",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715426,
+          "thumbnail_url": "",
+          "artist": "张学友 - 回头太难"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 吻别.flac",
+          "title": "张学友 - 吻别",
+          "name": "张学友 - 吻别",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715426,
+          "thumbnail_url": "",
+          "artist": "张学友 - 吻别"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 听海 (live).flac",
+          "title": "张学友 - 听海 (live)",
+          "name": "张学友 - 听海 (live)",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715426,
+          "thumbnail_url": "",
+          "artist": "张学友 - 听海 (live)"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 只想一生跟你走.flac",
+          "title": "张学友 - 只想一生跟你走",
+          "name": "张学友 - 只想一生跟你走",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715424,
+          "thumbnail_url": "",
+          "artist": "张学友 - 只想一生跟你走"
+        },
+        {
+          "url": "Jacky Cheung 张学友/张学友 - 偷心.flac",
+          "title": "张学友 - 偷心",
+          "name": "张学友 - 偷心",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766715423,
+          "thumbnail_url": "",
+          "artist": "张学友 - 偷心"
         },
         {
           "url": "Jacky Cheung 张学友/张学友 - 一千个伤心的理由.flac",
@@ -25,44 +135,24 @@
           "name": "张学友 - 一千个伤心的理由",
           "type": "local",
           "duration": 0,
-          "ts": 1766639091,
+          "ts": 1766715422,
           "thumbnail_url": "",
           "artist": "张学友 - 一千个伤心的理由"
         },
         {
-          "url": "Faye Wang 王菲/影子.flac",
-          "title": "影子.flac",
-          "name": "影子.flac",
-          "type": "local",
+          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
+          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "type": "youtube",
           "duration": 0,
-          "ts": 1766633236,
-          "thumbnail_url": null,
-          "artist": "影子.flac"
-        },
-        {
-          "url": "ETC/ラブ・ストーリーは突然に-小田和正.mp3",
-          "title": "ラブ・ストーリーは突然に-小田和正.mp3",
-          "name": "ラブ・ストーリーは突然に-小田和正.mp3",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766633229,
-          "thumbnail_url": null,
-          "artist": "ラブ・ストーリーは突然に-小田和正.mp3"
-        },
-        {
-          "url": "Spotify/Spotify Hits 2026 ❄️  ｜ Winter 2025⧸2026 ｜ Best Spotify Trending Playlist.flac",
-          "title": "Spotify Hits 2026 ❄️  ｜ Winter 2025⧸2026 ｜ Best Spotify Trending Playlist",
-          "name": "Spotify Hits 2026 ❄️  ｜ Winter 2025⧸2026 ｜ Best Spotify Trending Playlist",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766533902,
-          "thumbnail_url": "",
-          "artist": "Spotify Hits 2026 ❄️  ｜ Winter 2025⧸2026 ｜ Best Spotify Trending Playlist"
+          "ts": 1766713846,
+          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
+          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
         }
       ],
-      "song_count": 5,
+      "song_count": 14,
       "created_at": 1766369731.0493586,
-      "updated_at": 1766639133.1435528,
+      "updated_at": 1766717467.5316505,
       "current_playing_index": -1
     },
     {

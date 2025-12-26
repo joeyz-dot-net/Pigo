@@ -2,6 +2,7 @@
 import { api } from './api.js';
 import { settingsManager } from './settingsManager.js';
 import { operationLock } from './operationLock.js';
+import { webrtcSignaling, ConnectionState } from './webrtc.js';
 
 export class Player {
     constructor() {
@@ -51,7 +52,92 @@ export class Player {
     }
     
     // 启动浏览器推流（带详细的连接提示）
+    // 优先使用 WebRTC，失败则降级到 HTTP 流
     async startBrowserStream(streamFormat = 'mp3') {
+        // === 首先尝试 WebRTC ===
+        try {
+            const webrtcResult = await this.tryWebRTCStream();
+            if (webrtcResult.success) {
+                console.log('%c[推流] ✓ 使用 WebRTC 模式', 'color: #4CAF50; font-weight: bold');
+                return webrtcResult;
+            }
+            console.log('[推流] WebRTC 不可用，降级到 HTTP 流');
+        } catch (err) {
+            console.warn('[推流] WebRTC 尝试失败:', err.message);
+        }
+        
+        // === 降级到 HTTP 流 ===
+        return this.startHTTPStream(streamFormat);
+    }
+    
+    // 尝试 WebRTC 推流
+    async tryWebRTCStream() {
+        // 检查服务器是否支持 WebRTC
+        try {
+            const response = await fetch('/config/webrtc-enabled');
+            const data = await response.json();
+            
+            if (!data.webrtc_enabled) {
+                return { success: false, reason: 'server_disabled' };
+            }
+        } catch (err) {
+            return { success: false, reason: 'check_failed', error: err };
+        }
+        
+        // 获取音频元素
+        const audioElement = document.getElementById('browserStreamAudio');
+        if (!audioElement) {
+            return { success: false, reason: 'no_audio_element' };
+        }
+        
+        // 设置 WebRTC 信令回调
+        webrtcSignaling.setAudioElement(audioElement);
+        
+        webrtcSignaling.onStateChange = (state) => {
+            console.log(`[WebRTC] 状态变化: ${state}`);
+            if (state === ConnectionState.CONNECTED) {
+                if (window.settingsManager) {
+                    window.settingsManager.updateStreamStatusIndicator('playing');
+                }
+                this.emit('stream:playing');
+            } else if (state === ConnectionState.DISCONNECTED || state === ConnectionState.FAILED) {
+                if (window.settingsManager) {
+                    window.settingsManager.updateStreamStatusIndicator('closed');
+                }
+                this.emit('stream:ended');
+            } else if (state === ConnectionState.CONNECTING) {
+                if (window.settingsManager) {
+                    window.settingsManager.updateStreamStatusIndicator('buffering');
+                }
+            }
+        };
+        
+        webrtcSignaling.onAudioReady = (stream) => {
+            console.log('[WebRTC] ✓ 音频流就绪');
+            this.emit('stream:ready', { format: 'opus', mode: 'webrtc' });
+        };
+        
+        webrtcSignaling.onError = (err) => {
+            console.error('[WebRTC] 错误:', err);
+            this.emit('stream:error', { error: err, errorMsg: err.message || 'WebRTC 错误' });
+        };
+        
+        // 连接 WebRTC
+        try {
+            await webrtcSignaling.connect();
+            
+            // 设置音量
+            const streamVolume = settingsManager.getStreamVolume();
+            audioElement.volume = streamVolume / 100;
+            
+            return { success: true, mode: 'webrtc', format: 'opus' };
+        } catch (err) {
+            return { success: false, reason: 'connection_failed', error: err };
+        }
+    }
+    
+    // 启动 HTTP 流（原始实现，作为降级方案）
+    async startHTTPStream(streamFormat = 'mp3') {
         const audioElement = document.getElementById('browserStreamAudio');
         
         if (!audioElement) {

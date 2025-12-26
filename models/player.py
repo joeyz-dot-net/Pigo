@@ -747,7 +747,24 @@ class MusicPlayer:
         ready = self._wait_pipe()
         if not ready:
             logger.error("等待 mpv 管道超时: ", self.pipe_name)
-        return ready
+            return False
+        
+        # 🔊 MPV 启动成功后，设置默认音量为 50%
+        try:
+            default_volume = 50
+            if hasattr(self, 'config') and self.config:
+                vol_str = self.config.get("LOCAL_VOLUME", "50")
+                try:
+                    default_volume = int(vol_str)
+                except (ValueError, TypeError):
+                    default_volume = 50
+            
+            self.mpv_command(["set_property", "volume", default_volume])
+            logger.info(f"🔊 MPV 默认音量已设置为: {default_volume}%")
+        except Exception as e:
+            logger.warning(f"设置默认音量失败: {e}")
+        
+        return True
 
     def mpv_command(self, cmd_list) -> bool:
         """向 MPV 发送命令

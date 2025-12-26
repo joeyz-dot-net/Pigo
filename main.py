@@ -199,94 +199,6 @@ def interactive_select_audio_device(mpv_path: str = "mpv", timeout: int = 10) ->
             return "auto"
 
 
-def interactive_select_streaming_mode(timeout: int = 10) -> bool:
-    """交互式选择是否启用推流模式
-    
-    参数:
-        timeout: 超时时间（秒），超时后使用默认值
-    
-    返回:
-        True 启用推流，False 禁用推流
-    """
-    print("\n" + "╔" + "═" * 58 + "╗")
-    print("║" + " " * 19 + "🎙️  推流模式选择" + " " * 20 + "║")
-    print("╚" + "═" * 58 + "╝")
-    
-    # ANSI 颜色码
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    CYAN = '\033[96m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    RESET = '\033[0m'
-    
-    print("\n请选择音频输出模式:\n")
-    print(f"  {GREEN}{BOLD}► [1] 本地播放 - 播放到本机音频设备 ✓{RESET}")
-    print(f"      {CYAN}直接播放，无延迟{RESET}")
-    print("")
-    print(f"  [2] 推流模式 - 通过 VB-Cable + FFmpeg 推流到浏览器")
-    print(f"       ✓ 支持浏览器播放")
-    print(f"\n⏱️  {timeout}秒后自动选择: 本地播放模式{RESET}")
-    print("─" * 60)
-    
-    # 使用线程实现超时输入和倒计时显示
-    selected = [None]
-    countdown_active = [True]
-    
-    def show_countdown():
-        """显示倒计时"""
-        import time
-        remaining = timeout
-        while remaining > 0 and countdown_active[0] and selected[0] is None:
-            time.sleep(1)
-            remaining -= 1
-    
-    def get_input():
-        try:
-            user_input = input(f"\n请选择 [1]: ").strip()
-            countdown_active[0] = False
-            selected[0] = user_input if user_input else "1"
-        except EOFError:
-            countdown_active[0] = False
-            selected[0] = "1"
-    
-    countdown_thread = threading.Thread(target=show_countdown, daemon=True)
-    countdown_thread.start()
-    
-    input_thread = threading.Thread(target=get_input, daemon=True)
-    input_thread.start()
-    input_thread.join(timeout=timeout)
-    
-    # 解析用户选择
-    choice = selected[0] if selected[0] is not None else "1"
-    
-    try:
-        choice_num = int(choice)
-        if choice_num == 2:
-            GREEN = '\033[92m'
-            CYAN = '\033[96m'
-            BOLD = '\033[1m'
-            RESET = '\033[0m'
-            print(f"\n{GREEN}{BOLD}✅ 已选择: 推流模式{RESET}")
-            print(f"   {CYAN}音频将通过 VB-Cable 推流到浏览器{RESET}")
-            return True
-        else:
-            GREEN = '\033[92m'
-            CYAN = '\033[96m'
-            BOLD = '\033[1m'
-            RESET = '\033[0m'
-            print(f"\n{GREEN}{BOLD}✅ 已选择: 本地播放模式{RESET}")
-            print(f"   {CYAN}音频仅播放到本机音频设备{RESET}")
-            return False
-    except ValueError:
-        # 解析失败，使用默认
-        print(f"\n❌ 无效选择 '{choice}'，使用默认: 本地播放模式")
-        return False
-    except ValueError:
-        print(f"\n❌ 无效选择 '{choice}'，默认推流模式")
-        return True
-
-
 def update_mpv_cmd_with_device(config: configparser.ConfigParser, device_id: str) -> str:
     """更新 mpv_cmd 配置，添加音频设备参数
     
@@ -342,14 +254,80 @@ def cleanup_on_exit():
         print("\n✅ MPV 进程已清理")
     except:
         pass
+
+
+def interactive_select_streaming_mode(timeout: int = 10) -> bool:
+    """交互式选择是否启用 WebRTC 推流模式
+    
+    参数:
+        timeout: 超时时间（秒），超时后使用默认值（启用推流）
+    
+    返回:
+        True 启用推流，False 禁用推流
+    """
+    print("\n" + "╔" + "═" * 58 + "╗")
+    print("║" + " " * 19 + "🎙️  推流模式选择" + " " * 20 + "║")
+    print("╚" + "═" * 58 + "╝")
+    
+    # ANSI 颜色码
+    GREEN = '\033[92m'
+    CYAN = '\033[96m'
+    BOLD = '\033[1m'
+    RESET = '\033[0m'
+    
+    print("\n请选择音频输出模式:\n")
+    print(f"  [1] 仅本地播放 - 播放到本机音频设备")
+    print(f"      直接播放，无网络延迟")
+    print("")
+    print(f"  {GREEN}{BOLD}► [2] 启用推流 - 通过 WebRTC 推流到浏览器 ✓{RESET}")
+    print(f"       {CYAN}✓ 支持远程浏览器播放{RESET}")
+    print(f"\n⏱️  {timeout}秒后自动选择: 启用推流{RESET}")
+    print("─" * 60)
+    
+    # 使用线程实现超时输入
+    selected = [None]
+    countdown_active = [True]
+    
+    def show_countdown():
+        import time
+        remaining = timeout
+        while remaining > 0 and countdown_active[0] and selected[0] is None:
+            time.sleep(1)
+            remaining -= 1
+    
+    def get_input():
+        try:
+            user_input = input(f"\n请选择 [2]: ").strip()
+            countdown_active[0] = False
+            selected[0] = user_input if user_input else "2"
+        except EOFError:
+            countdown_active[0] = False
+            selected[0] = "2"
+    
+    countdown_thread = threading.Thread(target=show_countdown, daemon=True)
+    countdown_thread.start()
+    
+    input_thread = threading.Thread(target=get_input, daemon=True)
+    input_thread.start()
+    input_thread.join(timeout=timeout)
+    
+    # 解析用户选择
+    choice = selected[0] if selected[0] is not None else "2"
     
     try:
-        import subprocess
-        # 强制终止所有 FFmpeg 进程
-        subprocess.run(["taskkill", "/IM", "ffmpeg.exe", "/F"], capture_output=True, timeout=2)
-        print("✅ FFmpeg 进程已清理")
-    except:
-        pass
+        choice_num = int(choice)
+        if choice_num == 2:
+            print(f"\n{GREEN}{BOLD}✅ 已选择: 启用推流模式{RESET}")
+            print(f"   {CYAN}将初始化 WebRTC 推流模块{RESET}")
+            return True
+        else:
+            print(f"\n{GREEN}{BOLD}✅ 已选择: 仅本地播放{RESET}")
+            print(f"   {CYAN}不初始化推流模块，节省资源{RESET}")
+            return False
+    except ValueError:
+        print(f"\n❌ 无效选择 '{choice}'，使用默认: 启用推流")
+        return True
+
 
 def main():
     """启动 FastAPI 服务器"""
@@ -444,25 +422,9 @@ def main():
     if selected_device != "auto":
         os.environ["MPV_AUDIO_DEVICE"] = selected_device
     
-    # 【第二步】交互式选择推流模式（默认不启用）
+    # 【第二步】交互式选择是否启用推流
     enable_streaming = interactive_select_streaming_mode(timeout=10)
-    
-    # 【重要】通过环境变量传递运行时推流选择，app.py 根据此值决定是否加载推流模块
     os.environ["ENABLE_STREAMING"] = "true" if enable_streaming else "false"
-    
-    # 【第三步】如果启用推流，执行推流初始化
-    if enable_streaming:
-        try:
-            from models.stream import initialize_streaming
-            print("\n" + "=" * 60)
-            print("🎙️  正在初始化推流功能...")
-            print("=" * 60)
-            # 传入已选择的音频设备ID
-            initialize_streaming(audio_device_id=selected_device)
-            print("✅ 推流初始化完成\n")
-        except Exception as e:
-            print(f"❌ 推流初始化失败: {e}")
-            print("⚠️  将继续启动，但推流功能不可用\n")
     
     # 显示完整设备名称和设备ID
     device_display = '系统默认 (auto)'

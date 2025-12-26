@@ -1,11 +1,14 @@
 /**
- * 【新增】StreamManager - 推流格式管理器
+ * 【重构】StreamManager - 推流格式管理器
  * 职责：
- * - 支持mp3/aac/flac多格式推流
+ * - 支持WebRTC低延迟音频传输（主要模式）
+ * - HTTP流作为降级方案（mp3/aac/flac）
+ * - 自动检测WebRTC支持并选择最佳模式
  * - 格式特定的缓冲策略（AAC: 1.5x队列）
  * - 浏览器×格式组合优化
- * - 自动格式落选（若不支持则降级）
  */
+
+import { webrtcSignaling, ConnectionState } from './webrtc.js';
 
 class StreamManager {
     constructor() {
@@ -18,6 +21,11 @@ class StreamManager {
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 3;
         this.streamAudio = document.getElementById('browserStreamAudio');
+        
+        // WebRTC 模式开关
+        this.useWebRTC = true; // 默认启用 WebRTC
+        this.webrtcAvailable = false; // 服务器是否支持 WebRTC
+        
         this.formatConfig = {
             'mp3': {
                 mimeType: 'audio/mpeg',
@@ -132,8 +140,95 @@ class StreamManager {
 
     /**
      * 启动推流（指定格式）
+     * 优先使用 WebRTC，失败则降级到 HTTP 流
      */
     async startStream(format = null) {
+        // 检查是否可以使用 WebRTC
+        if (this.useWebRTC) {
+            try {
+                const webrtcResult = await this.startWebRTCStream();
+                if (webrtcResult.success) {
+                    return webrtcResult;
+                }
+            } catch (err) {
+                console.warn('[STREAM] WebRTC 启动失败，降级到 HTTP 流:', err);
+            }
+        }
+        
+        // 降级到 HTTP 流
+        return this.startHTTPStream(format);
+    }
+    
+    /**
+     * 启动 WebRTC 音频流
+     */
+    async startWebRTCStream() {
+        console.log('[STREAM] 尝试启动 WebRTC 音频流...');
+        
+        // 检查服务器是否支持 WebRTC
+        if (!this.webrtcAvailable) {
+            try {
+                const response = await fetch('/config/webrtc-enabled');
+                const data = await response.json();
+                this.webrtcAvailable = data.webrtc_enabled;
+                
+                if (!this.webrtcAvailable) {
+                    console.log('[STREAM] 服务器未启用 WebRTC');
+                    return { success: false, reason: 'server_not_available' };
+                }
+            } catch (err) {
+                console.warn('[STREAM] 检查 WebRTC 状态失败:', err);
+                return { success: false, reason: 'check_failed' };
+            }
+        }
+        
+        // 设置音频元素
+        webrtcSignaling.setAudioElement(this.streamAudio);
+        
+        // 设置回调
+        webrtcSignaling.onStateChange = (state) => {
+            console.log('[STREAM] WebRTC 状态:', state);
+            this.streamStatus = state;
+            
+            if (state === ConnectionState.CONNECTED) {
+                this.isStreaming = true;
+                this.updateNavButton(true);
+            } else if (state === ConnectionState.DISCONNECTED || 
+                       state === ConnectionState.FAILED) {
+                this.isStreaming = false;
+                this.updateNavButton(false);
+            }
+        };
+        
+        webrtcSignaling.onAudioReady = (stream) => {
+            console.log('[STREAM] ✓ WebRTC 音频就绪');
+            this.isStreaming = true;
+        };
+        
+        webrtcSignaling.onError = (err) => {
+            console.error('[STREAM] WebRTC 错误:', err);
+        };
+        
+        // 连接 WebRTC 信令服务器
+        try {
+            await webrtcSignaling.connect();
+            
+            return {
+                success: true,
+                mode: 'webrtc',
+                format: 'opus', // WebRTC 默认使用 Opus 编码
+                url: null // WebRTC 不使用 URL
+            };
+        } catch (err) {
+            console.error('[STREAM] WebRTC 连接失败:', err);
+            return { success: false, reason: 'connection_failed', error: err };
+        }
+    }
+    
+    /**
+     * 启动 HTTP 音频流（降级方案）
+     */
+    startHTTPStream(format = null) {
         if (!format) {
             format = this.getBestFormat();
         } else {
@@ -145,17 +240,70 @@ class StreamManager {
         const browserCfg = this.getBrowserFormatConfig(format);
 
         console.log(
-            `[STREAM] 启动推流: 格式=${format} (${config.description}), ` +
+            `[STREAM] 启动 HTTP 推流: 格式=${format} (${config.description}), ` +
             `浏览器=${this.detectBrowser()}, 队列=${browserCfg.queueBlocks}块`
         );
 
         // 向后端请求指定格式的推流
         return {
+            success: true,
+            mode: 'http',
             format: format,
             config: config,
             browserConfig: browserCfg,
             url: `/stream/play?format=${format}`
         };
+    }
+    
+    /**
+     * 停止推流
+     */
+    async stopStream() {
+        console.log('[STREAM] 停止推流...');
+        
+        // 停止 WebRTC
+        if (webrtcSignaling.isConnected()) {
+            await webrtcSignaling.disconnect();
+        }
+        
+        // 停止 HTTP 流
+        if (this.streamAudio) {
+            this.streamAudio.pause();
+            this.streamAudio.src = '';
+            this.streamAudio.srcObject = null;
+        }
+        
+        this.isStreaming = false;
+        this.streamStatus = 'idle';
+        this.updateNavButton(false);
+    }
+    
+    /**
+     * 更新导航栏按钮状态
+     */
+    updateNavButton(isActive) {
+        if (window.app && window.app.updateStreamNavButton) {
+            window.app.updateStreamNavButton(isActive);
+        } else if (window.MusicPlayerApp && window.MusicPlayerApp.updateStreamNavButton) {
+            window.MusicPlayerApp.updateStreamNavButton(isActive);
+        }
+    }
+    
+    /**
+     * 获取 WebRTC 统计信息
+     */
+    async getWebRTCStats() {
+        if (webrtcSignaling.isConnected()) {
+            return await webrtcSignaling.getStats();
+        }
+        return null;
+    }
+    
+    /**
+     * 是否正在使用 WebRTC
+     */
+    isUsingWebRTC() {
+        return webrtcSignaling.isConnected();
     }
 
     /**

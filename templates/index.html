@@ -174,10 +174,13 @@
 
 	<!-- Mini Player 已移除 -->
 	
-	<!-- Bottom Navigation (简化版：队列、搜索、设置) -->
+	<!-- Bottom Navigation (简化版：队列、排行、搜索、设置) -->
 	<nav id="bottomNav" class="bottom-nav">
 		<button class="nav-item active" data-tab="playlists">
 			<span class="nav-icon">🎵</span>
+		</button>
+		<button class="nav-item" data-tab="ranking">
+			<span class="nav-icon">🏆</span>
 		</button>
 		<button class="nav-item" data-tab="search">
 			<span class="nav-icon">🔍</span>
@@ -429,7 +432,7 @@
 					<div class="settings-item">
 						<label class="settings-label">推流音量</label>
 						<div class="settings-volume">
-							<input type="range" id="streamVolumeSetting" class="volume-slider" min="0" max="100" value="50">
+							<input type="range" id="streamVolumeSetting" class="volume-slider" min="0" max="50" value="50">
 							<span id="streamVolumeValue" class="volume-value">50%</span>
 						</div>
 					</div>

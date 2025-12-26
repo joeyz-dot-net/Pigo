@@ -47,17 +47,11 @@ export class MusicAPI {
         return this.get('/status');
     }
 
-    // 流状态 API（用于检查后端推流是否仍在运行）
-    async getStreamStatus() {
-        return this.get('/stream/status');
-    }
-
-    async play(url, title, type = 'local', streamFormat = 'mp3') {
+    async play(url, title, type = 'local') {
         const formData = new FormData();
         formData.append('url', url);
         formData.append('title', title);
         formData.append('type', type);
-        formData.append('stream_format', streamFormat);
         return this.postForm('/play', formData);
     }
 
@@ -77,17 +71,6 @@ export class MusicAPI {
         const formData = new FormData();
         formData.append('value', value);
         return this.postForm('/volume', formData);
-    }
-
-    async getStreamVolume() {
-        // 获取服务器推流音量（只读，从 settings.ini 读取）
-        try {
-            const response = await fetch('/stream/volume');
-            return await response.json();
-        } catch (error) {
-            console.error('获取推流音量失败:', error);
-            return { status: 'ERROR', error: error.message };
-        }
     }
 
     async seek(percent) {

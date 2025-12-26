@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 FastAPI Music Player - 纯FastAPI实现，彻底移除Flask依赖
 """
@@ -16,7 +16,7 @@ from urllib.parse import unquote
 
 logger = logging.getLogger(__name__)
 
-from fastapi import FastAPI, Request, File, UploadFile, HTTPException
+from fastapi import FastAPI, Request, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -48,73 +48,38 @@ from models import (
     HitRank,
 )
 
-# 【推流模块】延迟导入，由 main.py 根据用户选择决定是否加载
-# 如果启用推流，main.py 会在导入 app 之前设置 os.environ["ENABLE_STREAMING"] = "true"
-# 此时动态导入 stream 模块
-STREAMING_ENABLED = os.environ.get("ENABLE_STREAMING", "false").lower() in ("true", "1", "yes", "on")
-
-if STREAMING_ENABLED:
-    from models.stream import (
-        start_ffmpeg_stream,
-        stop_ffmpeg_stream,
-        register_client,
-        unregister_client,
-        get_mime_type as stream_get_mime_type,
-        cleanup_ffmpeg_processes,
-        ACTIVE_CLIENTS,
-        FFMPEG_PROCESS,
-        FFMPEG_FORMAT,
-        STREAM_STATS,
-    )
-    logger.info("✓ 推流模块已加载")
-else:
-    # 推流未启用，创建空的占位符以避免 NameError
-    start_ffmpeg_stream = None
-    stop_ffmpeg_stream = None
-    register_client = None
-    unregister_client = None
-    stream_get_mime_type = None
-    cleanup_ffmpeg_processes = None
-    ACTIVE_CLIENTS = {}
-    FFMPEG_PROCESS = None
-    FFMPEG_FORMAT = None
-    STREAM_STATS = {}
-    logger.info("⊘ 推流模块未加载（用户未启用）")
-
 from models.settings import initialize_settings
 
-logger.info("\n✓ 所有模块初始化完成！\n")
-
-# ============================================
-# 资源路径辅助函数
-# ============================================
-
-def _get_resource_path(relative_path):
-    """获取资源文件的绝对路径"""
-    base_path = os.path.dirname(os.path.abspath(__file__))
+# ==================== 获取资源路径函数 ====================
+def _get_resource_path(relative_path: str) -> str:
+    """获取资源路径（支持 PyInstaller 打包后的环境）
+    
+    PyInstaller 打包后，资源文件被解压到 sys._MEIPASS 临时目录中。
+    开发环境下，使用源代码目录。
+    """
+    if getattr(sys, 'frozen', False):
+        # PyInstaller 打包后：资源在 _MEIPASS 目录中
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    else:
+        # 开发环境
+        base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
 
-# ============================================
-# 创建全局播放器实例
-# ============================================
-
-PLAYER = MusicPlayer.initialize(data_dir=".")
-PLAYLISTS_MANAGER = Playlists(data_file="playlists.json")
-RANK_MANAGER = HitRank(max_size=100)
+# ==================== 全局单例实例 ====================
+# 初始化设置
 SETTINGS = initialize_settings()
 
-# 从配置文件初始化推流音量
-import models.stream as stream_module
-if PLAYER and hasattr(PLAYER, 'config') and PLAYER.config:
-    stream_volume_str = PLAYER.config.get("STREAM_VOLUME", "50")
-    try:
-        stream_module.STREAM_VOLUME = int(stream_volume_str)
-        logger.info(f"从 settings.ini 加载推流音量: {stream_module.STREAM_VOLUME}")
-    except (ValueError, TypeError):
-        stream_module.STREAM_VOLUME = 50
-        logger.warning(f"推流音量配置无效，使用默认值 50")
-else:
-    logger.warning("未能读取播放器配置，推流音量使用默认值 50")
+# 初始化播放器实例
+PLAYER = MusicPlayer.initialize(data_dir=".")
+
+# 初始化歌单管理器
+PLAYLISTS_MANAGER = Playlists()
+PLAYLISTS_MANAGER.load()
+
+# 初始化排行榜管理器
+RANK_MANAGER = HitRank()
+
+logger.info("\n✓ 所有模块初始化完成！\n")
 
 DEFAULT_PLAYLIST_ID = "default"
 CURRENT_PLAYLIST_ID = DEFAULT_PLAYLIST_ID
@@ -134,10 +99,6 @@ def _init_default_playlist():
 
 # 确保默认歌单存在
 _init_default_playlist()
-
-# ==================== 启动时清理孤立FFmpeg进程 ====================
-logger.info("检查并清理孤立的FFmpeg进程...")
-logger.info("✓ 孤立进程清理完成")
 
 # ==================== 浏览器检测函数 ====================
 def detect_browser(user_agent: str) -> str:
@@ -261,22 +222,6 @@ async def shutdown_event():
     """应用关闭时的清理事件"""
     logger.info("应用正在关闭...")
     
-    # 清理 FFmpeg 进程
-    try:
-        from models.stream import stop_ffmpeg_stream
-        logger.info("正在关闭 FFmpeg 进程...")
-        stop_ffmpeg_stream()
-        logger.info("✅ FFmpeg 进程已关闭")
-    except Exception as e:
-        logger.error(f"关闭 FFmpeg 进程失败: {e}")
-        # 尝试使用 taskkill 强制终止
-        try:
-            import subprocess
-            subprocess.run(["taskkill", "/IM", "ffmpeg.exe", "/F"], capture_output=True, timeout=2)
-            logger.info("✅ 使用 taskkill 强制终止 FFmpeg 进程")
-        except:
-            pass
-    
     # 清理 MPV 进程
     try:
         if PLAYER and PLAYER.mpv_process:
@@ -298,15 +243,6 @@ async def shutdown_event():
             logger.info("✅ 使用 taskkill 强制终止 MPV 进程")
         except:
             pass
-    
-    # 清理 FFmpeg 进程（仅在推流启用时）
-    if STREAMING_ENABLED:
-        try:
-            stop_ffmpeg_stream()
-            cleanup_ffmpeg_processes()
-            logger.info("✅ FFmpeg 进程已清理")
-        except Exception as e:
-            logger.error(f"关闭时清理 FFmpeg 失败: {e}")
     
     logger.info("应用已关闭")
 
@@ -415,28 +351,48 @@ def _get_cover_from_directory(file_path: str) -> str:
     return None
 
 def _extract_embedded_cover_bytes(file_path: str) -> bytes:
-    """使用 FFmpeg 提取音频文件内嵌封面，返回字节数据（不保存文件）"""
+    """使用 mutagen 提取音频文件内嵌封面，返回字节数据（不保存文件）
+    
+    支持格式：MP3 (ID3)、FLAC、M4A/AAC (MP4)、OGG/Opus
+    """
     try:
-        ffmpeg_path = SETTINGS.get("ffmpeg_path", "ffmpeg")
-        cmd = [
-            ffmpeg_path,
-            "-i", file_path,
-            "-an",  # 不处理音频
-            "-vcodec", "mjpeg",  # 输出为JPEG
-            "-vf", "scale=500:-1",  # 限制宽度为500px
-            "-f", "image2pipe",  # 输出到管道
-            "-"  # 输出到 stdout
-        ]
+        from mutagen import File
+        from mutagen.id3 import ID3
+        from mutagen.flac import FLAC
+        from mutagen.mp4 import MP4
+        from mutagen.oggvorbis import OggVorbis
+        from mutagen.oggopus import OggOpus
         
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            timeout=10,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
-        )
+        audio = File(file_path)
+        if audio is None:
+            return None
         
-        if result.returncode == 0 and result.stdout:
-            return result.stdout
+        # MP3: ID3 标签中的 APIC 帧
+        if hasattr(audio, 'tags') and audio.tags:
+            # ID3 格式 (MP3)
+            if isinstance(audio.tags, ID3):
+                for key in audio.tags:
+                    if key.startswith('APIC'):
+                        apic = audio.tags[key]
+                        return apic.data
+            
+            # MP4/M4A 格式
+            if isinstance(audio, MP4):
+                if 'covr' in audio.tags:
+                    covers = audio.tags['covr']
+                    if covers:
+                        return bytes(covers[0])
+        
+        # FLAC 格式
+        if isinstance(audio, FLAC):
+            if audio.pictures:
+                return audio.pictures[0].data
+        
+        # OGG/Opus 格式
+        if isinstance(audio, (OggVorbis, OggOpus)):
+            if hasattr(audio, 'pictures') and audio.pictures:
+                return audio.pictures[0].data
+        
     except Exception as e:
         logger.debug(f"提取内嵌封面失败: {e}")
     return None
@@ -562,23 +518,10 @@ async def play(request: Request):
             mpv_cmd=PLAYER.mpv_cmd
         )
         
-        # 新增：启动推流到浏览器（仅在启用时）
-        stream_started = False
-        if STREAMING_ENABLED:
-            try:
-                start_ffmpeg_stream(audio_format=stream_format)
-                stream_started = True
-            except Exception as e:
-                logger.error(f"[Play] 启动推流失败: {e}")
-        else:
-            logger.info(f"[Play] 推流功能已禁用，跳过 FFmpeg 启动")
-        
         return {
             "status": "OK",
             "message": "播放成功",
-            "current": PLAYER.current_meta,
-            "stream_started": stream_started,
-            "stream_format": stream_format
+            "current": PLAYER.current_meta
         }
     except Exception as e:
         import traceback
@@ -1402,29 +1345,6 @@ async def set_volume(request: Request):
         )
 
 
-@app.get("/stream/volume")
-async def get_stream_volume():
-    """获取推流音量（只读，不支持修改）
-    
-    推流音量只能通过编辑 settings.ini [app] stream_volume 配置项来改变，
-    重启应用后新配置生效。前端无权修改推流音量。
-    """
-    import models.stream as stream_module
-    
-    try:
-        return {
-            "status": "OK",
-            "stream_volume": stream_module.STREAM_VOLUME,
-            "message": "推流音量为只读，如需修改请编辑 settings.ini [app] stream_volume"
-        }
-    except Exception as e:
-        logger.error(f"[错误] /stream/volume 路由异常: {type(e).__name__}: {e}")
-        return JSONResponse(
-            {"status": "ERROR", "error": str(e)},
-            status_code=500
-        )
-
-
 @app.get("/volume/defaults")
 async def get_volume_defaults():
     """获取默认音量配置（从settings.ini）"""
@@ -2106,384 +2026,186 @@ async def get_settings_schema():
             }
         }
     }
-
 # ============================================
-# Stream 推流路由
+# WebRTC 信令路由
 # ============================================
 
+# WebRTC 信令服务器实例（延迟初始化）
+WEBRTC_SERVER = None
 
-
-@app.get("/stream/play")
-async def stream_play(request: Request, format: str = "mp3", t: str = None):
-    """
-    推流端点 - 浏览器自适应优化版本
-    支持mp3, aac, aac-raw, pcm, flac格式
+async def get_webrtc_server():
+    """获取或创建 WebRTC 信令服务器"""
+    global WEBRTC_SERVER
     
-    优化特性：
-    - 根据浏览器类型自动调整心跳间隔、块大小等参数
-    - Safari：更频繁的心跳（300ms）
-    - Chrome/Firefox/Edge：标准配置
-    """
-    # 检查推流功能是否启用
-    if not STREAMING_ENABLED:
-        logger.info(f"[STREAM] 推流功能已禁用")
-        return JSONResponse(
-            status_code=403,
-            content={"status": "ERROR", "message": "推流功能已禁用"}
-        )
+    # 检查是否启用推流
+    streaming_enabled = os.environ.get("ENABLE_STREAMING", "false").lower() == "true"
+    if not streaming_enabled:
+        logger.debug("[WebRTC] 推流已禁用，跳过 WebRTC 初始化")
+        return None
     
-    # �🔧 检测浏览器类型
-    user_agent = request.headers.get("user-agent", "")
-    browser_type = detect_browser(user_agent)
-    
-    # 🔧 获取浏览器特定配置
-    browser_config = detect_browser_and_apply_config(request)
-    browser_name = browser_config["browser"]
-    keepalive_interval = browser_config["keepalive_interval"]
-    queue_timeout = browser_config["queue_timeout"]
-    force_flush = browser_config["force_flush"]
-    max_consecutive_empty = browser_config["max_consecutive_empty"]
-    
-    # 🔧 检查调试模式
-    debug_mode = PLAYER.debug if hasattr(PLAYER, 'debug') else False
-    
-    # 获取或创建客户端ID
-    cookies = request.cookies
-    client_id = cookies.get("stream_client_id")
-    
-    if not client_id:
-        # 新客户端，生成一个新的client_id
-        unique_seed = f"{time.time()}{random.random()}"
-        client_id = hashlib.md5(unique_seed.encode()).hexdigest()[:16]
-    
-    # 导入stream模块以使用DEFAULT_STREAM_FORMAT常量
-    import models.stream as stream_module
-    
-    # 如果format参数为空或为"mp3"但配置不同，使用配置的默认值
-    if not format or format == "mp3":
-        format = stream_module.DEFAULT_STREAM_FORMAT
-    
-    format_map = {
-        "aac": "aac",
-        "aac-raw": "aac-raw",
-        "mp3": "mp3",
-        "pcm": "pcm",
-        "flac": "flac"
-    }
-    audio_format = format_map.get(format, stream_module.DEFAULT_STREAM_FORMAT)
-    
-    # 确保FFmpeg在运行（如果有活跃客户端，不会中断它们）
-    start_ffmpeg_stream(audio_format=audio_format)
-    
-    # 只在首次或重启后等待，不要每个客户端都等待
-    if stream_module.CLIENT_POOL.get_active_count() == 0:
-        # 新启动时等待FFmpeg初始化
-        await asyncio.sleep(0.5)
-    
-    # 🔧 使用浏览器特定的队列大小注册客户端（【新增】格式感知）
-    client_queue = register_client(client_id, audio_format=audio_format, browser_name=browser_type)
-    active_count = stream_module.CLIENT_POOL.get_active_count()
-    logger.info(f"[STREAM] ✓ 客户端已连接: {client_id[:8]} ({browser_type}, 格式: {audio_format}, 活跃数: {active_count})")
-    
-    async def stream_generator():
-        """浏览器自适应的流生成器"""
+    if WEBRTC_SERVER is None:
         try:
-            loop = asyncio.get_event_loop()
-            timeout_count = 0
-            last_seq_id = -1  # 上次发送的序列号，用于客户端丢包检测
-            logger.info(f"[流开始] {client_id[:8]} ({browser_name}) | 格式: {audio_format} | 超时阈值: {max_consecutive_empty} | 队列超时: {queue_timeout}s")
-            
-            while timeout_count < max_consecutive_empty:
-                try:
-                    # 使用浏览器特定的队列超时
-                    def blocking_get():
-                        return client_queue.get(block=True, timeout=queue_timeout)
-                    
-                    item = await asyncio.wait_for(
-                        loop.run_in_executor(None, blocking_get),
-                        timeout=queue_timeout + 5.0
-                    )
-                    if item:
-                        # 🔥 关键修复：客户端成功获取数据，更新活动时间
-                        stream_module.CLIENT_POOL.update_activity(client_id)
+            from models.webrtc import initialize_signaling_server, AIORTC_AVAILABLE
+            if not AIORTC_AVAILABLE:
+                logger.warning("[WebRTC] aiortc 未安装，WebRTC 功能不可用")
+                return None
+            # 使用 MPV 的音频设备配置
+            audio_device = os.environ.get("MPV_AUDIO_DEVICE", "CABLE Output (VB-Audio Virtual Cable)")
+            # 从设备ID中提取设备名（如果是 wasapi/{GUID} 格式）
+            if audio_device.startswith("wasapi/"):
+                # 尝试从设备列表获取名称
+                audio_device = "CABLE Output (VB-Audio Virtual Cable)"
+            WEBRTC_SERVER = await initialize_signaling_server(audio_device)
+        except Exception as e:
+            logger.error(f"[WebRTC] 初始化信令服务器失败: {e}")
+            return None
+    return WEBRTC_SERVER
+
+
+@app.websocket("/ws/signaling")
+async def websocket_signaling(websocket: WebSocket):
+    """
+    WebRTC 信令 WebSocket 端点
+    
+    消息格式:
+    - {"type": "offer", "sdp": "..."} - 客户端发送 Offer
+    - {"type": "answer", "sdp": "..."} - 服务器回复 Answer
+    - {"type": "ice", "candidate": {...}} - ICE candidate 交换
+    - {"type": "error", "message": "..."} - 错误消息
+    """
+    await websocket.accept()
+    
+    # 生成客户端ID
+    client_id = str(uuid.uuid4())
+    logger.info(f"[WebRTC] WebSocket 连接已建立: {client_id[:8]}...")
+    
+    # 获取信令服务器
+    server = await get_webrtc_server()
+    if not server:
+        await websocket.send_json({
+            "type": "error",
+            "message": "WebRTC 信令服务器未启动，请确保已安装 aiortc"
+        })
+        await websocket.close()
+        return
+    
+    try:
+        # 发送客户端ID
+        await websocket.send_json({
+            "type": "client_id",
+            "client_id": client_id
+        })
+        
+        # 消息处理循环
+        while True:
+            try:
+                data = await websocket.receive_json()
+                msg_type = data.get("type")
+                
+                if msg_type == "offer":
+                    # 处理 SDP Offer
+                    sdp = data.get("sdp")
+                    if not sdp:
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": "Offer 缺少 SDP"
+                        })
+                        continue
                         
-                        # 🔥 解包序列号和数据块
-                        if isinstance(item, tuple) and len(item) == 2:
-                            seq_id, chunk = item
-                            
-                            # 🔥 忽略心跳包检测丢包（seq < 0 表示心跳）
-                            if seq_id >= 0:
-                                # 🔥 防止重复：检查是否已经处理过这个序列号（冗余发送去重）
-                                if seq_id <= last_seq_id:
-                                    # 这是一个重复的块，跳过 yield 但不计入超时
-                                    timeout_count = 0
-                                    continue
-                                
-                                # 检测丢包：如果序列号不连续，打印警告（前端可基于此主动重发）
-                                # 🔥 优化：只记录大量连续丢包（>10块），忽略小间隙（可能是正常的异步延迟）
-                                if seq_id > last_seq_id + 1 and last_seq_id >= 0:
-                                    gap = seq_id - last_seq_id - 1
-                                    if gap >= 10:  # 只记录严重丢包
-                                        logger.warning(f"⚠️ 客户端 {client_id[:8]} 检测到严重丢包: 缺失 {gap} 块 (seq {last_seq_id+1}-{seq_id-1})")
-                                
-                                last_seq_id = seq_id
-                            else:
-                                # 记录心跳包 (seq_id < 0)
-                                logger.debug(f"[心跳] 客户端: {client_id[:8]}... | 浏览器: {browser_name:8} | 编码: {audio_format:6} | 序列号: {seq_id}")
-                            # 无论是数据块还是心跳，都已经解包到 chunk 变量
-                        else:
-                            # 非元组格式（兼容旧数据）
-                            chunk = item
-                        
-                        # 🔥 跳过空的心跳包（seq_id < 0 的空字节）- 避免爆音
-                        if not chunk or (isinstance(item, tuple) and item[0] < 0 and not item[1]):
-                            timeout_count = 0
-                            continue
-                        
-                        # 🔥 只 yield chunk 数据（字节），不 yield 元组
-                        yield chunk
-                        timeout_count = 0
-                        
-                        # 🔧 Safari强制刷新：立即推送数据，不等待缓冲填满
-                        if force_flush:
-                            await asyncio.sleep(0.01)
+                    answer_sdp = await server.handle_offer(client_id, sdp)
+                    if answer_sdp:
+                        await websocket.send_json({
+                            "type": "answer",
+                            "sdp": answer_sdp
+                        })
+                        logger.info(f"[WebRTC] 已发送 Answer: {client_id[:8]}...")
                     else:
-                        timeout_count += 1
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": "处理 Offer 失败"
+                        })
                         
-                except (asyncio.TimeoutError, queue.Empty):
-                    timeout_count += 1
-                    # 🔥 每10次超时输出一次日志（避免刷屏）
-                    if timeout_count % 10 == 1:
-                        logger.warning(f"[队列超时] {client_id[:8]} ({browser_name}) | 超时计数: {timeout_count}/{max_consecutive_empty} | 队列大小: {client_queue.qsize()}")
+                elif msg_type == "ice":
+                    # 处理 ICE Candidate
+                    candidate = data.get("candidate")
+                    if candidate:
+                        success = await server.handle_ice_candidate(client_id, candidate)
+                        if not success:
+                            logger.warning(f"[WebRTC] ICE candidate 处理失败: {client_id[:8]}")
                             
-        finally:
-            logger.warning(f"[流结束] {client_id[:8]} ({browser_name}) | 最终超时计数: {timeout_count}/{max_consecutive_empty}")
-            unregister_client(client_id)
-    
-    # 🔧 Safari优化HTTP头：禁用代理缓冲，启用分块编码
-    response = StreamingResponse(
-        stream_generator(),
-        media_type=stream_get_mime_type(audio_format),
-        headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  # 禁用代理层缓冲（Nginx优化）
-            "Transfer-Encoding": "chunked",  # 显式启用分块编码
-            "Content-Type": f"audio/{audio_format if audio_format != 'aac-raw' else 'aac'}",
-            "X-Content-Type-Options": "nosniff",
-            "Pragma": "no-cache",
-        }
-    )
-    
-    # 设置stream_client_id cookie，有效期30天
-    response.set_cookie(
-        "stream_client_id",
-        client_id,
-        max_age=30*24*3600,  # 30天
-        httponly=True,  # 只允许HTTP访问，JavaScript无法读取
-        samesite="lax"  # CSRF保护
-    )
-    
-    return response
-
-
-@app.get("/stream/debug/browser")
-async def stream_debug_browser(request: Request):
-    """调试端点：显示当前浏览器的自适应配置"""
-    config = detect_browser_and_apply_config(request)
-    return JSONResponse({
-        "status": "OK",
-        "browser": config["browser"],
-        "user_agent": request.headers.get("user-agent", "Unknown"),
-        "keepalive_interval_ms": int(config["keepalive_interval"] * 1000),
-        "queue_timeout_ms": int(config["queue_timeout"] * 1000),
-        "force_flush": config["force_flush"],
-        "max_consecutive_empty": config["max_consecutive_empty"],
-        "recommendation": f"✓ 已为 {config['browser']} 浏览器优化" if config["browser"] != "Unknown" else "⚠️ 未识别浏览器，使用默认配置"
-    })
-
-
-@app.post("/stream/control")
-async def stream_control(request: Request):
-    """流控制接口"""
-    import models.stream as stream_module
-    
-    # 检查推流功能是否启用
-    if not STREAMING_ENABLED:
-        logger.info(f"[STREAM] 推流功能已禁用")
-        return JSONResponse(
-            status_code=403,
-            content={"status": "ERROR", "message": "推流功能已禁用"}
-        )
-    
-    try:
-        form = await request.form()
-        action = form.get("action", "").strip()
-        format_type = form.get("format", stream_module.DEFAULT_STREAM_FORMAT).strip()
-        
-        if action == "start":
-            if start_ffmpeg_stream(audio_format=format_type):
-                return JSONResponse({"status": "OK", "message": f"推流已启动 ({format_type})"})
-            else:
-                return JSONResponse(
-                    {"status": "ERROR", "message": f"无法启动推流 ({format_type})"},
-                    status_code=500
-                )
-        elif action == "stop":
-            stop_ffmpeg_stream()
-            # 延迟清理，避免进程冲突
-            await asyncio.sleep(0.5)
-            if cleanup_ffmpeg_processes:
-                cleanup_ffmpeg_processes()
-            return JSONResponse({"status": "OK", "message": "推流已停止"})
-        elif action == "restart":
-            # 安全重启：先停止，清理，再启动
-            stop_ffmpeg_stream()
-            await asyncio.sleep(0.5)
-            if cleanup_ffmpeg_processes:
-                cleanup_ffmpeg_processes()
-            await asyncio.sleep(0.5)
-            if start_ffmpeg_stream(audio_format=format_type):
-                return JSONResponse({"status": "OK", "message": f"推流已重启 ({format_type})"})
-            else:
-                return JSONResponse(
-                    {"status": "ERROR", "message": f"无法重启推流 ({format_type})"},
-                    status_code=500
-                )
-        else:
-            return JSONResponse(
-                {"status": "ERROR", "message": "未知操作: start|stop|restart"},
-                status_code=400
-            )
+                elif msg_type == "ping":
+                    # 心跳响应 - 更新客户端活动时间
+                    client = server.get_client(client_id)
+                    if client:
+                        client.update_activity()
+                    await websocket.send_json({"type": "pong"})
+                    
+                else:
+                    logger.warning(f"[WebRTC] 未知消息类型: {msg_type}")
+                    
+            except WebSocketDisconnect:
+                logger.info(f"[WebRTC] 客户端断开连接: {client_id[:8]}...")
+                break
+            except json.JSONDecodeError as e:
+                logger.warning(f"[WebRTC] JSON 解析失败: {e}")
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "无效的 JSON 格式"
+                })
+                
     except Exception as e:
-        logger.error(f"Stream control error: {e}")
-        return JSONResponse(
-            {"status": "ERROR", "message": str(e)},
-            status_code=500
-        )
+        logger.error(f"[WebRTC] WebSocket 异常: {e}")
+    finally:
+        # 清理客户端
+        if server:
+            await server.remove_client(client_id)
+        logger.info(f"[WebRTC] WebSocket 连接已关闭: {client_id[:8]}...")
 
 
-@app.get("/stream/resend/{seq_id}")
-async def stream_resend(seq_id: int):
-    """
-    🔥 重发端点：客户端检测到丢包时，可以请求重发特定序列号的数据块
-    用途：Safari/Edge等浏览器在检测到序列号间隔不连续时，可调用此端点补齐丢失数据
-    """
-    import models.stream as stream_module
-    
-    try:
-        seq_id = int(seq_id)
-        chunk = stream_module.get_from_retransmit_buffer(seq_id)
-        
-        if chunk is None:
-            return JSONResponse({
-                "status": "ERROR",
-                "message": f"序列号 {seq_id} 不在缓冲池中（已过期或未生成）",
-                "data": None
-            }, status_code=404)
-        
-        return Response(
-            content=chunk,
-            media_type="audio/mpeg",
-            headers={
-                "X-Sequence-ID": str(seq_id),
-                "Cache-Control": "no-cache",
-                "X-Resend": "true"
-            }
-        )
-    except ValueError:
+@app.get("/webrtc/status")
+async def webrtc_status():
+    """获取 WebRTC 信令服务器状态"""
+    server = await get_webrtc_server()
+    if not server:
         return JSONResponse({
             "status": "ERROR",
-            "message": f"无效的序列号格式: {seq_id}"
-        }, status_code=400)
-    except Exception as e:
-        return JSONResponse({
-            "status": "ERROR",
-            "message": f"重发失败: {str(e)}"
-        }, status_code=500)
+            "message": "WebRTC 信令服务器未启动"
+        })
+        
+    stats = server.get_stats()
+    return JSONResponse({
+        "status": "OK",
+        "data": stats
+    })
 
 
-@app.get("/stream/status")
-async def stream_status():
-    """推流状态 - 详细的性能和客户端统计"""
-    import models.stream as stream_module
-    
-    # 🔥 检查推流功能是否启用
+@app.get("/config/webrtc-enabled")
+async def config_webrtc_enabled():
+    """检查 WebRTC 功能是否可用"""
     try:
-        enable_stream = SETTINGS.get('enable_stream', True) if SETTINGS else True
-        if not enable_stream:
-            return JSONResponse({
-                "status": "OK",
-                "data": {
-                    "running": False,
-                    "format": "--",
-                    "duration": 0,
-                    "total_bytes": 0,
-                    "total_mb": 0,
-                    "avg_speed": 0,
-                    "active_clients": 0,
-                    "is_active": False,
-                    "status_text": "❌ 推流功能已禁用"
-                }
-            })
-    except Exception as e:
-        logger.warning(f"[STREAM] 检查推流配置失败: {e}")
-    
-    stats = stream_module.get_stream_stats()
-    
-    # 整合前端需要的数据
-    return JSONResponse({
-        "status": "OK",
-        "data": {
-            "running": stats.get("running", False),
-            "format": stats.get("format", "--"),
-            "duration": stats.get("duration", 0),
-            "total_bytes": stats.get("total_bytes", 0),
-            "total_mb": stats.get("total_mb", 0),
-            "avg_speed": stats.get("avg_speed_kbps", 0),  # 转换字段名
-            "active_clients": stats["pool"].get("active_clients", 0),  # 从 pool 中获取
-            "is_active": stats["pool"].get("active_clients", 0) > 0,
-            "status_text": f"✓ 活跃 ({stats['pool'].get('active_clients', 0)}客户端)" 
-                          if stats["pool"].get("active_clients", 0) > 0 
-                          else "⚠️ 等待客户端连接",
-        }
-    })
-
-
-@app.get("/config/stream")
-async def config_stream():
-    """获取推流配置（前端使用）"""
-    import models.stream as stream_module
-    return JSONResponse({
-        "status": "OK",
-        "data": {
-            "default_format": stream_module.DEFAULT_STREAM_FORMAT
-        }
-    })
+        from models.webrtc import AIORTC_AVAILABLE
+        return JSONResponse({
+            "status": "OK",
+            "webrtc_enabled": AIORTC_AVAILABLE,
+            "message": "WebRTC 功能可用" if AIORTC_AVAILABLE else "需要安装 aiortc: pip install aiortc"
+        })
+    except ImportError:
+        return JSONResponse({
+            "status": "OK",
+            "webrtc_enabled": False,
+            "message": "WebRTC 模块未加载"
+        })
 
 
 @app.get("/config/streaming-enabled")
 async def config_streaming_enabled():
-    """获取服务器推流是否启用 - 前端检查用户是否可以开启推流"""
+    """检查推流是否在启动时被启用"""
+    streaming_enabled = os.environ.get("ENABLE_STREAMING", "false").lower() == "true"
     return JSONResponse({
         "status": "OK",
-        "streaming_enabled": STREAMING_ENABLED,
-        "message": "推流功能已启用" if STREAMING_ENABLED else "推流功能已禁用"
+        "streaming_enabled": streaming_enabled,
+        "message": "推流已启用" if streaming_enabled else "推流已禁用（启动时选择）"
     })
-
-
-@app.get("/test/aac-stream")
-async def test_aac_stream():
-    """AAC推流测试页面"""
-    with open("templates/test_aac_stream.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(f.read())
-
-
-@app.get("/test/browsers")
-async def test_browsers():
-    """浏览器兼容性测试页面"""
-    with open("templates/compatibility-test.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(f.read())
 
 # ============================================
 # 错误处理

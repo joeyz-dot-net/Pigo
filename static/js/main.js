@@ -2503,38 +2503,45 @@ class MusicPlayerApp {
         
         console.log('[DEBUG] updateStreamStatus 开始...');
         
-        // 获取推流状态
-        fetch('/stream/status')
+        // 获取推流状态 (WebRTC)
+        fetch('/webrtc/status')
             .then(res => res.json())
             .then(data => {
-                console.log('[DEBUG] /stream/status 响应:', data);
+                console.log('[DEBUG] /webrtc/status 响应:', data);
                 
                 if (data.status === 'OK' && data.data) {
                     const streamData = data.data;
                     
+                    // WebRTC 状态：有活跃客户端即视为激活
+                    const isActive = (streamData.active_clients || 0) > 0;
+                    const statusText = isActive 
+                        ? `已连接 (${streamData.active_clients} 个客户端)` 
+                        : '等待连接...';
+                    
                     if (streamStatusDisplay) {
-                        streamStatusDisplay.textContent = streamData.is_active ? '●' : '●';
-                        streamStatusDisplay.style.color = streamData.is_active ? '#51cf66' : '#f44336';
+                        streamStatusDisplay.textContent = '●';
+                        streamStatusDisplay.style.color = isActive ? '#51cf66' : '#f44336';
                     }
                     
                     if (streamStatusText) {
-                        streamStatusText.textContent = streamData.status_text || '未激活';
-                        streamStatusText.style.color = streamData.is_active ? '#51cf66' : '#f44336';
+                        streamStatusText.textContent = statusText;
+                        streamStatusText.style.color = isActive ? '#51cf66' : '#f44336';
                     }
                     
                     // 更新导航栏按钮的推流状态 (绿色=正在接收, 红色=断开)
-                    this.updateStreamNavButton(streamData.is_active);
+                    this.updateStreamNavButton(isActive);
                     
                     if (streamSpeed) {
-                        streamSpeed.innerHTML = `速度: <strong>${(streamData.avg_speed || 0).toFixed(2)} KB/s</strong>`;
+                        // WebRTC 不提供传输速度，显示音频设备
+                        streamSpeed.innerHTML = `设备: <strong>${streamData.audio_device || '--'}</strong>`;
                         streamSpeed.style.color = '#51cf66';
                     }
                     if (streamTotal) {
-                        streamTotal.innerHTML = `总数据: <strong>${(streamData.total_mb || 0).toFixed(2)} MB</strong>`;
+                        streamTotal.innerHTML = `已处理Offer: <strong>${streamData.total_offers_processed || 0}</strong>`;
                         streamTotal.style.color = '#51cf66';
                     }
                     if (streamDuration) {
-                        streamDuration.innerHTML = `用时: <strong>${streamData.duration || 0}s</strong>`;
+                        streamDuration.innerHTML = `已发送Answer: <strong>${streamData.total_answers_sent || 0}</strong>`;
                         streamDuration.style.color = '#51cf66';
                     }
                     if (streamClients) {
@@ -2542,11 +2549,11 @@ class MusicPlayerApp {
                         streamClients.style.color = '#51cf66';
                     }
                     if (streamFormat) {
-                        streamFormat.innerHTML = `格式: <strong>${streamData.format || '--'}</strong>`;
+                        streamFormat.innerHTML = `峰值连接: <strong>${streamData.peak_concurrent || 0}</strong>`;
                         streamFormat.style.color = '#51cf66';
                     }
                     
-                    console.log('[DEBUG] 推流状态已更新');
+                    console.log('[DEBUG] WebRTC 状态已更新');
                 }
             })
             .catch(err => {

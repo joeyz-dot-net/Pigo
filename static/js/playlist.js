@@ -379,9 +379,9 @@ export function renderPlaylistUI({ container, onPlay, currentMeta }) {
             
             // 添加垂直进度条
             const progressBar = document.createElement('div');
-            progressBar.className = 'track-progress-bar';
-            progressBar.innerHTML = '<div class="track-progress-fill" id="currentTrackProgress"></div>';
-            item.appendChild(progressBar);
+            //progressBar.className = 'track-progress-bar';
+            //progressBar.innerHTML = '<div class="track-progress-fill" id="currentTrackProgress"></div>';
+            //item.appendChild(progressBar);
         }
         
         item.dataset.index = index;
@@ -431,7 +431,7 @@ export function renderPlaylistUI({ container, onPlay, currentMeta }) {
         } else {
             const playlistNameEl = document.createElement('div');
             playlistNameEl.className = 'track-playlist-name';
-            playlistNameEl.textContent = playlistName;
+            //playlistNameEl.textContent = playlistName;
             metaEl.appendChild(playlistNameEl);
         }
         

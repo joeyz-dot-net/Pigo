@@ -6,3 +6,8 @@ requests
 Pillow
 yt-dlp
 pyinstaller
+aiortc
+av
+numpy
+mutagen
+sounddevice
