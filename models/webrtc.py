@@ -49,13 +49,27 @@ class VirtualAudioTrack(AudioStreamTrack):
     
     kind = "audio"
     
-    def __init__(self, device_name: str = "CABLE Output (VB-Audio Virtual Cable)", 
-                 sample_rate: int = 48000, channels: int = 2):
+    def __init__(self, device_name: str = "", 
+                 sample_rate: int = 48000, channels: int = 2, blocksize: int = 1920):
         super().__init__()
         self.device_name = device_name
-        self.sample_rate = sample_rate
-        self.channels = channels
-        self._queue = asyncio.Queue(maxsize=100)
+        
+        # 从环境变量读取音质配置（如果有设置）
+        try:
+            self.sample_rate = int(os.environ.get("WEBRTC_SAMPLE_RATE", sample_rate))
+            self.channels = int(os.environ.get("WEBRTC_CHANNELS", channels))
+            self.blocksize = int(os.environ.get("WEBRTC_BLOCKSIZE", blocksize))
+            self.target_bitrate_kbps = int(os.environ.get("WEBRTC_BITRATE_KBPS", 256))
+            self.profile_name = os.environ.get("WEBRTC_PROFILE_NAME", "默认配置")
+        except (ValueError, TypeError):
+            self.sample_rate = sample_rate
+            self.channels = channels
+            self.blocksize = blocksize
+            self.target_bitrate_kbps = 256
+            self.profile_name = "默认配置"
+        
+        # 增大队列容量，减少丢帧导致的卡顿（2000帧 ≈ 40秒缓冲）
+        self._queue = asyncio.Queue(maxsize=2000)
         self._running = False
         self._capture_thread = None
         self._start_time = None
@@ -76,11 +90,28 @@ class VirtualAudioTrack(AudioStreamTrack):
     def _find_device_index(self) -> Optional[int]:
         """查找指定名称的音频设备索引
         
-        优先选择 2 通道版本的设备（立体声，与 WebRTC 兼容）
+        优先使用启动时选择的设备索引（从环境变量），避免重复搜索
         """
         if not SOUNDDEVICE_AVAILABLE:
             return None
+        
+        # 首先检查环境变量中是否有启动时选择的设备索引
+        cached_index_str = os.environ.get("WEBRTC_AUDIO_DEVICE_INDEX", "")
+        if cached_index_str:
+            try:
+                cached_index = int(cached_index_str)
+                if cached_index >= 0:
+                    # 验证设备索引是否仍然有效
+                    devices = sd.query_devices()
+                    if cached_index < len(devices):
+                        dev = devices[cached_index]
+                        if dev.get('max_input_channels', 0) > 0:
+                            logger.debug(f"[WebRTC] 使用启动时选择的设备索引: {cached_index} ({dev.get('name')})")
+                            return cached_index
+            except (ValueError, TypeError):
+                pass
             
+        # 如果没有缓存的索引，按名称搜索（兼容旧逻辑）
         try:
             devices = sd.query_devices()
             
@@ -98,19 +129,19 @@ class VirtualAudioTrack(AudioStreamTrack):
                         'name': name,
                         'channels': max_input_channels
                     })
-                    logger.info(f"[WebRTC] 发现设备: {name} (索引: {i}, 通道数: {max_input_channels})")
+                    logger.debug(f"[WebRTC] 发现设备: {name} (索引: {i}, 通道数: {max_input_channels})")
             
             if matched_devices:
                 # 优先选择 2 通道版本（立体声，与 WebRTC 最兼容）
                 stereo_devices = [d for d in matched_devices if d['channels'] == 2]
                 if stereo_devices:
                     selected = stereo_devices[0]
-                    logger.info(f"[WebRTC] ✓ 选择 2 通道设备: {selected['name']} (索引: {selected['index']})")
+                    logger.debug(f"[WebRTC] ✓ 选择 2 通道设备: {selected['name']} (索引: {selected['index']})")
                     return selected['index']
                 else:
                     # 没有 2 通道设备，选择通道数最小的（更兼容）
                     selected = min(matched_devices, key=lambda d: d['channels'])
-                    logger.info(f"[WebRTC] ✓ 选择设备: {selected['name']} (索引: {selected['index']}, 通道数: {selected['channels']})")
+                    logger.debug(f"[WebRTC] ✓ 选择设备: {selected['name']} (索引: {selected['index']}, 通道数: {selected['channels']})")
                     return selected['index']
                     
             # 如果没找到指定设备，列出所有可用的输入设备
@@ -152,6 +183,25 @@ class VirtualAudioTrack(AudioStreamTrack):
         self._last_bytes_sent = 0
         self._last_bytes_captured = 0
         
+        # 输出详细的音质配置日志
+        logger.info("\n" + "="*70)
+        logger.info("🎵 [WebRTC] 音频采集配置")
+        logger.info("="*70)
+        logger.info(f"📋 配置方案: {self.profile_name}")
+        logger.info(f"🎧 采集设备: {self.device_name} (索引: {self._device_index})")
+        logger.info(f"🔊 采样率: {self.sample_rate} Hz")
+        logger.info(f"📻 声道数: {self.channels} ({'立体声' if self.channels == 2 else '单声道'})")
+        logger.info(f"📦 块大小: {self.blocksize} 样本 ({self.blocksize * 1000 / self.sample_rate:.1f}ms 延迟)")
+        logger.info(f"📡 目标码率: {self.target_bitrate_kbps} kbps")
+        logger.info(f"🗂️  队列容量: {self._queue.maxsize} 帧 ({self._queue.maxsize * self.blocksize / self.sample_rate:.1f}秒缓冲)")
+        logger.info(f"⏱️  帧间隔: {self.blocksize / self.sample_rate * 1000:.1f}ms")
+        
+        # 计算理论带宽
+        theoretical_bandwidth_kbps = (self.sample_rate * self.channels * 16) / 1000
+        logger.info(f"📊 未压缩带宽: {theoretical_bandwidth_kbps:.1f} kbps (PCM 16-bit)")
+        logger.info(f"📉 预期压缩比: {theoretical_bandwidth_kbps / self.target_bitrate_kbps:.1f}:1")
+        logger.info("="*70 + "\n")
+        
         # 在后台线程中运行 sounddevice 采集
         self._capture_thread = threading.Thread(
             target=self._capture_audio_loop,
@@ -159,7 +209,7 @@ class VirtualAudioTrack(AudioStreamTrack):
             name="WebRTC-AudioCapture"
         )
         self._capture_thread.start()
-        logger.info(f"[WebRTC] sounddevice 音频采集已启动: {self.device_name}")
+        logger.info(f"[WebRTC] ✓ sounddevice 音频采集已启动")
         
     def stop(self):
         """停止音频采集"""
@@ -179,20 +229,38 @@ class VirtualAudioTrack(AudioStreamTrack):
         """sounddevice 音频采集循环（在后台线程中运行）"""
         logger.info("[WebRTC] 🎤 音频采集线程已启动")
         try:
-            # 每帧 960 样本 @ 48kHz = 20ms（WebRTC 标准帧长度）
-            frame_samples = 960
+            # 使用配置的 blocksize
+            frame_samples = self.blocksize
             
-            logger.info(f"[WebRTC] sounddevice 流已打开: {self.sample_rate}Hz, {self.channels}ch, {frame_samples} samples/frame")
-            logger.info(f"[WebRTC] 使用设备索引: {self._device_index}")
+            logger.info(f"[WebRTC] sounddevice 流配置:")
+            logger.info(f"  - 采样率: {self.sample_rate} Hz")
+            logger.info(f"  - 声道数: {self.channels}")
+            logger.info(f"  - 块大小: {frame_samples} 样本/帧 ({frame_samples * 1000 / self.sample_rate:.1f}ms)")
+            logger.info(f"  - 设备索引: {self._device_index}")
             
-            # 使用 InputStream 进行阻塞式录制
-            with sd.InputStream(
-                device=self._device_index,
-                channels=self.channels,
-                samplerate=self.sample_rate,
-                dtype='int16',
-                blocksize=frame_samples
-            ) as stream:
+            # 验证设备索引有效
+            if self._device_index is None:
+                logger.error("[WebRTC] 无效的设备索引，无法启动采集")
+                self._running = False
+                return
+            
+            # 使用 InputStream 进行阻塞式录制（添加超时保护）
+            try:
+                stream = sd.InputStream(
+                    device=self._device_index,
+                    channels=self.channels,
+                    samplerate=self.sample_rate,
+                    dtype='int16',
+                    blocksize=frame_samples,
+                    latency='high'  # 使用高延迟模式，更大的缓冲区减少卡顿
+                )
+                stream.start()
+            except Exception as e:
+                logger.error(f"[WebRTC] 无法打开音频设备: {e}")
+                self._running = False
+                return
+            
+            try:
                 while self._running:
                     try:
                         # 读取一帧音频数据
@@ -210,37 +278,37 @@ class VirtualAudioTrack(AudioStreamTrack):
                         data = audio_data.tobytes()
                         self._bytes_captured += len(data)
                         
-                        # 每500帧输出一次采集状态（约10秒）- 简化日志
-                        if self._frame_count % 500 == 0:
+                        # 每1000帧输出一次采集状态（约20秒）- 减少日志开销
+                        if self._frame_count % 1000 == 0:
                             max_amplitude = np.max(np.abs(audio_data))
                             logger.debug(
                                 f"[WebRTC] 🎤 音频采集 | "
                                 f"帧数: {self._frame_count} | "
-                                f"队列: {self._queue.qsize()}/100 | "
+                                f"队列: {self._queue.qsize()}/500 | "
                                 f"电平: {max_amplitude}"
                             )
                         
-                        # 创建 PyAV 音频帧
-                        frame = av.AudioFrame(
+                        # 创建 PyAV 音频帧（aiortc 要求的格式）
+                        # 对于 packed s16 格式，需要将数据展平为交错格式 (1, samples*channels)
+                        # audio_data 形状: (960, 2) -> flatten 为 [L0,R0,L1,R1,...] -> reshape 为 (1, 1920)
+                        frame = av.AudioFrame.from_ndarray(
+                            audio_data.flatten().reshape(1, -1),
                             format='s16',
-                            layout='stereo' if self.channels == 2 else 'mono',
-                            samples=frame_samples
+                            layout='stereo' if self.channels == 2 else 'mono'
                         )
-                        frame.planes[0].update(data)
                         frame.sample_rate = self.sample_rate
-                        # 使用正确的时间基准：采样点数 * 帧序号
                         frame.pts = self._frame_count * frame_samples
                         frame.time_base = fractions.Fraction(1, self.sample_rate)
                         
-                        # 放入队列
+                        # 放入队列（非阻塞方式）
                         try:
-                            future = asyncio.run_coroutine_threadsafe(
-                                self._queue.put(frame),
-                                self._loop
-                            )
-                            future.result(timeout=0.1)
-                        except asyncio.QueueFull:
-                            pass  # 队列满，丢弃帧
+                            # 使用 call_soon_threadsafe 避免阻塞
+                            def put_nowait():
+                                try:
+                                    self._queue.put_nowait(frame)
+                                except asyncio.QueueFull:
+                                    pass  # 队列满，丢弃帧
+                            self._loop.call_soon_threadsafe(put_nowait)
                         except Exception as e:
                             if self._running:
                                 logger.debug(f"[WebRTC] 放入队列失败: {e}")
@@ -249,6 +317,14 @@ class VirtualAudioTrack(AudioStreamTrack):
                         if self._running:
                             logger.error(f"[WebRTC] 读取音频帧失败: {e}")
                         time.sleep(0.01)
+            finally:
+                # 确保音频流正确关闭
+                try:
+                    stream.stop()
+                    stream.close()
+                    logger.info("[WebRTC] 音频流已正确关闭")
+                except Exception as e:
+                    logger.warning(f"[WebRTC] 关闭音频流失败: {e}")
                         
         except Exception as e:
             logger.error(f"[WebRTC] sounddevice 采集异常: {e}")
@@ -258,23 +334,31 @@ class VirtualAudioTrack(AudioStreamTrack):
         if not self._running:
             logger.info("[WebRTC] recv() 调用时采集未运行，启动采集...")
             await self.start()
+            # 等待队列预填充一些帧（减少启动时的卡顿）
+            await asyncio.sleep(0.1)
             
         try:
-            frame = await asyncio.wait_for(self._queue.get(), timeout=1.0)
+            # 进一步增加超时时间，提高对网络抖动的容忍度
+            frame = await asyncio.wait_for(self._queue.get(), timeout=0.2)
             # 统计发送字节数
             if frame and hasattr(frame, 'planes') and len(frame.planes) > 0:
                 self._bytes_sent += len(bytes(frame.planes[0]))
-            # 每500帧输出一次统计（约10秒）
-            if self._frame_count > 0 and self._frame_count % 500 == 0:
-                logger.info(f"[WebRTC] 📤 已发送 {self._frame_count} 帧到 WebRTC")
+            # 每1000帧输出一次统计（约20秒）
+            if self._frame_count > 0 and self._frame_count % 1000 == 0:
+                queue_size = self._queue.qsize()
+                logger.info(f"[WebRTC] 📤 已发送 {self._frame_count} 帧, 队列: {queue_size}/1000")
             return frame
         except asyncio.TimeoutError:
-            # 超时返回静音帧
-            frame_samples = 960
-            # 使用与采集相同的方式创建静音帧
-            silence_bytes = bytes(frame_samples * self.channels * 2)  # 16-bit = 2 bytes per sample
-            frame = av.AudioFrame(format='s16', layout='stereo' if self.channels == 2 else 'mono', samples=frame_samples)
-            frame.planes[0].update(silence_bytes)
+            # 超时返回静音帧（保持播放连续性）
+            frame_samples = self.blocksize
+            # 使用 numpy 创建静音数据，与采集帧格式一致
+            # packed s16 stereo: (1, samples*channels) 的交错格式
+            silence_data = np.zeros((frame_samples, self.channels), dtype=np.int16)
+            frame = av.AudioFrame.from_ndarray(
+                silence_data.flatten().reshape(1, -1),
+                format='s16',
+                layout='stereo' if self.channels == 2 else 'mono'
+            )
             frame.sample_rate = self.sample_rate
             frame.pts = self._frame_count * frame_samples
             frame.time_base = fractions.Fraction(1, self.sample_rate)

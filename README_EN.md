@@ -1,4 +1,4 @@
-# 🎵 Music Player
+# 🎵 ClubMusic
 
 A full-featured web-based music player supporting local files and YouTube streaming, with playlist management, playback history tracking, ranking statistics, and **browser audio streaming**.
 
@@ -79,7 +79,7 @@ Output `app.exe` in `dist/` directory.
 ## 📁 Project Structure
 
 ```
-MusicPlayer/
+ClubMusic/
 ├── app.py                 # FastAPI main app (2300+ lines, 60+ routes)
 ├── main.py                # Entry point
 ├── settings.ini           # Configuration

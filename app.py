@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-FastAPI Music Player - 纯FastAPI实现，彻底移除Flask依赖
+ClubMusic - 纯FastAPI实现的网页音乐播放器
 """
 
 import os
@@ -29,7 +29,7 @@ import queue
 # ============================================
 
 logger.info("\n" + "="*50)
-logger.info("初始化 FastAPI 音乐播放器...")
+logger.info("初始化 ClubMusic...")
 logger.info("="*50 + "\n")
 
 # 确保 stdout 使用 UTF-8 编码（Windows 兼容性）
@@ -195,8 +195,8 @@ def detect_browser_and_apply_config(request: Request) -> dict:
 # ============================================
 
 app = FastAPI(
-    title="MusicPlayer",
-    description="FastAPI 音乐播放器",
+    title="ClubMusic",
+    description="ClubMusic - 网页音乐播放器",
     version="2.0.0"
 )
 
@@ -2049,12 +2049,12 @@ async def get_webrtc_server():
             if not AIORTC_AVAILABLE:
                 logger.warning("[WebRTC] aiortc 未安装，WebRTC 功能不可用")
                 return None
-            # 使用 MPV 的音频设备配置
-            audio_device = os.environ.get("MPV_AUDIO_DEVICE", "CABLE Output (VB-Audio Virtual Cable)")
-            # 从设备ID中提取设备名（如果是 wasapi/{GUID} 格式）
-            if audio_device.startswith("wasapi/"):
-                # 尝试从设备列表获取名称
-                audio_device = "CABLE Output (VB-Audio Virtual Cable)"
+            # 从环境变量获取 WebRTC 音频采集设备（由 main.py 启动时选择）
+            audio_device = os.environ.get("WEBRTC_AUDIO_DEVICE", "")
+            if not audio_device:
+                logger.warning("[WebRTC] 未配置音频采集设备，将使用默认设备")
+                audio_device = "CABLE-A Output (VB-Audio Virtual Cable A)"
+            logger.info(f"[WebRTC] 使用音频采集设备: {audio_device}")
             WEBRTC_SERVER = await initialize_signaling_server(audio_device)
         except Exception as e:
             logger.error(f"[WebRTC] 初始化信令服务器失败: {e}")

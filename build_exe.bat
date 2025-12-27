@@ -1,11 +1,11 @@
 @echo off
 chcp 65001 >nul
 REM ========================================
-REM 音乐播放器打包脚本 - 单一 EXE 模式
+REM ClubMusic 打包脚本 - 单一 EXE 模式
 REM ========================================
 
 echo ========================================
-echo 开始打包 FastAPI 音乐播放器...
+echo 开始打包 ClubMusic...
 echo ========================================
 echo.
 
@@ -48,13 +48,13 @@ echo ✓ 完成
 
 echo.
 echo ========================================
-echo ✓ 打包完成！
+echo ✓ echo 打包完成！
 echo ========================================
 echo.
-echo 📦 可执行文件位置: dist\MusicPlayer.exe
+echo 📦 可执行文件位置: dist\ClubMusic.exe
 echo.
 echo 📋 使用说明:
-echo 1. MusicPlayer.exe 包含所有必需文件（static、templates、settings.ini）
+echo 1. ClubMusic.exe 包含所有必需文件（static、templates、settings.ini）
 echo.
 echo 2. 必需依赖（需单独配置）:
 echo    • mpv.exe - 音乐播放核心
@@ -68,7 +68,7 @@ echo      放入: C:\ffmpeg\bin\ffmpeg.exe 或系统 PATH
 echo.
 echo    • yt-dlp.exe - YouTube 播放支持
 echo      下载: https://github.com/yt-dlp/yt-dlp/releases
-echo      与 MusicPlayer.exe 同目录
+echo      与 ClubMusic.exe 同目录
 echo.
 echo 4. 配置:
 echo    首次运行时会自动创建 settings.ini
@@ -77,7 +77,7 @@ echo    • MUSIC_DIR: 音乐目录（如 Z:\ 或 D:\Music）
 echo    • SERVER_PORT: 服务端口（默认 80）
 echo.
 echo 🚀 运行:
-echo 双击 MusicPlayer.exe 或命令行运行即可
+echo 双击 ClubMusic.exe 或命令行运行即可
 echo.
 echo 🔐 防火墙提示:
 echo 首次运行时 Windows 防火墙可能会提示，请允许访问网络

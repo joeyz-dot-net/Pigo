@@ -44,7 +44,7 @@ class MusicPlayerApp {
     async init() {
         if (this.initialized) return;
         
-        console.log('🎵 初始化音乐播放器...');
+        console.log('🎵 初始化 ClubMusic...');
         
         try {
             // 0. 保护浏览器音频元素，防止非法 URL 被设置

@@ -1,4 +1,4 @@
-# 🎵 音乐播放器 (Music Player)
+# 🎵 ClubMusic
 
 一个功能完整的网页音乐播放器，支持本地文件和 YouTube 音乐串流播放，具有多歌单管理、播放历史追踪、排行榜统计、**浏览器推流**等高级功能。
 
@@ -79,7 +79,7 @@
 ## 📁 项目结构
 
 ```
-MusicPlayer/
+ClubMusic/
 ├── app.py                 # FastAPI 主应用 (2300+ 行, 60+ 路由)
 ├── main.py                # 启动入口
 ├── settings.ini           # 配置文件
