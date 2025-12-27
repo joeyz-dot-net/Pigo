@@ -10,24 +10,64 @@
       "name": "正在播放",
       "songs": [
         {
-          "url": "Jacky Cheung 张学友/张学友 - 天黑黑 (live).flac",
-          "title": "张学友 - 天黑黑 (live)",
-          "name": "张学友 - 天黑黑 (live)",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766715427,
-          "thumbnail_url": "",
-          "artist": "张学友 - 天黑黑 (live)"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=w58oQuijN8Y",
-          "title": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质",
-          "name": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质",
+          "url": "https://www.youtube.com/watch?v=iy8-IviW3Qo",
+          "title": "【歌手2025·纯享】 #单依纯 《珠玉》“神女吟唱”！奇幻 迷离又绵延不绝｜《歌手2025》| SINGER 2025｜MangoTV",
+          "name": "【歌手2025·纯享】 #单依纯 《珠玉》“神女吟唱”！奇幻 迷离又绵延不绝｜《歌手2025》| SINGER 2025｜MangoTV",
           "type": "youtube",
           "duration": 0,
-          "ts": 1766713926,
-          "thumbnail_url": "https://img.youtube.com/vi/w58oQuijN8Y/default.jpg",
-          "artist": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质"
+          "ts": 1766804153,
+          "thumbnail_url": "https://img.youtube.com/vi/iy8-IviW3Qo/default.jpg",
+          "artist": "【歌手2025·纯享】 #单依纯 《珠玉》“神女吟唱”！奇幻 迷离又绵延不绝｜《歌手2025》| SINGER 2025｜MangoTV"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=AFA2pStSy0I",
+          "title": "王力宏 Wang Leehom & 單依純 Shan Yichun「最好的地方」The Best Place《愛錯》現場官攝 Official Video",
+          "name": "王力宏 Wang Leehom & 單依純 Shan Yichun「最好的地方」The Best Place《愛錯》現場官攝 Official Video",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766804152,
+          "thumbnail_url": "https://img.youtube.com/vi/AFA2pStSy0I/default.jpg",
+          "artist": "王力宏 Wang Leehom & 單依純 Shan Yichun「最好的地方」The Best Place《愛錯》現場官攝 Official Video"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=x5ccWWNfjLE",
+          "title": "ShanYichun單依純 - Lil sis《純妹妹》Officially Music Video｜騰訊音樂發行頻道",
+          "name": "ShanYichun單依純 - Lil sis《純妹妹》Officially Music Video｜騰訊音樂發行頻道",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766804151,
+          "thumbnail_url": "https://img.youtube.com/vi/x5ccWWNfjLE/default.jpg",
+          "artist": "ShanYichun單依純 - Lil sis《純妹妹》Officially Music Video｜騰訊音樂發行頻道"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=EtwgTAVeEQc",
+          "title": "‘R&B diva’ Shan Yichun top ten seal of fame scene inventory! Sing a song and you'll be blown away!",
+          "name": "‘R&B diva’ Shan Yichun top ten seal of fame scene inventory! Sing a song and you'll be blown away!",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766804150,
+          "thumbnail_url": "https://img.youtube.com/vi/EtwgTAVeEQc/default.jpg",
+          "artist": "‘R&B diva’ Shan Yichun top ten seal of fame scene inventory! Sing a song and you'll be blown away!"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=UCMZu5T_Ku7lCm33KhNHg1QA",
+          "title": "单依纯Official",
+          "name": "单依纯Official",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766804149,
+          "thumbnail_url": "https://img.youtube.com/vi/UCMZu5T_Ku7lCm33KhNHg1QA/default.jpg",
+          "artist": "单依纯Official"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=PisAtilDIis",
+          "title": "【歌手2025·纯享】 #单依纯《君》“经典传承”！创新串烧改编 传递跨越时空的怀念 |《歌手2025》| SINGER 2025｜MangoTV",
+          "name": "【歌手2025·纯享】 #单依纯《君》“经典传承”！创新串烧改编 传递跨越时空的怀念 |《歌手2025》| SINGER 2025｜MangoTV",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766804148,
+          "thumbnail_url": "https://img.youtube.com/vi/PisAtilDIis/default.jpg",
+          "artist": "【歌手2025·纯享】 #单依纯《君》“经典传承”！创新串烧改编 传递跨越时空的怀念 |《歌手2025》| SINGER 2025｜MangoTV"
         },
         {
           "url": "Jacky Cheung 张学友/张学友 - 夕阳醉了(Live).flac",
@@ -40,14 +80,24 @@
           "artist": "张学友 - 夕阳醉了(Live)"
         },
         {
-          "url": "Jacky Cheung 张学友/张学友 - 回头太难.flac",
-          "title": "张学友 - 回头太难",
-          "name": "张学友 - 回头太难",
-          "type": "local",
+          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
+          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
+          "type": "youtube",
           "duration": 0,
-          "ts": 1766715426,
-          "thumbnail_url": "",
-          "artist": "张学友 - 回头太难"
+          "ts": 1766713846,
+          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
+          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=w58oQuijN8Y",
+          "title": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质",
+          "name": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质",
+          "type": "youtube",
+          "duration": 0,
+          "ts": 1766713926,
+          "thumbnail_url": "https://img.youtube.com/vi/w58oQuijN8Y/default.jpg",
+          "artist": "【粤语歌曲】张学友“乐坛三十年粤语珍藏版”CD1，母盘级品质"
         },
         {
           "url": "Jacky Cheung 张学友/张学友 - 吻别.flac",
@@ -98,21 +148,11 @@
           "ts": 1766715422,
           "thumbnail_url": "",
           "artist": "张学友 - 一千个伤心的理由"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
-          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
-          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766713846,
-          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
-          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
         }
       ],
-      "song_count": 10,
+      "song_count": 14,
       "created_at": 1766369731.0493586,
-      "updated_at": 1766792387.1442168,
+      "updated_at": 1766806060.166045,
       "current_playing_index": -1
     },
     {

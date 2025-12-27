@@ -1210,31 +1210,69 @@ class MusicPlayerApp {
                         console.log('[自动播放] 触发！剩余时间:', timeRemaining.toFixed(2), '秒，即将播放下一首');
                         
                         // 先删除当前歌曲，然后播放列表第一首
-                        this.removeCurrentSongFromPlaylist().then(async () => {
-                            // 重新加载播放列表以获取最新数据
-                            await playlistManager.loadCurrent();
-                            // 重新渲染UI
-                            this.renderPlaylist();
-                            
-                            // 播放删除后的第一首歌曲（即原来的第二首）
-                            if (playlistManager && playlistManager.currentPlaylist && playlistManager.currentPlaylist.length > 0) {
-                                const firstSong = playlistManager.currentPlaylist[0];
-                                console.log('[自动播放] ✓ 播放列表第一首:', firstSong.title);
-                                await this.playSong(firstSong);
-                            } else {
-                                console.log('[自动播放] 播放列表已空，停止播放');
+                        (async () => {
+                            try {
+                                // 删除当前歌曲
+                                await this.removeCurrentSongFromPlaylist();
+                                
+                                // 重新加载播放列表以获取最新数据
+                                await playlistManager.loadCurrent();
+                                // 重新渲染UI
+                                this.renderPlaylist();
+                                
+                                // 播放删除后的第一首歌曲（即原来的第二首）
+                                if (playlistManager && playlistManager.currentPlaylist && playlistManager.currentPlaylist.length > 0) {
+                                    const firstSong = playlistManager.currentPlaylist[0];
+                                    console.log('[自动播放] ✓ 播放列表第一首:', firstSong.title);
+                                    await this.playSong(firstSong);
+                                    console.log('[自动播放] ✓ 已成功播放下一首');
+                                } else {
+                                    console.log('[自动播放] ⚠️ 播放列表已空，停止播放');
+                                    Toast.info('播放列表已清空');
+                                }
+                            } catch (err) {
+                                console.error('[自动播放] ✗ 播放下一首失败:', err.message || err);
+                                
+                                // 备选方案1: 尝试播放列表中的第二首
+                                try {
+                                    console.log('[自动播放] 备选方案1: 尝试播放列表中的第二首...');
+                                    await playlistManager.loadCurrent();
+                                    if (playlistManager && playlistManager.currentPlaylist && playlistManager.currentPlaylist.length >= 2) {
+                                        const secondSong = playlistManager.currentPlaylist[1];
+                                        console.log('[自动播放] 备选歌曲:', secondSong.title);
+                                        await this.playSong(secondSong);
+                                        console.log('[自动播放] ✓ 已成功播放备选歌曲');
+                                        return;
+                                    }
+                                } catch (backupErr1) {
+                                    console.error('[自动播放] ✗ 备选方案1失败:', backupErr1.message || backupErr1);
+                                }
+                                
+                                // 备选方案2: 直接调用后端 /next 接口强制播放下一首
+                                try {
+                                    console.log('[自动播放] 备选方案2: 调用后端 /next 接口...');
+                                    const result = await api.next();
+                                    if (result.status === 'OK') {
+                                        console.log('[自动播放] ✓ 已通过后端接口成功播放下一首');
+                                        // 重新加载播放列表
+                                        await playlistManager.loadCurrent();
+                                        this.renderPlaylist();
+                                        return;
+                                    }
+                                } catch (backupErr2) {
+                                    console.error('[自动播放] ✗ 备选方案2失败:', backupErr2.message || backupErr2);
+                                }
+                                
+                                // 所有方案都失败
+                                console.error('[自动播放] ✗ 所有播放方案都失败，请手动选择下一首');
+                                Toast.error('自动播放下一首失败，请手动选择');
+                            } finally {
+                                // 延迟1秒后重置标记，防止抖动
+                                setTimeout(() => {
+                                    this._autoNextTriggered = false;
+                                }, 1000);
                             }
-                            // 延迟1秒后重置标记，防止抖动
-                            setTimeout(() => {
-                                this._autoNextTriggered = false;
-                            }, 1000);
-                        }).catch(err => {
-                            console.error('[自动播放] ✗ 失败:', err.message || err);
-                            // 失败时立即重置，允许重试
-                            setTimeout(() => {
-                                this._autoNextTriggered = false;
-                            }, 500);
-                        });
+                        })();
                     }
                 } else if (timeRemaining >= 3 || !isPlaying) {
                     // 当还有较长时间或暂停时，重置标记
@@ -1547,16 +1585,41 @@ class MusicPlayerApp {
             // 从 localStorage 读取用户选择的格式，默认为 mp3
             const streamFormat = localStorage.getItem('streamFormat') || 'mp3';
             
-            // 播放歌曲
-            await player.play(song.url, song.title, song.type, streamFormat);
+            // 播放歌曲，添加重试逻辑，网络歌曲特别容易失败
+            let playSuccess = false;
+            let lastError = null;
+            const maxRetries = 3;
             
-            // 立即隐藏加载提示（不再等待推流）
-            loading.hide();
-            Toast.success(`🎵 正在播放: ${song.title}`);
+            for (let retry = 0; retry < maxRetries; retry++) {
+                try {
+                    await player.play(song.url, song.title, song.type, streamFormat);
+                    playSuccess = true;
+                    break; // 播放成功，跳出重试循环
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`[播放] 第 ${retry + 1} 次播放失败: ${err.message}`);
+                    
+                    // 如果是本地歌曲或最后一次重试，直接抛出
+                    if (song.type === 'local' || retry === maxRetries - 1) {
+                        throw err;
+                    }
+                    
+                    // 网络歌曲失败，等待后重试
+                    await new Promise(resolve => setTimeout(resolve, 500 * (retry + 1)));
+                    console.log(`[播放] 等待后重试播放: ${song.title}`);
+                }
+            }
+            
+            if (playSuccess) {
+                // 立即隐藏加载提示（不再等待推流）
+                loading.hide();
+                Toast.success(`🎵 正在播放: ${song.title}`);
+            }
             
         } catch (error) {
             loading.hide();
-            Toast.error('播放失败: ' + error.message);
+            console.error('[播放错误] 播放失败:', error);
+            Toast.error('播放失败: ' + (error.message || error));
         }
     }
 
@@ -1650,33 +1713,61 @@ class MusicPlayerApp {
                 return; // 没有正在播放的歌曲
             }
             
-            const currentUrl = status.current_meta.url;
+            const currentMeta = status.current_meta;
+            const currentUrl = currentMeta.url || currentMeta.rel || currentMeta.raw_url;
+            const currentTitle = currentMeta.title || currentMeta.name;
+            
             if (!playlistManager || !playlistManager.currentPlaylist) {
                 console.log('[删除歌曲] 播放列表管理器或播放列表不可用');
                 return;
             }
             
-            // 找到当前正在播放的歌曲索引
-            const currentIndex = playlistManager.currentPlaylist.findIndex(
+            console.log('[删除歌曲] 当前播放信息:', {
+                url: currentUrl,
+                title: currentTitle,
+                type: currentMeta.type,
+                playlistLength: playlistManager.currentPlaylist.length
+            });
+            
+            // 多层级匹配策略：先按 URL，再按标题，最后按索引（考虑 YouTube URL 可能变化）
+            let currentIndex = -1;
+            
+            // 策略1: 按 URL 精确匹配
+            currentIndex = playlistManager.currentPlaylist.findIndex(
                 song => song.url === currentUrl
             );
             
-            console.log('[删除歌曲] 当前URL:', currentUrl);
-            console.log('[删除歌曲] 当前播放列表:', playlistManager.currentPlaylist);
-            console.log('[删除歌曲] 找到的索引:', currentIndex);
+            // 策略2: 如果找不到，尝试按标题匹配（YouTube 歌曲 URL 可能被转换）
+            if (currentIndex === -1 && currentTitle) {
+                console.log('[删除歌曲] 标准 URL 匹配失败，尝试标题匹配...');
+                currentIndex = playlistManager.currentPlaylist.findIndex(
+                    song => (song.title || song.name) === currentTitle
+                );
+            }
+            
+            // 策略3: 如果仍未找到，假设当前播放的是列表第一首（最常见的自动播放情况）
+            if (currentIndex === -1 && playlistManager.currentPlaylist.length > 0) {
+                console.warn('[删除歌曲] ⚠️ URL 和标题都无法匹配，假设是列表第一首（可能是 YouTube URL 转换）');
+                currentIndex = 0;
+            }
+            
+            console.log('[删除歌曲] 最终匹配索引:', currentIndex);
             
             if (currentIndex !== -1) {
+                const removedSong = playlistManager.currentPlaylist[currentIndex];
+                console.log('[删除歌曲] 准备删除:', removedSong.title || removedSong.name);
+                
                 // 使用 PlaylistManager 的 removeAt 方法，它会自动重新加载播放列表
                 const result = await playlistManager.removeAt(currentIndex);
                 if (result.status === 'OK') {
-                    console.log('[删除歌曲] 已删除索引为', currentIndex, '的歌曲');
+                    console.log('[删除歌曲] ✓ 成功删除索引为', currentIndex, '的歌曲');
                     // 重新渲染UI确保界面立即更新
                     this.renderPlaylist();
                 } else {
-                    console.error('[删除歌曲] 删除失败:', result.error || result.message);
+                    console.error('[删除歌曲] ✗ 删除失败:', result.error || result.message);
                 }
             } else {
-                console.log('[删除歌曲] 未找到当前播放的歌曲');
+                console.error('[删除歌曲] ✗ 无法找到当前播放的歌曲，跳过删除');
             }
         } catch (err) {
             console.error('[删除歌曲错误]', err.message);

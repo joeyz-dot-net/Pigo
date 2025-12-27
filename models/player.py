@@ -36,7 +36,7 @@ class MusicPlayer:
         "SERVER_HOST": "0.0.0.0",
         "SERVER_PORT": "80",
         "DEBUG": "false",
-        "MPV_CMD": r'bin\mpv.exe --input-ipc-server=\\.\pipe\mpv-pipe --idle=yes --force-window=no --ao=dshow --audio-device="CABLE Output (VB-Audio Virtual Cable)"',
+        "MPV_CMD": r'bin\mpv.exe --input-ipc-server=\\.\pipe\mpv-pipe --idle=yes --force-window=no --no-video --ao=dshow --audio-device="CABLE Output (VB-Audio Virtual Cable)"',
         "LOCAL_SEARCH_MAX_RESULTS": "20",
         "YOUTUBE_SEARCH_MAX_RESULTS": "20",
         "LOCAL_VOLUME": "50",
@@ -110,7 +110,7 @@ class MusicPlayer:
         return (
             f'"{mpv_path}" '
             "--input-ipc-server=\\\\.\\\pipe\\\\mpv-pipe "
-            "--idle=yes --force-window=no "
+            "--idle=yes --force-window=no --no-video "
             '--ao=dshow --audio-device="CABLE Output (VB-Audio Virtual Cable)"'
         )
 

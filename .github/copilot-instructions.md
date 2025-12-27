@@ -14,6 +14,8 @@ Bilingual (zh/en) web music player: **FastAPI** + **ES6 modules** + **MPV audio 
 | **i18n Sync** | Add strings to BOTH `zh` and `en` objects in [static/js/i18n.js](../static/js/i18n.js) |
 | **Persistence** | Call `PLAYLISTS_MANAGER.save()` after any playlist modification |
 | **User Isolation** | Playlist selection stored in browser `localStorage` (`selectedPlaylistId`), not backend global state |
+| **PyInstaller Paths** | External tools (`mpv.exe`, `yt-dlp.exe`) → `sys.executable` dir; bundled resources → `sys._MEIPASS` |
+| **Singleton Pattern** | Use `MusicPlayer.initialize()` not constructor; returns cached instance |
 
 ## Architecture
 
@@ -114,10 +116,20 @@ else:
 
 ```powershell
 python main.py              # Start server (interactive audio device selection)
-.\build_exe.bat             # Build to dist/app.exe via PyInstaller
+.\build_exe.bat             # Build to dist/ClubMusic.exe via PyInstaller (reads app.spec)
 Get-Process mpv             # Verify MPV is running
 Test-Path "\\.\pipe\mpv-pipe"  # Verify MPV IPC pipe exists
 ```
+
+### VS Code Tasks (`.vscode/tasks.json`)
+Available via `Ctrl+Shift+B` or Terminal → Run Task:
+- **Build Only** - PyInstaller build to `dist/ClubMusic.exe` (no deployment)
+- **Deploy to B560** - Copy exe to `\\b560\code\ClubMusic` (network share)
+- **Deploy to Local** - Copy exe to `D:\Code\ClubMusic-Deploy`
+- **Build & Deploy to All** - Sequential: build → B560 → local
+- **Clean Build** - Remove `build/`, `dist/`, `__pycache__/` before building
+- **启动音乐播放器** - Launch dev server (`python main.py`)
+- **安装依赖** - `pip install -r requirements.txt`
 
 ## Debugging Tips
 
