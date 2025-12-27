@@ -1,21 +1,22 @@
 # ClubMusic AI Agent Guide
 
-Bilingual (zh/en) web music player: **FastAPI** + **ES6 modules** + **MPV audio engine** + **WebRTC/HTTP browser streaming**.
+**Full-stack web music player**: FastAPI + ES6 modules + MPV IPC engine + WebRTC/HTTP streaming.  
+**Key distinction**: Bilingual (zh/en), user-isolation via localStorage, multi-singleton architecture, Windows/PyInstaller-optimized.
 
-## ⚠️ Critical Rules
+## ⚠️ Critical Rules (Must-Know)
 
-| Rule | Details |
+| Rule | Impact & Example |
 |------|---------|
-| **API Sync** | Route changes require updating BOTH [app.py](../app.py) AND [static/js/api.js](../static/js/api.js)—field names must match exactly |
-| **FormData vs JSON** | Player routes (`/play`, `/seek`, `/volume`, `/playlist_remove`, `/search_youtube`) use `await request.form()`; CRUD routes (`/playlists`, `/playlist_reorder`, `/search_song`) use `await request.json()` |
-| **Global Singletons** | Use `PLAYER`, `PLAYLISTS_MANAGER`, `RANK_MANAGER` directly ([app.py#L70-80](../app.py))—never instantiate new |
-| **Config Reload** | `settings.ini` is cached at startup—restart `python main.py` for changes |
-| **UTF-8 Windows** | Every Python entry point needs UTF-8 stdout wrapper (see [models/__init__.py#L6-11](../models/__init__.py)) |
-| **i18n Sync** | Add strings to BOTH `zh` and `en` objects in [static/js/i18n.js](../static/js/i18n.js) |
-| **Persistence** | Call `PLAYLISTS_MANAGER.save()` after any playlist modification |
-| **User Isolation** | Playlist selection stored in browser `localStorage` (`selectedPlaylistId`), not backend global state |
-| **PyInstaller Paths** | External tools (`mpv.exe`, `yt-dlp.exe`) → `sys.executable` dir; bundled resources → `sys._MEIPASS` |
-| **Singleton Pattern** | Use `MusicPlayer.initialize()` not constructor; returns cached instance |
+| **API Sync** | Backend [app.py](../app.py) + Frontend [static/js/api.js](../static/js/api.js) must match exactly. New route? Update BOTH. Field rename? Check both files. Missing sync = silent failures. |
+| **FormData vs JSON** | **Player control** (`/play`, `/seek`, `/volume`, `/playlist_remove`): `await request.form()`. **Data CRUD** (`/playlists`, `/playlist_reorder`, `/search_song`): `await request.json()`. Wrong type = "form required" errors. |
+| **Global Singletons** | `PLAYER`, `PLAYLISTS_MANAGER`, `RANK_MANAGER` initialized in [app.py#L70-80](../app.py). Access directly—never create new instances. State corruption if duplicated. |
+| **Config Reload** | [settings.ini](../settings.ini) parsed once at startup. Audio device change? Music dir? **Requires restart** `python main.py`. |
+| **UTF-8 Windows** | Every `.py` entry point needs UTF-8 wrapper (see [models/__init__.py#L6-11](../models/__init__.py)). Chinese chars garbled = missing wrapper. |
+| **i18n Sync** | Always add BOTH `zh` and `en` keys in [static/js/i18n.js](../static/js/i18n.js). Missing lang = undefined UI text. |
+| **Persistence** | Call `PLAYLISTS_MANAGER.save()` after ANY playlist modification. Forgetting it = data loss. |
+| **User Isolation** | Playlist selection in browser `localStorage` (`selectedPlaylistId`), NOT backend global state. Each browser/tab independent. |
+| **PyInstaller Paths** | External tools (`mpv.exe`, `yt-dlp.exe`) live next to exe. Bundled assets (`static/`, `templates/`) in temp `_MEIPASS` dir. |
+| **Singleton Pattern** | Use `MusicPlayer.initialize()` classmethod, not `__init__()`. Returns cached instance across app lifetime. |
 
 ## Architecture
 
@@ -112,36 +113,48 @@ else:
 | `playlists.json` | `{"order": [...], "playlists": [{id, name, songs: [{url, title, type, thumbnail_url?}], created_at, updated_at}]}` |
 | `playback_history.json` | `[{url, title, type, timestamps, thumbnail_url}]` for ranking |
 
-## Development Commands
+## Essential Workflows
 
+### 1. Development Server
 ```powershell
-python main.py              # Start server (interactive audio device selection)
-.\build_exe.bat             # Build to dist/ClubMusic.exe via PyInstaller (reads app.spec)
-Get-Process mpv             # Verify MPV is running
-Test-Path "\\.\pipe\mpv-pipe"  # Verify MPV IPC pipe exists
+python main.py              # Starts Uvicorn + interactive audio device selection dialog
+                             # Will prompt for MPV output device (defaults to VB-Cable)
+                             # Will prompt for WebRTC input device if streaming enabled
 ```
 
-### VS Code Tasks (`.vscode/tasks.json`)
-Available via `Ctrl+Shift+B` or Terminal → Run Task:
-- **Build Only** - PyInstaller build to `dist/ClubMusic.exe` (no deployment)
-- **Deploy to B560** - Copy exe to `\\b560\code\ClubMusic` (network share)
-- **Deploy to Local** - Copy exe to `D:\Code\ClubMusic-Deploy`
-- **Build & Deploy to All** - Sequential: build → B560 → local
-- **Clean Build** - Remove `build/`, `dist/`, `__pycache__/` before building
-- **启动音乐播放器** - Launch dev server (`python main.py`)
-- **安装依赖** - `pip install -r requirements.txt`
+### 2. Building & Deployment
+```powershell
+.\build_exe.bat             # PyInstaller → dist/ClubMusic.exe (reads app.spec)
+                             # Bundles: bin/ (mpv.exe, yt-dlp.exe), static/, templates/
+```
 
-## Debugging Tips
+### 3. Verification Commands
+```powershell
+Get-Process mpv             # Confirm MPV process running
+Test-Path "\\.\pipe\mpv-pipe"  # Confirm MPV IPC pipe exists
+$env:MPV_AUDIO_DEVICE       # Check selected audio device UUID
+```
 
-| Symptom | Cause & Fix |
-|---------|-------------|
-| Settings not applied | INI cached at startup—restart server |
-| No audio output | Check `mpv_cmd` audio-device GUID in [settings.ini](../settings.ini) |
-| Chinese text garbled | Add UTF-8 stdout wrapper at Python entry point |
-| YouTube 403 errors | Update `bin/yt-dlp.exe` to latest version |
-| Frontend API fails | Verify FormData vs JSON matches backend `request.form()` vs `request.json()` |
-| WebRTC no audio | Ensure VB-Cable installed, check `WEBRTC_AUDIO_DEVICE` env var |
-| Playlist not syncing | Check `localStorage.selectedPlaylistId`, each browser is independent |
+### 4. VS Code Tasks (`Ctrl+Shift+B`)
+- **Build Only** → `dist/ClubMusic.exe` (no network deploy)
+- **Build & Deploy to All** → build + copy to B560 + copy to local
+- **Clean Build** → remove `build/`, `dist/`, `__pycache__/` then rebuild
+- **启动音乐播放器** → `python main.py` (dev server)
+- **安装依赖** → `pip install -r requirements.txt`
+
+## Common Pitfalls & Debugging
+
+| Symptom | Root Cause | Fix |
+|---------|---------|------|
+| Settings changes ignored | Config cached on startup | Restart `python main.py` |
+| No audio output | Wrong WASAPI device GUID in `mpv_cmd` | Re-run startup device selection or edit `settings.ini` |
+| Chinese text garbled | Missing UTF-8 wrapper in entry point | Add wrapper in [models/__init__.py#L6](../models/__init__.py) |
+| YouTube videos 403 | yt-dlp outdated | `pip install --upgrade yt-dlp` or replace `bin/yt-dlp.exe` |
+| Frontend API 400 errors | FormData/JSON mismatch (POST `/play` expects form, not JSON) | Check [api.js](../static/js/api.js) calls vs [app.py](../app.py) route handler |
+| WebRTC has no audio | VB-Cable missing OR wrong device selected | Install VB-Cable, re-run startup dialog |
+| Playlist changes lost | Code forgot `PLAYLISTS_MANAGER.save()` | Add call after [models/playlists.py](../models/playlists.py) modifications |
+| Playlist appears empty in another browser | Each browser has independent `localStorage.selectedPlaylistId` | This is intentional—user isolation feature |
+| MPV won't start | IPC pipe busy OR mpv.exe path wrong | Kill lingering processes: `taskkill /IM mpv.exe /F`, check [settings.ini](../settings.ini) |
 
 ## Frontend Module System
 
@@ -162,9 +175,26 @@ ES6 modules in [static/js/](../static/js/):
 - `HitRank`, `PlayHistory` – play count tracking for ranking feature
 - `VirtualAudioTrack` (webrtc.py) – sounddevice audio capture for WebRTC
 
-## Audio Device Selection (Startup)
+## Device Selection & Environment Variables
 
-[main.py](../main.py) provides interactive device selection:
-1. **MPV Output**: `interactive_select_audio_device()` → sets `MPV_AUDIO_DEVICE` env var
-2. **WebRTC Input**: `interactive_select_webrtc_device()` → sets `WEBRTC_AUDIO_DEVICE` env var
-3. Both use `startup_timeout` from settings.ini (default 15s, auto-selects VB-Cable)
+[main.py](../main.py) orchestrates two interactive prompts at startup:
+
+### MPV Output Device
+```python
+interactive_select_audio_device()  # Prompts for WASAPI output
+                                   # Populates mpv_cmd with audio-device GUID
+                                   # Auto-selects "CABLE-A Input" if found
+                                   # Timeout: settings.ini [app] startup_timeout (default 15s)
+                                   # Sets env var: MPV_AUDIO_DEVICE
+```
+
+### WebRTC Input Device (if `enable_stream = true`)
+```python
+interactive_select_webrtc_device()  # Prompts for sounddevice input
+                                    # Used by models/webrtc.py:VirtualAudioTrack
+                                    # Auto-selects 2-channel CABLE Output if found
+                                    # Sets env var: WEBRTC_AUDIO_DEVICE
+                                    # Also sets: WEBRTC_AUDIO_DEVICE_INDEX (0-based int)
+```
+
+**Key insight**: Device selection dialog appears BEFORE Uvicorn starts. If user doesn't input within timeout, uses defaults.
