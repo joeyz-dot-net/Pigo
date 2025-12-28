@@ -10,64 +10,24 @@
       "name": "正在播放",
       "songs": [
         {
+          "url": "Black Myth - Wukong FLAC/01. I See.flac",
+          "title": "01. I See.flac",
+          "name": "01. I See.flac",
+          "type": "local",
+          "duration": 0,
+          "ts": 1766890379,
+          "thumbnail_url": null,
+          "artist": "01. I See.flac"
+        },
+        {
           "url": "https://www.youtube.com/watch?v=PisAtilDIis",
           "title": "【歌手2025·纯享】 #单依纯《君》“经典传承”！创新串烧改编 传递跨越时空的怀念 |《歌手2025》| SINGER 2025｜MangoTV",
           "name": "【歌手2025·纯享】 #单依纯《君》“经典传承”！创新串烧改编 传递跨越时空的怀念 |《歌手2025》| SINGER 2025｜MangoTV",
           "type": "youtube",
           "duration": 0,
-          "ts": 1766887158,
-          "thumbnail_url": "https://img.youtube.com/vi/PisAtilDIis/default.jpg",
+          "ts": 1766890199,
+          "thumbnail_url": "https://img.youtube.com/vi/PisAtilDIis/maxresdefault.jpg",
           "artist": "【歌手2025·纯享】 #单依纯《君》“经典传承”！创新串烧改编 传递跨越时空的怀念 |《歌手2025》| SINGER 2025｜MangoTV"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=xThHm69dnFA",
-          "title": "【張學友 - Jacky Cheung 2024】張學友傳唱金曲 20 《還是覺得妳最好, 情已逝, 吻別, 暗戀你, 分手總要在雨天, 用餘生去愛, 怎麼捨得你, 李香蘭, ...》",
-          "name": "【張學友 - Jacky Cheung 2024】張學友傳唱金曲 20 《還是覺得妳最好, 情已逝, 吻別, 暗戀你, 分手總要在雨天, 用餘生去愛, 怎麼捨得你, 李香蘭, ...》",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766887101,
-          "thumbnail_url": "https://img.youtube.com/vi/xThHm69dnFA/default.jpg",
-          "artist": "【張學友 - Jacky Cheung 2024】張學友傳唱金曲 20 《還是覺得妳最好, 情已逝, 吻別, 暗戀你, 分手總要在雨天, 用餘生去愛, 怎麼捨得你, 李香蘭, ...》"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=V51lvMylpNA",
-          "title": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
-          "name": "Jophia版-張學友 活出生命live演唱會2004全集 高清",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766887101,
-          "thumbnail_url": "https://img.youtube.com/vi/V51lvMylpNA/default.jpg",
-          "artist": "Jophia版-張學友 活出生命live演唱會2004全集 高清"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=7Sw2ZWTt0_U",
-          "title": "【怀旧音乐】高品质张学友国语音乐专辑，感受无损的HIFI魅力！",
-          "name": "【怀旧音乐】高品质张学友国语音乐专辑，感受无损的HIFI魅力！",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766887100,
-          "thumbnail_url": "https://img.youtube.com/vi/7Sw2ZWTt0_U/default.jpg",
-          "artist": "【怀旧音乐】高品质张学友国语音乐专辑，感受无损的HIFI魅力！"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=CA5CwZ4Nmnk",
-          "title": "張學友 - 心如刀割 (Official Video)",
-          "name": "張學友 - 心如刀割 (Official Video)",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766887098,
-          "thumbnail_url": "https://img.youtube.com/vi/CA5CwZ4Nmnk/default.jpg",
-          "artist": "張學友 - 心如刀割 (Official Video)"
-        },
-        {
-          "url": "https://www.youtube.com/watch?v=viis5-_JjXQ",
-          "title": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
-          "name": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》",
-          "type": "youtube",
-          "duration": 0,
-          "ts": 1766887097,
-          "thumbnail_url": "https://img.youtube.com/vi/viis5-_JjXQ/default.jpg",
-          "artist": "【張學友 - Jacky Cheung 粤语歌曲】張學友20精選歌曲《還是覺得妳最好, 分手總要在雨天, 情已逝, 暗戀你, 我醒著做夢, 真情流露, 一千个伤心的理由, 藍雨, ...》"
         },
         {
           "url": "SF6/1-13. Marisa's Theme - Pankration.mp3",
@@ -75,134 +35,14 @@
           "name": "1-13. Marisa's Theme - Pankration",
           "type": "local",
           "duration": 0,
-          "ts": 1766833263,
+          "ts": 1766890333,
           "thumbnail_url": null,
           "artist": "1-13. Marisa's Theme - Pankration"
-        },
-        {
-          "url": "SF6/1-14. Manon's Theme - Walk With Grace.mp3",
-          "title": "1-14. Manon's Theme - Walk With Grace",
-          "name": "1-14. Manon's Theme - Walk With Grace",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833263,
-          "thumbnail_url": null,
-          "artist": "1-14. Manon's Theme - Walk With Grace"
-        },
-        {
-          "url": "SF6/1-15. Dee Jay's Theme - All Right!.mp3",
-          "title": "1-15. Dee Jay's Theme - All Right!",
-          "name": "1-15. Dee Jay's Theme - All Right!",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833263,
-          "thumbnail_url": null,
-          "artist": "1-15. Dee Jay's Theme - All Right!"
-        },
-        {
-          "url": "SF6/1-16. JP's Theme - The Plunderer.mp3",
-          "title": "1-16. JP's Theme - The Plunderer",
-          "name": "1-16. JP's Theme - The Plunderer",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833263,
-          "thumbnail_url": null,
-          "artist": "1-16. JP's Theme - The Plunderer"
-        },
-        {
-          "url": "SF6/1-17. Zangief's Theme - R.E.D..mp3",
-          "title": "1-17. Zangief's Theme - R.E.D.",
-          "name": "1-17. Zangief's Theme - R.E.D.",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833263,
-          "thumbnail_url": null,
-          "artist": "1-17. Zangief's Theme - R.E.D."
-        },
-        {
-          "url": "SF6/1-18. Lily's Theme - Diosa Del Sol.mp3",
-          "title": "1-18. Lily's Theme - Diosa Del Sol",
-          "name": "1-18. Lily's Theme - Diosa Del Sol",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "1-18. Lily's Theme - Diosa Del Sol"
-        },
-        {
-          "url": "SF6/1-19. Cammy's Theme - OverTrip.mp3",
-          "title": "1-19. Cammy's Theme - OverTrip",
-          "name": "1-19. Cammy's Theme - OverTrip",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "1-19. Cammy's Theme - OverTrip"
-        },
-        {
-          "url": "SF6/1-20. Rashid's Theme - The Turbulent Wind.mp3",
-          "title": "1-20. Rashid's Theme - The Turbulent Wind",
-          "name": "1-20. Rashid's Theme - The Turbulent Wind",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "1-20. Rashid's Theme - The Turbulent Wind"
-        },
-        {
-          "url": "SF6/1-21. A.K.I.'s Theme - Poisonous Passion.mp3",
-          "title": "1-21. A.K.I.'s Theme - Poisonous Passion",
-          "name": "1-21. A.K.I.'s Theme - Poisonous Passion",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "1-21. A.K.I.'s Theme - Poisonous Passion"
-        },
-        {
-          "url": "SF6/1-22. Ed's Theme - König oder Feigling.mp3",
-          "title": "1-22. Ed's Theme - König oder Feigling",
-          "name": "1-22. Ed's Theme - König oder Feigling",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "1-22. Ed's Theme - König oder Feigling"
-        },
-        {
-          "url": "SF6/2-01. World Tour - Main Menu.mp3",
-          "title": "2-01. World Tour - Main Menu",
-          "name": "2-01. World Tour - Main Menu",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "2-01. World Tour - Main Menu"
-        },
-        {
-          "url": "SF6/2-02. Body Shop - Avatar Creator.mp3",
-          "title": "2-02. Body Shop - Avatar Creator",
-          "name": "2-02. Body Shop - Avatar Creator",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "2-02. Body Shop - Avatar Creator"
-        },
-        {
-          "url": "SF6/2-03. Metro City Downtown - Stage Battle.mp3",
-          "title": "2-03. Metro City Downtown - Stage Battle",
-          "name": "2-03. Metro City Downtown - Stage Battle",
-          "type": "local",
-          "duration": 0,
-          "ts": 1766833264,
-          "thumbnail_url": null,
-          "artist": "2-03. Metro City Downtown - Stage Battle"
         }
       ],
-      "song_count": 19,
+      "song_count": 3,
       "created_at": 1766369731.0493586,
-      "updated_at": 1766887210.5881467,
+      "updated_at": 1766890379.3216155,
       "current_playing_index": -1
     },
     {

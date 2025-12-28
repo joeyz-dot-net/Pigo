@@ -195,40 +195,12 @@ class MusicPlayerApp {
                 }
             }
             
-            // [新增] 检测播放停止（本地文件播放完毕）
-            if (this.lastPlayStatus && !this.lastPlayStatus.paused && status && status.paused) {
-                // 从播放状态变为暂停状态
-                const currentTime = status.time_pos || 0;
-                const duration = status.duration || 0;
-                
-                // 判断是自然播放结束（时间接近结尾）还是被用户暂停
-                if (duration > 0 && currentTime >= duration - 2) {
-                    // 自然播放结束（在最后2秒内）
-                    const title = status.current_meta?.title || status.current_meta?.name || '歌曲';
-                    Toast.info(`${title} 已播放完毕`);
-                    console.log('[播放] 当前音乐已停止');
-                    
-                    // 删除当前歌曲，然后播放列表第一首
-                    this.removeCurrentSongFromPlaylist().then(async () => {
-                        // 重新加载播放列表以获取最新数据
-                        await playlistManager.loadCurrent();
-                        // 重新渲染UI
-                        this.renderPlaylist();
-                        
-                        // 播放删除后的第一首歌曲
-                        if (playlistManager && playlistManager.currentPlaylist && playlistManager.currentPlaylist.length > 0) {
-                            const firstSong = playlistManager.currentPlaylist[0];
-                            console.log('[播放完毕] 开始播放列表第一首:', firstSong.title);
-                            player.play(firstSong).catch(err => {
-                                console.error('[播放错误]', err.message);
-                            });
-                        }
-                    });
-                } else {
-                    // 被用户暂停
-                    Toast.info('播放已暂停');
-                }
-            }
+            // ✅【关键】自动播放完全由后端控制，前端只负责显示状态
+            // 当歌曲播放完毕时，后端 handle_playback_end() 会：
+            // 1. 通过 MPV 事件监听检测 end-file 事件
+            // 2. 删除当前播放的歌曲（通过URL匹配）
+            // 3. 播放删除后的 songs[0]
+            // 前端只需等待后续 statusUpdate 中 current_meta 的变化即可
             
             this.lastPlayStatus = status;
             this.updatePlayerUI(status);
@@ -256,26 +228,9 @@ class MusicPlayerApp {
             Toast.info('推流已暂停');
         });
 
-        player.on('stream:ended', () => {
-            Toast.info('当前音乐已停止');
-            
-            // 删除当前歌曲，然后播放列表第一首
-            this.removeCurrentSongFromPlaylist().then(async () => {
-                // 重新加载播放列表以获取最新数据
-                await playlistManager.loadCurrent();
-                // 重新渲染UI
-                this.renderPlaylist();
-                
-                // 播放删除后的第一首歌曲
-                if (playlistManager && playlistManager.currentPlaylist && playlistManager.currentPlaylist.length > 0) {
-                    const firstSong = playlistManager.currentPlaylist[0];
-                    console.log('[播放完毕] 开始播放列表第一首:', firstSong.title);
-                    player.play(firstSong).catch(err => {
-                        console.error('[播放错误]', err.message);
-                    });
-                }
-            });
-        });
+        // ✅【移除】自动播放完全由后端 handle_playback_end() 控制
+        // 后端通过 MPV 事件监听器检测 end-file 事件并自动处理自动播放
+        // 前端不应该在这里干涉自动播放流程，以避免竞态条件
 
         player.on('stream:error', ({ errorMsg, silent }) => {
             // 静默错误不显示 toast（例如格式不支持错误）
@@ -1988,6 +1943,10 @@ if (document.readyState === 'loading') {
 window.MusicPlayerApp = app;
 window.app = {
     ...app,
+    // 显式导出关键方法，确保可以被外部调用
+    playSong: app.playSong.bind(app),
+    renderPlaylist: app.renderPlaylist.bind(app),
+    applyPlaylistTheme: app.applyPlaylistTheme.bind(app),
     player,      // 播放器对象
     settingsManager,  // 设置管理器
     modules: {

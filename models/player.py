@@ -634,6 +634,7 @@ class MusicPlayer:
         - 此方法被后台事件监听线程调用（detect end-file 事件）
         - 直接在后端完成自动播放逻辑：删除当前歌曲+播放下一首
         - 前端只负责状态显示，不再参与自动播放控制
+        - 删除当前播放的歌曲（通过URL匹配），然后播放列表顶部
         
         实现完整的后端控制自动播放流程
         """
@@ -649,14 +650,36 @@ class MusicPlayer:
                 logger.info("[自动播放] ⚠️ 默认歌单为空，停止自动播放")
                 return
             
-            # 删除第一首歌曲（当前播放完毕的歌曲）
-            if len(default_playlist.songs) > 0:
-                removed_song = default_playlist.songs.pop(0)
+            # 删除当前播放的歌曲（通过URL匹配）
+            current_playing_url = self.current_meta.get("url") or self.current_meta.get("rel") or self.current_meta.get("raw_url")
+            current_playing_title = self.current_meta.get("title") or "未知歌曲"
+            removed_index = -1
+            
+            if current_playing_url:
+                # 根据URL查找并删除当前播放的歌曲
+                for idx, song in enumerate(default_playlist.songs):
+                    song_url = song.get("url") if isinstance(song, dict) else str(song)
+                    if song_url == current_playing_url:
+                        removed_index = idx
+                        break
+            
+            if removed_index >= 0:
+                # 找到了匹配的歌曲，删除它
+                removed_song = default_playlist.songs.pop(removed_index)
                 default_playlist.updated_at = time.time()
                 app.PLAYLISTS_MANAGER.save()
                 
                 song_title = removed_song.get('title') if isinstance(removed_song, dict) else str(removed_song)
-                logger.info(f"[自动播放] ✓ 已删除播放完毕的歌曲: {song_title}")
+                logger.info(f"[自动播放] ✓ 已删除播放完毕的歌曲 (索引{removed_index}): {song_title}")
+            else:
+                # 未找到匹配的歌曲，默认删除第一首
+                logger.warning(f"[自动播放] ⚠️ 未找到匹配的歌曲 ({current_playing_url})，删除列表第一首")
+                if len(default_playlist.songs) > 0:
+                    removed_song = default_playlist.songs.pop(0)
+                    default_playlist.updated_at = time.time()
+                    app.PLAYLISTS_MANAGER.save()
+                    song_title = removed_song.get('title') if isinstance(removed_song, dict) else str(removed_song)
+                    logger.info(f"[自动播放] ✓ 已删除列表第一首: {song_title}")
             
             # 播放下一首（删除后的第一首）
             if len(default_playlist.songs) > 0:

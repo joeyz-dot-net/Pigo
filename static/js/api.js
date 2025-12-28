@@ -167,6 +167,11 @@ export class MusicAPI {
         if (thumbnail_url) formData.append('thumbnail_url', thumbnail_url);
         return this.postForm('/song_add_to_history', formData);
     }
+
+    // ✅ 新增：获取已合并的播放历史（相同歌曲仅显示最后播放时间）
+    async getPlaybackHistoryMerged() {
+        return this.get('/playback_history_merged');
+    }
 }
 
 // 导出单例

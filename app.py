@@ -579,6 +579,20 @@ async def play(request: Request):
             mpv_cmd=PLAYER.mpv_cmd
         )
         
+        # 【新增】更新 PLAYER.current_index：查找当前播放歌曲在列表中的索引
+        # 这样下次添加歌曲时才能计算正确的插入位置
+        try:
+            playlist = PLAYLISTS_MANAGER.get_playlist(CURRENT_PLAYLIST_ID)
+            if playlist:
+                for idx, song_item in enumerate(playlist.songs):
+                    song_item_url = song_item.get("url") if isinstance(song_item, dict) else str(song_item)
+                    if song_item_url == url:
+                        PLAYER.current_index = idx
+                        logger.info(f"[播放] 已更新 current_index = {idx}, 歌曲: {title}")
+                        break
+        except Exception as e:
+            logger.warning(f"[播放] 更新 current_index 失败: {e}")
+        
         return {
             "status": "OK",
             "message": "播放成功",
@@ -1165,12 +1179,19 @@ async def add_to_playlist(request: Request):
         
         # ✅ 如果未指定 insert_index，插入到当前播放歌曲的下一个位置（插队）
         if insert_index is None:
-            current_index = playlist.current_playing_index if hasattr(playlist, 'current_playing_index') else -1
+            # 【修复】使用 PLAYER.current_index 而不是 playlist.current_playing_index
+            # 因为 current_playing_index 从未被更新，总是 -1
+            current_index = PLAYER.current_index if hasattr(PLAYER, 'current_index') else -1
+            
+            logger.info(f"[添加歌曲] 计算插入位置 - PLAYER.current_index: {current_index}, 歌单长度: {len(playlist.songs)}")
+            
             # 如果有当前播放的歌曲，则插入到下一个位置；否则插入到第一首之后
             if current_index >= 0 and current_index < len(playlist.songs):
                 insert_index = current_index + 1
+                logger.info(f"[添加歌曲] 有当前播放的歌曲，插入到下一个位置: {insert_index}")
             else:
                 insert_index = 1 if playlist.songs else 0  # 第一首之后，或如果空列表则位置0
+                logger.info(f"[添加歌曲] 无当前播放歌曲或索引无效，使用默认位置: {insert_index}")
         
         # 创建 Song 对象
         song_type = song_data.get("type", "local")
@@ -1794,6 +1815,42 @@ async def get_playback_history():
         return {
             "status": "OK",
             "history": history
+        }
+    except Exception as e:
+        return JSONResponse(
+            {"status": "ERROR", "error": str(e)},
+            status_code=500
+        )
+
+@app.get("/playback_history_merged")
+async def get_playback_history_merged():
+    """获取已合并的播放历史 - 相同URL只显示一次，最后播放时间降序排列"""
+    try:
+        raw_history = PLAYER.playback_history.get_all()
+        
+        # 按 URL 合并，只保留最新的记录
+        merged_dict = {}
+        for item in raw_history:
+            url = item.get('url', '')
+            if url:
+                # 如果URL已存在，只有新的时间戳更新时才更新
+                if url not in merged_dict:
+                    merged_dict[url] = item
+                else:
+                    # 比较时间戳，保留更新的
+                    existing_ts = merged_dict[url].get('ts', 0)
+                    new_ts = item.get('ts', 0)
+                    if new_ts > existing_ts:
+                        merged_dict[url] = item
+        
+        # 转换为列表并按时间降序排列（最新的在前）
+        merged_history = list(merged_dict.values())
+        merged_history.sort(key=lambda x: x.get('ts', 0), reverse=True)
+        
+        return {
+            "status": "OK",
+            "history": merged_history,
+            "count": len(merged_history)
         }
     except Exception as e:
         return JSONResponse(

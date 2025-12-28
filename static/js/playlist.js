@@ -504,9 +504,70 @@ export function renderPlaylistUI({ container, onPlay, currentMeta }) {
     container.innerHTML = '';
 
     if (!playlist || playlist.length === 0) {
-        container.innerHTML = `
-            <div class="playlist-empty">暂无歌曲</div>
+        // 播放列表为空时，显示空状态提示和历史按钮
+        const emptyContainer = document.createElement('div');
+        emptyContainer.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            height: 60vh;
+            color: #999;
         `;
+        
+        // 空状态文本
+        const emptyText = document.createElement('div');
+        emptyText.style.cssText = `
+            font-size: 16px;
+            text-align: center;
+            color: #999;
+        `;
+        emptyText.innerHTML = '📭 暂无歌曲<br><span style="font-size: 14px;">从播放历史或搜索中添加歌曲</span>';
+        
+        // 历史按钮
+        const historyBtn = document.createElement('button');
+        const appTheme = getCurrentAppTheme();
+        const colors = getThemeColors(appTheme);
+        
+        historyBtn.style.cssText = `
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        `;
+        
+        historyBtn.innerHTML = '📜 播放历史';
+        historyBtn.title = '查看播放历史';
+        
+        historyBtn.addEventListener('mouseover', () => {
+            historyBtn.style.transform = 'translateY(-2px)';
+            historyBtn.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.6)';
+        });
+        
+        historyBtn.addEventListener('mouseout', () => {
+            historyBtn.style.transform = 'translateY(0)';
+            historyBtn.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
+        });
+        
+        historyBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await showPlaybackHistory();
+        });
+        
+        emptyContainer.appendChild(emptyText);
+        emptyContainer.appendChild(historyBtn);
+        container.appendChild(emptyContainer);
         return;
     }
 
@@ -572,6 +633,40 @@ export function renderPlaylistUI({ container, onPlay, currentMeta }) {
         infoSection.appendChild(songCount);
         headerContainer.appendChild(infoSection);
 
+        // 历史按钮
+        const historyBtn = document.createElement('button');
+        historyBtn.style.cssText = `
+            background: ${colors.buttonBg};
+            border: 1.5px solid ${colors.buttonBorder};
+            color: ${colors.buttonText};
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        `;
+        historyBtn.innerHTML = '📜';
+        historyBtn.title = '播放历史';
+        historyBtn.addEventListener('mouseover', () => {
+            historyBtn.style.background = colors.buttonHover;
+            historyBtn.style.transform = 'scale(1.1)';
+            historyBtn.style.boxShadow = `0 4px 12px ${colors.shadow}`;
+        });
+        historyBtn.addEventListener('mouseout', () => {
+            historyBtn.style.background = colors.buttonBg;
+            historyBtn.style.transform = 'scale(1)';
+            historyBtn.style.boxShadow = 'none';
+        });
+        historyBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await showPlaybackHistory();
+        });
+
         // 清空按钮
         const clearBtn = document.createElement('button');
         clearBtn.style.cssText = `
@@ -616,6 +711,7 @@ export function renderPlaylistUI({ container, onPlay, currentMeta }) {
             }
         });
 
+        headerContainer.appendChild(historyBtn);
         headerContainer.appendChild(clearBtn);
         container.appendChild(headerContainer);
     }
@@ -1252,3 +1348,256 @@ function initTouchDragSort(container, rerenderFn, rerenderArgs) {
 
 // 兼容性导出，确保可被按名导入
 export { renderPlaylistUI as playlistRenderer };
+
+// ✅ 新增：显示播放历史模态框
+async function showPlaybackHistory() {
+    try {
+        loading.show('📜 加载播放历史...');
+        
+        // 获取合并后的播放历史
+        const result = await api.getPlaybackHistoryMerged();
+        
+        if (result.status !== 'OK') {
+            Toast.error('加载历史失败: ' + (result.error || '未知错误'));
+            loading.hide();
+            return;
+        }
+        
+        const history = result.history || [];
+        loading.hide();
+        
+        // 获取历史模态框元素
+        const historyModal = document.getElementById('historyModal');
+        if (!historyModal) {
+            console.error('[历史] 找不到 historyModal 元素');
+            Toast.error('历史模态框未找到');
+            return;
+        }
+        
+        // 填充历史列表
+        const historyList = document.getElementById('historyList');
+        if (!historyList) {
+            console.error('[历史] 找不到 historyList 元素');
+            Toast.error('历史列表未找到');
+            return;
+        }
+        
+        historyList.innerHTML = '';
+        
+        if (history.length === 0) {
+            historyList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">暂无播放历史</div>';
+        } else {
+            // 获取应用主题
+            const appTheme = getCurrentAppTheme();
+            const colors = getThemeColors(appTheme);
+            
+            history.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.style.cssText = `
+                    padding: 12px 16px;
+                    border-bottom: 1px solid ${appTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'};
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                `;
+                
+                historyItem.addEventListener('mouseover', () => {
+                    historyItem.style.background = colors.buttonHover;
+                });
+                
+                historyItem.addEventListener('mouseout', () => {
+                    historyItem.style.background = 'transparent';
+                });
+                
+                // 封面
+                const cover = document.createElement('img');
+                cover.style.cssText = `
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 4px;
+                    object-fit: cover;
+                    background: ${colors.buttonBg};
+                    flex-shrink: 0;
+                `;
+                cover.src = item.thumbnail_url || '';
+                cover.onerror = function() {
+                    this.style.display = 'none';
+                    const placeholder = document.createElement('div');
+                    placeholder.style.cssText = `
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 4px;
+                        background: ${colors.buttonBg};
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 20px;
+                    `;
+                    placeholder.textContent = '🎵';
+                    this.parentNode.replaceChild(placeholder, this);
+                };
+                
+                // 信息
+                const info = document.createElement('div');
+                info.style.cssText = `
+                    flex: 1;
+                    overflow: hidden;
+                `;
+                
+                const title = document.createElement('div');
+                title.style.cssText = `
+                    color: ${colors.textColor};
+                    font-weight: 500;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-size: 14px;
+                `;
+                title.textContent = item.title || '未知歌曲';
+                
+                const typeLabel = document.createElement('div');
+                typeLabel.style.cssText = `
+                    color: ${colors.secondaryText};
+                    font-size: 12px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    margin-top: 2px;
+                `;
+                const itemType = item.type === 'youtube' ? '🎬 YouTube' : '🎵 本地音乐';
+                typeLabel.textContent = itemType;
+                
+                info.appendChild(title);
+                info.appendChild(typeLabel);
+                
+                // 时间戳
+                const timeEl = document.createElement('div');
+                timeEl.style.cssText = `
+                    color: ${colors.secondaryText};
+                    font-size: 12px;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                `;
+                const date = new Date(item.ts * 1000);
+                timeEl.textContent = date.toLocaleString('zh-CN', { 
+                    month: '2-digit', 
+                    day: '2-digit', 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false
+                });
+                
+                historyItem.appendChild(cover);
+                historyItem.appendChild(info);
+                historyItem.appendChild(timeEl);
+                
+                // 点击播放
+                historyItem.addEventListener('click', async () => {
+                    const song = {
+                        url: item.url,
+                        title: item.title,
+                        type: item.type,
+                        thumbnail_url: item.thumbnail_url
+                    };
+                    
+                    try {
+                        loading.show('📀 准备播放...');
+                        
+                        // 添加歌曲到默认播放列表的顶部（insert_index = 0）
+                        const addResult = await api.addToPlaylist({
+                            playlist_id: 'default',
+                            song: song,
+                            insert_index: 0  // 插入到顶部
+                        });
+                        
+                        if (addResult.status !== 'OK') {
+                            Toast.error('添加失败: ' + (addResult.error || addResult.message));
+                            loading.hide();
+                            return;
+                        }
+                        
+                        // 刷新播放列表数据
+                        await playlistManager.loadCurrent();
+                        await playlistManager.loadAll();
+                        
+                        // 关闭历史模态框
+                        historyModal.style.display = 'none';
+                        historyModal.classList.remove('modal-visible');
+                        
+                        // 立即播放该歌曲
+                        if (window.app) {
+                            loading.show('🎵 正在播放...');
+                            await window.app.playSong(song);
+                            loading.hide();
+                        }
+                        
+                        console.log('[历史] 已将歌曲添加到顶部并开始播放:', song.title);
+                        
+                    } catch (error) {
+                        console.error('[历史] 播放失败:', error);
+                        Toast.error('❌ 播放失败: ' + error.message);
+                        loading.hide();
+                    }
+                });
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+        
+        // 显示模态框
+        historyModal.style.display = 'block';
+        setTimeout(() => {
+            historyModal.classList.add('modal-visible');
+        }, 10);
+        
+        // 为历史模态框添加关闭事件处理
+        // 点击背景关闭
+        historyModal.onclick = function(e) {
+            if (e.target === historyModal) {
+                closeHistoryModal(historyModal);
+            }
+        };
+        
+        // 为历史模态框内的关闭按钮添加事件处理
+        const historyCloseBtn = historyModal.querySelector('.history-modal-close') || 
+                               historyModal.querySelector('.modal-close-btn') || 
+                               historyModal.querySelector('[data-close]') ||
+                               historyModal.querySelector('[data-icon]');
+        if (historyCloseBtn) {
+            historyCloseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeHistoryModal(historyModal);
+            });
+        }
+        
+        console.log('[历史] 显示了 ' + history.length + ' 条播放历史');
+        
+    } catch (error) {
+        console.error('[历史] 加载失败:', error);
+        Toast.error('❌ 加载历史失败: ' + error.message);
+        loading.hide();
+    }
+}
+
+// ✅ 新增：关闭历史模态框并返回默认歌单列表
+function closeHistoryModal(historyModal) {
+    historyModal.classList.remove('modal-visible');
+    setTimeout(() => {
+        historyModal.style.display = 'none';
+        
+        // 重新渲染默认歌单列表（刷新显示）
+        const container = document.getElementById('playListContainer');
+        const status = window.app?.lastPlayStatus || { current_meta: null };
+        if (container) {
+            renderPlaylistUI({
+                container,
+                onPlay: (song) => window.app?.playSong(song),
+                currentMeta: status.current_meta
+            });
+        }
+        
+        console.log('[历史] 已关闭，返回默认歌单列表');
+    }, 300);
+}
