@@ -218,71 +218,206 @@ app.add_middleware(
 def auto_fill_and_play_if_idle():
     """
     后台守护线程：如果1分钟内没有歌曲播放且队列为空，自动随机选择10首歌填充并播放
+
+    改进：
+    - 随机池同时包含：所有非默认歌单、默认歌单（作为回退）和本地文件树
+    - 支持从歌单中包含网络歌曲(YouTube/http)及其不同字段名 (url, stream_url, id)
+    - 归一化歌曲条目为 dict: {url, title, type, duration?, thumbnail_url?}
+    - 去重基于 url
+    - 空闲阈值严格使用 60 秒（需求）
     """
     import time
     import random
-    from models.song import Song
+    import re
+
+    def build_youtube_url_from_id(video_id: str):
+        if not video_id:
+            return ""
+        if video_id.startswith("http"):
+            return video_id
+        return f"https://www.youtube.com/watch?v={video_id}"
+
+    def normalize_song_item(item):
+        """把不同来源的歌曲条目标准化为 dict（更鲁棒地包含网络歌曲）"""
+        try:
+            if not item:
+                return None
+
+            # 处理可能的对象实例（兼容不一致的数据）
+            # 支持 dict、StreamSong/LocalSong-like 对象（有属性 url/stream_url）
+            url = None
+            title = ""
+            typ = "local"
+            duration = 0
+            thumbnail = None
+
+            if isinstance(item, dict):
+                url = item.get("url") or item.get("stream_url") or item.get("rel") or item.get("path") or ""
+                title = item.get("title") or item.get("name") or item.get("media_title") or ""
+                duration = item.get("duration", 0)
+                thumbnail = item.get("thumbnail_url") or item.get("thumb") or None
+                typ = item.get("type") or item.get("song_type") or typ
+
+            else:
+                # 可能是 Song/StreamSong 实例（from models.song）
+                # 只读取常见属性，避免强依赖类型
+                url = getattr(item, "url", None) or getattr(item, "stream_url", None) or getattr(item, "rel", None)
+                title = getattr(item, "title", None) or getattr(item, "name", None) or title
+                duration = getattr(item, "duration", duration)
+                thumbnail = getattr(item, "thumbnail_url", None) or getattr(item, "get_thumbnail_url", None)
+                typ = getattr(item, "type", None) or getattr(item, "stream_type", None) or typ
+
+            if not url:
+                # 尝试用 id/video_id 构造 youtube 链接
+                vid = None
+                if isinstance(item, dict):
+                    vid = item.get("id") or item.get("video_id")
+                else:
+                    vid = getattr(item, "video_id", None) or getattr(item, "id", None)
+                if vid:
+                    url = build_youtube_url_from_id(vid)
+
+            if not url:
+                return None
+
+            url = str(url).strip()
+
+            # 若类型未明确，依据 URL 判断网络/YouTube
+            if not typ or typ == "local":
+                if url.startswith("http://") or url.startswith("https://"):
+                    if "youtube.com" in url.lower() or "youtu.be" in url.lower():
+                        typ = "youtube"
+                    else:
+                        typ = "stream"
+                else:
+                    typ = "local"
+
+            return {
+                "url": url,
+                "title": title or os.path.splitext(os.path.basename(url))[0],
+                "type": typ,
+                "duration": duration or 0,
+                "thumbnail_url": thumbnail
+            }
+        except Exception as e:
+            logger.debug(f"[自动填充.normalize] 归一化条目失败: {e}")
+            return None
 
     def get_all_available_songs():
-        # 收集所有歌单（排除default）和本地文件树的歌曲
+        """收集所有歌单（包含非default与default）和本地文件树，确保包含网络歌曲"""
         all_songs = []
-        # 1. 所有非默认歌单
-        for pl in PLAYLISTS_MANAGER.get_all():
-            if pl.id != DEFAULT_PLAYLIST_ID and isinstance(pl.songs, list):
-                all_songs.extend(pl.songs)
-        # 2. 本地文件树
-        def collect_local(node, arr):
-            if not node:
-                return
-            if node.get('files'):
-                for f in node['files']:
-                    arr.append({
-                        "url": f['rel'],
-                        "title": f['name'].rsplit('.', 1)[0],
-                        "type": "local"
-                    })
-            if node.get('dirs'):
-                for d in node['dirs']:
-                    collect_local(d, arr)
+
         try:
-            tree = PLAYER.local_file_tree
-            collect_local(tree, all_songs)
-        except Exception:
-            pass
-        # 去重
-        url_set = set()
-        unique_songs = []
-        for song in all_songs:
-            url = song.get('url')
-            if url and url not in url_set:
-                url_set.add(url)
-                unique_songs.append(song)
-        return unique_songs
+            pls = PLAYLISTS_MANAGER.get_all()
+            logger.debug(f"[自动填充] 收集歌单数量: {len(pls)}")
+            for pl in pls:
+                try:
+                    if not getattr(pl, "songs", None):
+                        continue
+                    for s in pl.songs:
+                        norm = normalize_song_item(s)
+                        if norm and norm.get("url"):
+                            all_songs.append(norm)
+                except Exception as e:
+                    logger.debug(f"[自动填充] 处理歌单 {getattr(pl,'id', '??')} 的歌曲失败: {e}")
+        except Exception as e:
+            logger.warning(f"[自动填充] 收集歌单歌曲失败: {e}")
+
+        # 本地文件树补充（不覆盖已有同url条目）
+        def collect_local(node):
+            items = []
+            if not node:
+                return items
+            files = node.get("files") or []
+            for f in files:
+                rel = f.get("rel") or f.get("path") or None
+                name = f.get("name") or None
+                if rel:
+                    items.append({
+                        "url": rel,
+                        "title": os.path.splitext(name or rel)[0],
+                        "type": "local",
+                        "duration": 0,
+                        "thumbnail_url": None
+                    })
+            for d in (node.get("dirs") or []):
+                items.extend(collect_local(d))
+            return items
+
+        try:
+            tree = getattr(PLAYER, "local_file_tree", None)
+            if tree:
+                all_songs.extend(collect_local(tree))
+        except Exception as e:
+            logger.debug(f"[自动填充] 收集本地文件失败: {e}")
+
+        # 去重并保持首个出现顺序；确保网络歌曲保留
+        seen = set()
+        unique = []
+        for s in all_songs:
+            url = s.get("url")
+            if not url:
+                continue
+            url_norm = url.strip()
+            if url_norm in seen:
+                continue
+            seen.add(url_norm)
+            s["url"] = url_norm
+            unique.append(s)
+
+        logger.debug(f"[自动填充] 候选总数: {len(unique)} (本地+网络+歌单聚合) -> youtube/stream count: {sum(1 for x in unique if x['type'] in ('youtube','stream'))}")
+        return unique
 
     def fill_and_play():
         playlist = PLAYLISTS_MANAGER.get_playlist(DEFAULT_PLAYLIST_ID)
         if not playlist:
             return
-        # 只在队列为空时填充
+        # 仅在队列为空时填充
         if playlist.songs:
             return
-        all_songs = get_all_available_songs()
-        if not all_songs:
+
+        candidates = get_all_available_songs()
+        if not candidates:
+            logger.info("[自动填充] 无可用候选歌曲，跳过填充")
             return
-        random.shuffle(all_songs)
-        selected = all_songs[:10]
-        for idx, song in enumerate(selected):
-            # 直接插入到队列
-            playlist.songs.insert(idx, song)
+
+        # 只保留有 URL 的项（网络URL也保留）
+        playable = [c for c in candidates if c.get("url")]
+        if not playable:
+            logger.info("[自动填充] 无有效 URL，跳过")
+            return
+
+        # 优先把网络歌曲和YouTube混入池中（不排除），随机打乱并选取
+        random.shuffle(playable)
+        selected = playable[:10]
+
+        # 插入到默认歌单末尾（按顺序）
+        for song in selected:
+            song_dict = {
+                "url": song.get("url"),
+                "title": song.get("title") or os.path.basename(song.get("url") or ""),
+                "type": song.get("type", "local"),
+                "duration": song.get("duration", 0),
+                "thumbnail_url": song.get("thumbnail_url") or None,
+                "ts": int(time.time())
+            }
+            playlist.songs.append(song_dict)
+
         playlist.updated_at = time.time()
         PLAYLISTS_MANAGER.save()
-        # 自动播放第一首
-        if selected:
-            try:
-                if selected[0].get("type") == "youtube" or str(selected[0].get("url", "")).startswith("http"):
-                    s = StreamSong(stream_url=selected[0]["url"], title=selected[0].get("title", ""))
+        logger.info(f"[自动填充] 已添加 {len(selected)} 首歌曲到默认歌单 (包含网络歌曲: {sum(1 for x in selected if x['type'] in ('youtube','stream'))})")
+
+        # 自动播放第一首（如果MPV可用）
+        try:
+            first = playlist.songs[0]
+            if first:
+                url = first.get("url")
+                title = first.get("title", url)
+                typ = first.get("type", "local")
+                if typ == "youtube" or (isinstance(url, str) and url.startswith("http")):
+                    s = StreamSong(stream_url=url, title=title)
                 else:
-                    s = LocalSong(file_path=selected[0]["url"], title=selected[0].get("title", ""))
+                    s = LocalSong(file_path=url, title=title)
                 PLAYER.play(
                     s,
                     mpv_command_func=PLAYER.mpv_command,
@@ -292,22 +427,22 @@ def auto_fill_and_play_if_idle():
                     save_to_history=True,
                     mpv_cmd=PLAYER.mpv_cmd
                 )
-            except Exception as e:
-                logger.error(f"[自动填充] 自动播放失败: {e}")
+                logger.info("[自动填充] 自动播放已启动（第一首）")
+        except Exception as e:
+            logger.error(f"[自动填充] 自动播放第一首失败: {e}")
 
     def monitor():
         logger.info("[自动填充] 后台自动填充线程已启动")
         last_play_ts = time.time()
+        IDLE_SECONDS = 60  # 需求：空闲 1 分钟
         while True:
             try:
-                # 检查当前是否有歌曲在播放
                 playlist = PLAYLISTS_MANAGER.get_playlist(DEFAULT_PLAYLIST_ID)
-                is_playing = PLAYER.current_meta and PLAYER.current_meta.get("url")
-                # 如果有歌曲在播放，更新时间戳
+                is_playing = bool(PLAYER.current_meta and PLAYER.current_meta.get("url"))
                 if is_playing:
                     last_play_ts = time.time()
-                # 如果无歌曲播放且队列为空，且空闲超过60秒，自动填充
-                elif (not playlist or not playlist.songs) and (time.time() - last_play_ts > 30):
+                # 无歌曲播放且默认队列为空，且空闲超过阈值
+                elif (not playlist or not playlist.songs) and (time.time() - last_play_ts > IDLE_SECONDS):
                     logger.info("[自动填充] 检测到空闲超过1分钟且队列为空，自动填充并播放")
                     fill_and_play()
                     last_play_ts = time.time()
@@ -330,7 +465,7 @@ async def startup_event():
 async def shutdown_event():
     """应用关闭时的清理事件"""
     logger.info("应用正在关闭...")
-    
+
     # 清理 MPV 进程
     try:
         if PLAYER and PLAYER.mpv_process:
