@@ -519,6 +519,12 @@ async def get_cover(file_path: str):
             }.get(ext, "image/jpeg")
             return FileResponse(cover_path, media_type=media_type)
         
+        # 回退：返回默认占位图（避免前端收到 404 并在控制台日志中打印错误）
+        placeholder = _get_resource_path("static/images/preview.png")
+        if os.path.isfile(placeholder):
+            return FileResponse(placeholder, media_type="image/png")
+        
+        # 最终回退为 404（极少发生）
         raise HTTPException(status_code=404, detail="未找到封面")
     except HTTPException:
         raise
@@ -2138,7 +2144,7 @@ async def update_single_setting(key: str, request: Request):
                 status_code=400
             )
         
-        logger.info(f"[设置] 客户端更新 {key} = {value}（已保存到 localStorage）")
+        logger.info(f"[设置] 客户端更新 {key} = {value}（已保存到localStorage）")
         
         return {
             "status": "OK",
