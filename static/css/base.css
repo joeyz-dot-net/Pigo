@@ -852,32 +852,30 @@ button:active { transform: scale(0.98); }
 
 /* 歌单管理模态框 */
 .playlists-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 20px;
     background: rgba(0, 0, 0, 0.5);
     z-index: 1001;
-    animation: fadeIn 0.3s ease-in-out;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .playlists-modal-content {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
+    position: relative;
+    margin: 0 auto;
     max-width: 500px;
     max-height: 80vh;
-    background: var(--bg-secondary, #1e1e1e);
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
-    z-index: 1002;
+    width: 90vw;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
-    animation: slideUp 0.3s ease-out;
     overflow: hidden;
+    /* 不要设置 top/bottom/left/transform */
 }
 
 .playlists-modal-header {

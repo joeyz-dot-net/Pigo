@@ -525,7 +525,7 @@ export function renderPlaylistUI({ container, onPlay, currentMeta }) {
             text-align: center;
             color: #999;
         `;
-        emptyText.innerHTML = '📭 暂无歌曲<br><span style="font-size: 14px;">从播放历史或搜索中添加歌曲</span>';
+        emptyText.innerHTML = '📭 暂无歌曲<br><span style="font-size: 14px;"></span>';
         
         // 历史按钮
         const historyBtn = document.createElement('button');
@@ -567,6 +567,111 @@ export function renderPlaylistUI({ container, onPlay, currentMeta }) {
             await showPlaybackHistory();
         });
         
+        // 添加10首随即歌曲
+        if (selectedPlaylistId === 'default') {
+            const randomBtn = document.createElement('button');
+            randomBtn.style.cssText = `
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                border: none;
+                color: white;
+                padding: 16px 32px;
+                border-radius: 12px;
+                font-size: 18px;
+                cursor: pointer;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 16px rgba(67, 233, 123, 0.3);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+            `;
+            randomBtn.innerHTML = '🎲 随机添加10首歌';
+            randomBtn.title = '从所有歌单和本地歌曲中随机添加10首到队列';
+
+            randomBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    loading.show('🎲 正在随机添加10首歌...');
+                    // 1. 获取所有歌单和本地歌曲
+                    await playlistManager.loadAll();
+                    let allSongs = [];
+                    // 从所有歌单收集（排除default）
+                    playlistManager.playlists.forEach(pl => {
+                        if (pl.id !== 'default' && Array.isArray(pl.songs)) {
+                            allSongs = allSongs.concat(pl.songs);
+                        }
+                    });
+                    // 从本地文件树收集
+                    const collectLocalSongs = (node, arr) => {
+                        if (!node) return;
+                        if (node.files) {
+                            node.files.forEach(f => arr.push({
+                                url: f.rel,
+                                title: f.name.replace(/\.[^/.]+$/, ''),
+                                type: 'local'
+                            }));
+                        }
+                        if (node.dirs) {
+                            node.dirs.forEach(dir => collectLocalSongs(dir, arr));
+                        }
+                    };
+                    // 获取本地文件树
+                    let fileTree = null;
+                    try {
+                        const treeResult = await api.get('/tree');
+                        fileTree = treeResult?.tree;
+                    } catch {}
+                    if (fileTree) {
+                        collectLocalSongs(fileTree, allSongs);
+                    }
+
+                    // 去重（按url）
+                    const urlSet = new Set();
+                    allSongs = allSongs.filter(song => {
+                        if (!song.url || urlSet.has(song.url)) return false;
+                        urlSet.add(song.url);
+                        return true;
+                    });
+
+                    // 随机选10首
+                    const shuffled = allSongs.sort(() => Math.random() - 0.5);
+                    const randomSongs = shuffled.slice(0, 10);
+
+                    if (randomSongs.length === 0) {
+                        loading.hide();
+                        Toast.error('没有可用的歌曲可添加');
+                        return;
+                    }
+
+                    // 批量添加到默认歌单
+                    for (let i = 0; i < randomSongs.length; i++) {
+                        await api.addToPlaylist({
+                            playlist_id: 'default',
+                            song: randomSongs[i],
+                            insert_index: i
+                        });
+                    }
+                    await playlistManager.loadCurrent();
+                    loading.hide();
+                    Toast.success(`已随机添加${randomSongs.length}首歌到队列`);
+                    // 自动播放第一首
+                    if (randomSongs[0]) {
+                        window.app?.playSong(randomSongs[0]);
+                    }
+                    // 刷新列表
+                    renderPlaylistUI({ container, onPlay, currentMeta });
+                } catch (err) {
+                    loading.hide();
+                    Toast.error('随机添加失败: ' + (err.message || err));
+                }
+            });
+
+            emptyContainer.appendChild(randomBtn);
+        }
+        // ...existing code...
+
+
         emptyContainer.appendChild(emptyText);
         emptyContainer.appendChild(historyBtn);
         container.appendChild(emptyContainer);
