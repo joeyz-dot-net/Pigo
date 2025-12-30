@@ -1184,6 +1184,17 @@ class MusicPlayerApp {
         }
     }
 
+    // 简单防抖：将请求延迟 200ms，频繁触发只会发送最后一次
+    _volumeDebounceTimer = null;
+    setVolumeDebounced(value) {
+        clearTimeout(this._volumeDebounceTimer);
+        this._volumeDebounceTimer = setTimeout(() => {
+            const form = new FormData();
+            form.append('value', value);
+            fetch('/volume', { method: 'POST', body: form }).catch(()=>{});
+        }, 200);
+    }
+
     // 处理进度条点击
     handleProgressClick(e) {
         if (!this.elements.playerProgress) return;
