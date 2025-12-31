@@ -94,29 +94,40 @@ def interactive_select_audio_device(mpv_path: str = "mpv", timeout: int = 10) ->
         return "auto"
     
     # 默认优先选择 2ch CABLE 虚拟音频设备
+    # 新策略：优先选择 CABLE-B（或显示包含 VB-Audio Virtual Cable B 的设备），
+    # 不优先任何名称中包含 "16ch" 的设备（但仍列出供用户选择）。
     default_choice = 0
     default_name = "系统默认设备"
-    
-    # 优先级 1: CABLE-A Input (2ch)
+
+    def is_16ch(name: str) -> bool:
+        return "16ch" in (name or "").lower()
+
+    # 优先级 1: CABLE-B Input 或包含 VB-Audio Virtual Cable B
     for idx, (device_id, device_name) in enumerate(devices, 1):
-        if "CABLE-A Input" in device_name:
+        if is_16ch(device_name):
+            continue
+        if "CABLE-B Input" in device_name or "vb-audio virtual cable b" in device_name.lower():
             default_choice = idx
             default_name = device_name
-            print(f"\n✅ 默认选择: {device_name} (优先级1: CABLE-A Input)")
+            print(f"\n✅ 默认选择: {device_name} (优先级1: CABLE-B / VB-Audio B)")
             break
-    
-    # 优先级 2: CABLE-B Input (2ch)
+
+    # 优先级 2: CABLE-A Input（作为退路，仍避免包含 16ch 的设备）
     if default_choice == 0:
         for idx, (device_id, device_name) in enumerate(devices, 1):
-            if "CABLE-B Input" in device_name:
+            if is_16ch(device_name):
+                continue
+            if "CABLE-A Input" in device_name:
                 default_choice = idx
                 default_name = device_name
-                print(f"\n✅ 默认选择: {device_name} (优先级2: CABLE-B Input)")
+                print(f"\n✅ 默认选择: {device_name} (优先级2: CABLE-A Input)")
                 break
-    
-    # 优先级 3: 通用 CABLE Input
+
+    # 优先级 3: 通用 CABLE Input（仍优先不含 16ch 的设备）
     if default_choice == 0:
         for idx, (device_id, device_name) in enumerate(devices, 1):
+            if is_16ch(device_name):
+                continue
             if "CABLE" in device_name and "Input" in device_name:
                 default_choice = idx
                 default_name = device_name

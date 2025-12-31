@@ -1,50 +1,50 @@
 # ClubMusic — Copilot Instructions (concise)
 
-Purpose: quickly orient AI coding agents to become productive in this repository.
+Purpose: Help AI coding agents become productive quickly in this repository.
 
-Last Updated: 2025-12-30
+Last updated: 2025-12-30
 
-Summary
-- Full-stack single-process app: Browser (ES6 static files) ↔ FastAPI (`app.py`) ↔ in-process singletons in `app.py` (e.g. `PLAYER`, `PLAYLISTS_MANAGER`) ↔ MPV via IPC (`\\.\\pipe\\mpv-pipe`).
-- Frontend static code lives under `static/js/*` and calls backend endpoints in `app.py` (see `static/js/api.js`).
+Key architecture
+- Single-process server: Browser (ES6 static files) ↔ FastAPI app (`app.py`) ↔ in-process singletons (`PLAYER`, `PLAYLISTS_MANAGER`) ↔ MPV via IPC pipe (`\\.\\pipe\\mpv-pipe`).
+- Frontend <-> backend contract is thin and explicit: UI calls endpoints in `app.py`; the frontend wrapper is [static/js/api.js](static/js/api.js).
 
 Critical rules (must follow)
-- API parity: any change to routes/payloads in `app.py` must be mirrored in `static/js/api.js` (method & payload type). Failure here is the most common silent bug.
-- FormData vs JSON: player-control endpoints use FormData (`request.form()`): `/play`, `/seek`, `/volume`, `/playlist_remove`, `/playlists/{id}/add_next`.
-- CRUD/search endpoints use JSON (`request.json()`): `/playlists` (create), `/playlist_reorder`, `/search_song`, `/play_youtube_playlist`.
-- Singletons: use the global instances created in `app.py` (e.g. `PLAYER = MusicPlayer.initialize(...)`, `PLAYLISTS_MANAGER = Playlists()`). Do NOT instantiate duplicate players/managers.
-- Persistence: always call `PLAYLISTS_MANAGER.save()` after mutating playlists (many APIs already do this).
-- Default playlist: `default` must exist; do not delete it. Code assumes it in several places.
-- UTF-8 stdout wrapper: entry modules and `models/__init__.py` configure stdout for Windows — preserve this pattern when adding entry scripts.
-- PyInstaller resources: use `_get_resource_path()` in `app.py` and handle `sys._MEIPASS` when referencing bundled assets or `bin/` tools.
+- Keep API parity: any route/method/payload changed in [app.py](app.py) must be mirrored in [static/js/api.js](static/js/api.js). Mismatches are the most common silent bug.
+- Payload type conventions:
+  - Player-control endpoints use FormData and `await request.form()` (examples: `/play`, `/seek`, `/volume`, `/playlist_remove`, `/playlists/{id}/add_next`).
+  - CRUD/search endpoints use JSON and `await request.json()` (examples: `POST /playlists`, `/playlist_reorder`, `/search_song`, `/play_youtube_playlist`).
+- Use the global singletons from `app.py` (do NOT create new `MusicPlayer`/`Playlists`). Examples: `PLAYER = MusicPlayer.initialize(...)`, `PLAYLISTS_MANAGER = Playlists()`.
+- Always call `PLAYLISTS_MANAGER.save()` after mutating playlists.
+- Never delete or rename the `default` playlist — code assumes `DEFAULT_PLAYLIST_ID = "default"`.
 
-Where important behavior lives
-- HTTP routing & singletons: [app.py](app.py)
-- MPV integration, playback, history: [models/player.py](models/player.py)
+Project-specific patterns & gotchas
+- UTF-8 stdout wrapper: entry modules and `models/__init__.py` rewrap stdout for Windows — preserve this when adding CLI entrypoints.
+- PyInstaller resource helper: use `_get_resource_path()` in `app.py` to access bundled assets; handle `sys._MEIPASS`.
+- Playback model: backend controls auto-next and auto-fill.
+  - See `app.py:auto_fill_and_play_if_idle()` — it may append network (YouTube/stream) items into the default playlist and call `PLAYER.play()`.
+- Indexing and current track: `PLAYER.current_index` and `PLAYER.current_meta` are used across controllers — update `current_index` only via existing helpers or API-consistent code paths.
+- Thumbnail generation for YouTube: code extracts video id and uses `https://img.youtube.com/vi/{id}/default.jpg` when missing.
+
+Where to look first (high-value files)
+- Routing & singletons: [app.py](app.py)
+- MPV and playback logic: [models/player.py](models/player.py)
 - Playlist model & persistence: [models/playlists.py](models/playlists.py) and `playlists.json`
-- Song metadata, yt-dlp helpers: [models/song.py](models/song.py)
-- Frontend API wrapper: [static/js/api.js](static/js/api.js)
-- i18n: [static/js/i18n.js](static/js/i18n.js) — add both `zh` and `en` keys for new UI text.
-- Runtime settings: [settings.ini](settings.ini)
+- Song metadata & yt-dlp helpers: [models/song.py](models/song.py)
+- Frontend API wrapper: [static/js/api.js](static/js/api.js) (mirror changes here)
+- i18n strings: [static/js/i18n.js](static/js/i18n.js) — add both `zh` and `en` keys when adding UI text.
+- Runtime configs: [settings.ini](settings.ini)
 
-Developer workflows
-- Run dev server (interactive audio device selection):
-  - `python main.py` or `python app.py` (uvicorn run is in `__main__` block)
-- Build Windows exe: run `build_exe.bat` (task in workspace: "Build").
-- Logs & noisy endpoints: `settings.ini` contains logging controls (`filtered_paths`, `polling_sample_rate`). `/status` is polled frequently by the frontend.
+Developer workflows (quick)
+- Dev server (interactive audio device selection): `python main.py` or `python app.py` (uvicorn run present).
+- Build Windows exe: run `build_exe.bat` (workspace task "Build").
+- Tests: check `test/` for small utilities; run targeted tests manually as needed.
 
-Conventions & gotchas
-- Playlist selection is client-local (localStorage `selectedPlaylistId`). Backend `playlists/{id}/switch` only validates existence and does NOT change server global playlist state.
-- Auto-fill is backend-driven: `app.py:auto_fill_and_play_if_idle()` may mutate `default` playlist and call `PLAYER.play()`.
-- When adding YouTube items, code often auto-generates thumbnails using the video id pattern — follow the same approach.
-- Avoid mutating `PLAYER` or `PLAYLISTS_MANAGER` state incorrectly — prefer existing helper APIs (e.g., `playlist.add_song` or `PLAYLISTS_MANAGER` methods).
+PR checklist (include in PR description)
+- List exact route/method/payload changes and updated frontend calls in `static/js/api.js`.
+- If playlist/song dict fields changed, describe migration and update `playlists.json` if needed.
+- Note any changes to `PLAYER` or `PLAYLISTS_MANAGER` usage and why duplicating singletons was avoided.
 
-PR guidance
-- If you change an endpoint, list the exact route/method/payload changes in the PR and update `static/js/api.js` and any frontend callers.
-- When changing persistence shape (playlist/song dict fields), update `playlists.json` migration notes in the PR.
-
-If you're missing something
-- Ask for the intended user flow or point to the exact file you want to change; I will audit usages and produce a minimal patch and tests where applicable.
+If anything is unclear, point me to the file or endpoint you want modified and I will produce a minimal, safe patch.
 
 Please review this and tell me which areas to expand (examples, specific endpoints, or developer scripts).
 # ClubMusic AI Agent Guide
