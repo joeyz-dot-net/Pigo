@@ -6,16 +6,16 @@
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
 	
 	<!-- Primary Metadata -->
-	<title>飞猪音乐 - 可以点歌的网络播放器</title>
-	<meta name="description" content="ClubMusic - 可以点歌的网络播放器" />
+	<title>飞猪音乐 - 可以在浏览器中后台播放的网络播放器</title>
+	<meta name="description" content="ClubMusic - 可以在浏览器中后台播放的网络播放器" />
 	<meta name="keywords" content="音乐,点播,串流,mp3,flac,wav,ClubMusic" />
 	
 	<!-- Open Graph -->
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="飞猪音乐 - 可以点歌的网络播放器" />
+	<meta property="og:title" content="飞猪音乐 - 可以在浏览器中后台播放的网络播放器" />
 	<meta property="og:site_name" content="飞猪音乐" />
 	<meta property="og:url" content="{{ request.url }}" />
-	<meta property="og:description" content="飞猪音乐 - 可以点歌的网络播放器" />
+	<meta property="og:description" content="飞猪音乐 - 可以在浏览器中后台播放的网络播放器" />
 	<meta property="og:image" content="/static/images/preview.png" />
 	<meta property="og:image:secure_url" content="/static/images/preview.png" />
 	<meta property="og:image:width" content="1200" />
@@ -144,9 +144,9 @@
 					<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
 				</svg>
 				<div class="full-player-volume-slider">
-						<input type="range" id="fullPlayerVolumeSlider" min="1" max="100" value="50" />	
+						<input type="range" id="fullPlayerVolumeSlider" min="1" max="50" value="25" />	
 						<div id="fullPlayerVolumeDisplay" class="volume-display" style="display:none;">
-						<span class="volume-value">50</span>
+						<span class="volume-value">25</span>
 					</div>				</div>
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
 					<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
@@ -176,7 +176,7 @@
 		position: fixed;
 		left: 50%;
 		transform: translateX(-50%);
-		bottom: 72px; /* 在底部导航之上，稍偏上一点 */
+		bottom: 58px; /* 在底部导航之上，稍偏上一点 */
 		z-index: 1200;
 		background: rgba(20,20,20,0.9);
 		color: #ddd;
@@ -251,8 +251,8 @@
 				dot().style.background = '#1db954';
 				// 显示源信息（尽量简洁）
 				const src = (localAudio.src || '').split('?')[0];
-				const friendly = src.includes('b.joeyz.net') ? 'b.joeyz.net 推流' : (src.split('/').slice(-1)[0] || '远端推流');
-				txt().textContent = `收听: ${friendly}`;
+				//const friendly = src.includes('b.joeyz.net') ? 'b.joeyz.net 推流' : (src.split('/').slice(-1)[0] || '远端推流');
+				//txt().textContent = `收听: ${friendly}`;
 				return;
 			}
 			// 否则回退到后端 /status
@@ -270,6 +270,22 @@
 			setInterval(updateIndicator, 2000);
 		}
 	})();
+	</script>
+
+	<!-- 使浮动推流指示器可交互：点击时触发设置面板中的流切换按钮 -->
+	<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const indicator = document.getElementById('floating-stream-indicator');
+		if(!indicator) return;
+		indicator.style.cursor = 'pointer';
+		indicator.addEventListener('click', () => {
+			// 优先直接触发设置面板内的流切换按钮（存在于页面上）
+			const btn = document.getElementById('streamToggleBtn');
+			if(btn){
+				try{ btn.click(); }catch(e){ /* noop */ }
+			}
+		});
+	});
 	</script>
 
 	<!-- History modal -->
