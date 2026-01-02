@@ -25,6 +25,18 @@
 	<!-- Favicon -->
 	<link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
 	<link rel="shortcut icon" href="/static/images/favicon.ico" />
+	
+	<!-- PWA Manifest -->
+	<link rel="manifest" href="/manifest.json" />
+	<meta name="theme-color" content="#667eea" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	
+	<!-- iOS Safari PWA Support -->
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="ClubMusic" />
+	<link rel="apple-touch-icon" href="/static/images/icon-192.png" />
+	<link rel="apple-touch-startup-image" href="/static/images/icon-512.png" />
 		
 	<!-- Compatibility -->
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -153,7 +165,6 @@
 		</div>
 	</div>
 
-	<!-- Mini Player 已移除 -->
 	
 	<!-- Bottom Navigation (简化版：队列、搜索、设置) -->
 	<nav id="bottomNav" class="bottom-nav">
@@ -295,6 +306,17 @@
 					</div>
 					<div id="debugLogs" style="background: #0a0a0a; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 11px; color: #51cf66; font-family: 'Courier New', monospace; max-height: 200px; border-left: 3px solid #51cf66; line-height: 1.6;"></div>
 				</div>
+
+			<!-- PWA 状态 -->
+				<div style="margin-bottom: 20px;">
+					<h4 style="margin: 0 0 10px 0; color: #51cf66; font-size: 14px; font-weight: bold;">📱 PWA 状态</h4>
+					<div id="debugPWA" style="background: #0a0a0a; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; color: #51cf66; font-family: 'Courier New', monospace; min-height: 80px; border-left: 3px solid #51cf66;">检测中...</div>
+					<div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+						<button id="debugPWARefresh" style="padding: 6px 12px; background: #4facfe; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: background 0.2s;">🔄 刷新</button>
+						<button id="debugPWATest" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: background 0.2s;">🧪 测试页</button>
+						<button id="debugCachesClear" style="padding: 6px 12px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: background 0.2s;">🗑️ 清除缓存</button>
+					</div>
+				</div>
 			</div>
 			
 			<!-- Footer -->
@@ -351,24 +373,7 @@
 						</select>
 					</div>
 				</div>
-		    <!-- 🐛 调试面板入口按钮 -->
-            <button class="playlists-debug-btn" id="playlistsDebugBtn" title="调试面板" style="margin-left:8px;">
-                <span style="font-size:20px;">🐛</span>
-            </button>		
-	<script type="module">
-    // 调试面板入口按钮绑定
-    document.addEventListener('DOMContentLoaded', () => {
-        const debugBtn = document.getElementById('playlistsDebugBtn');
-        const debugModal = document.getElementById('debugModal');
-        if (debugBtn && debugModal) {
-            debugBtn.addEventListener('click', () => {
-                debugModal.style.display = 'flex';
-            });
-        }
-    });
-	</script>		
-			
-		
+				
 			<!-- ClubVoice 语音收听控件 -->
 			<div class="settings-section" id="clubvoiceSection">
 				<h3 class="section-title" data-i18n="settings.clubvoice">🎧 房间语音</h3>
@@ -511,6 +516,24 @@
 				}, 500);
 			})();
 			</script>
+
+    <!-- 🐛 调试面板入口按钮 -->
+            <button class="playlists-debug-btn" id="playlistsDebugBtn" title="调试面板" style="margin-left:8px;">
+                <span style="font-size:20px;">🐛</span>
+            </button>		
+	<script type="module">
+    // 调试面板入口按钮绑定
+    document.addEventListener('DOMContentLoaded', () => {
+        const debugBtn = document.getElementById('playlistsDebugBtn');
+        const debugModal = document.getElementById('debugModal');
+        if (debugBtn && debugModal) {
+            debugBtn.addEventListener('click', () => {
+                debugModal.style.display = 'flex';
+            });
+        }
+    });
+	</script>		
+
 </div>
 			<!-- 底部操作栏 -->
 			<div class="settings-footer">
@@ -545,5 +568,29 @@
 		}, { passive: false });
 	</script>
 
-</body>
-</html>
+<!-- PWA Service Worker 注册 -->
+<script>
+	if ('serviceWorker' in navigator) {
+		window.addEventListener('load', () => {
+			navigator.serviceWorker.register('/sw.js')
+				.then(registration => {
+					console.log('[PWA] Service Worker 注册成功:', registration.scope);
+					
+					// 检测Service Worker更新
+					registration.addEventListener('updatefound', () => {
+						const newWorker = registration.installing;
+						newWorker.addEventListener('statechange', () => {
+							if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+								console.log('[PWA] 检测到新版本，准备更新...');
+								// 可选：显示更新提示给用户
+							}
+						});
+					});
+				})
+				.catch(error => {
+					console.error('[PWA] Service Worker 注册失败:', error);
+				});
+		});
+	}
+</script>
+

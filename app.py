@@ -723,15 +723,63 @@ async def index():
     except Exception as e:
         return HTMLResponse(f"<h1>错误</h1><p>{str(e)}</p>", status_code=500)
 
-@app.get("/integration")
-async def integration_template():
-    """返回集成模板页面"""
+
+
+@app.get("/pwa-test")
+async def pwa_test_page():
+    """返回 PWA 测试页面"""
     try:
-        template_path = _get_resource_path("templates/integration-template.html")
+        template_path = _get_resource_path("templates/pwa-test.html")
         with open(template_path, "r", encoding="utf-8") as f:
             return HTMLResponse(f.read())
     except Exception as e:
         return HTMLResponse(f"<h1>错误</h1><p>{str(e)}</p>", status_code=500)
+
+@app.get("/sw.js")
+async def service_worker():
+    """返回 Service Worker 脚本"""
+    try:
+        from fastapi.responses import Response
+        sw_path = _get_resource_path("static/sw.js")
+        with open(sw_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return Response(
+            content=content,
+            media_type="application/javascript",
+            headers={
+                "Service-Worker-Allowed": "/",
+                "Cache-Control": "no-cache, no-store, must-revalidate"
+            }
+        )
+    except Exception as e:
+        logger.error(f"读取 Service Worker 失败: {e}")
+        return Response(
+            content=f"// Error loading Service Worker: {str(e)}",
+            media_type="application/javascript",
+            status_code=500
+        )
+
+@app.get("/manifest.json")
+async def manifest():
+    """返回 PWA Manifest"""
+    try:
+        from fastapi.responses import Response
+        manifest_path = _get_resource_path("static/manifest.json")
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return Response(
+            content=content,
+            media_type="application/manifest+json",
+            headers={
+                "Cache-Control": "public, max-age=3600"
+            }
+        )
+    except Exception as e:
+        logger.error(f"读取 Manifest 失败: {e}")
+        return JSONResponse(
+            {"error": f"Failed to load manifest: {str(e)}"},
+            status_code=500
+        )
 
 # ============================================
 # API 路由：歌单管理

@@ -3,413 +3,503 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PWA 测试 - ClubVoice</title>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#16213e">
-    
+    <title>PWA 测试 - ClubMusic</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#667eea" />
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff;
             padding: 20px;
+            min-height: 100vh;
         }
+        
         .container {
             max-width: 800px;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
+        
         h1 {
-            margin-bottom: 20px;
-            color: #2ecc71;
-        }
-        h2 {
-            margin-top: 30px;
-            margin-bottom: 15px;
-            color: #3498db;
-            font-size: 1.3rem;
-        }
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .status-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #3498db;
-        }
-        .status-card.success { border-color: #2ecc71; }
-        .status-card.error { border-color: #e74c3c; }
-        .status-card.warning { border-color: #f39c12; }
-        .label {
-            font-size: 0.85rem;
-            color: #888;
-            margin-bottom: 5px;
-        }
-        .value {
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-        .btn {
-            background: #2ecc71;
-            border: none;
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin: 5px;
-            transition: all 0.3s;
-        }
-        .btn:hover {
-            background: #27ae60;
-            transform: translateY(-2px);
-        }
-        .btn:disabled {
-            background: #555;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .log-container {
-            background: #000;
-            border-radius: 8px;
-            padding: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            line-height: 1.6;
-        }
-        .log-entry {
-            margin-bottom: 4px;
-        }
-        .log-entry.success { color: #2ecc71; }
-        .log-entry.error { color: #e74c3c; }
-        .log-entry.info { color: #3498db; }
-        .log-entry.warn { color: #f39c12; }
-        .icon-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .icon-item {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 10px;
-            border-radius: 8px;
+            font-size: 2em;
+            margin-bottom: 10px;
             text-align: center;
         }
-        .icon-item img {
-            width: 100%;
-            height: auto;
+        
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h2 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .status-label {
+            font-weight: 500;
+        }
+        
+        .status-value {
+            font-family: 'Courier New', monospace;
+            padding: 4px 12px;
             border-radius: 4px;
-            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.2);
         }
-        .icon-item .size {
-            font-size: 0.75rem;
-            color: #888;
+        
+        .status-ok {
+            color: #4ade80;
         }
-        a {
-            color: #3498db;
+        
+        .status-error {
+            color: #f87171;
+        }
+        
+        .status-warning {
+            color: #fbbf24;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
             text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
         }
-        a:hover {
-            text-decoration: underline;
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: rgba(102, 126, 234, 0.8);
+            border-color: rgba(102, 126, 234, 1);
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .info-box {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .status-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔬 PWA 功能测试</h1>
-        <p><a href="/">← 返回主页面</a></p>
-
-        <h2>📱 PWA 支持状态</h2>
-        <div class="status-grid" id="statusGrid"></div>
-
-        <h2>🎯 功能测试</h2>
-        <div>
-            <button class="btn" id="btnInstall">📥 安装 PWA</button>
-            <button class="btn" id="btnUnregister">🗑️ 注销 Service Worker</button>
-            <button class="btn" id="btnRefresh">🔄 刷新缓存</button>
-            <button class="btn" id="btnTest">🧪 测试功能</button>
+        <h1>🚀 PWA 测试页面</h1>
+        <p class="subtitle">ClubMusic - Progressive Web App 功能检测</p>
+        
+        <!-- Service Worker 状态 -->
+        <div class="test-section">
+            <h2>📡 Service Worker 状态</h2>
+            <div class="status-item">
+                <span class="status-label">浏览器支持</span>
+                <span class="status-value" id="sw-support">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">注册状态</span>
+                <span class="status-value" id="sw-registered">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">激活状态</span>
+                <span class="status-value" id="sw-active">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">控制器</span>
+                <span class="status-value" id="sw-controller">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">脚本URL</span>
+                <span class="status-value" id="sw-url" style="font-size: 0.85em;">检测中...</span>
+            </div>
         </div>
-
-        <h2>🖼️ 图标资源</h2>
-        <div class="icon-grid" id="iconGrid"></div>
-
-        <h2>📋 日志</h2>
-        <div class="log-container" id="logContainer"></div>
+        
+        <!-- Manifest 状态 -->
+        <div class="test-section">
+            <h2>📄 Manifest 状态</h2>
+            <div class="status-item">
+                <span class="status-label">Manifest 链接</span>
+                <span class="status-value" id="manifest-link">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">应用名称</span>
+                <span class="status-value" id="manifest-name">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">启动 URL</span>
+                <span class="status-value" id="manifest-start-url">检测中...</span>
+            </div>
+        </div>
+        
+        <!-- 安装状态 -->
+        <div class="test-section">
+            <h2>📱 安装状态</h2>
+            <div class="status-item">
+                <span class="status-label">显示模式</span>
+                <span class="status-value" id="display-mode">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">独立模式</span>
+                <span class="status-value" id="standalone">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">可安装</span>
+                <span class="status-value" id="installable">检测中...</span>
+            </div>
+        </div>
+        
+        <!-- Cache API -->
+        <div class="test-section">
+            <h2>💾 Cache API</h2>
+            <div class="status-item">
+                <span class="status-label">Cache 支持</span>
+                <span class="status-value" id="cache-support">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">缓存数量</span>
+                <span class="status-value" id="cache-count">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">缓存项目</span>
+                <span class="status-value" id="cache-items">检测中...</span>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="test-section">
+            <h2>🛠 操作</h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="refreshStatus()">🔄 刷新状态</button>
+                <button class="btn" onclick="clearAllCaches()">🗑 清除缓存</button>
+                <button class="btn" onclick="unregisterSW()">❌ 注销 SW</button>
+                <a href="/" class="btn">🏠 返回首页</a>
+            </div>
+        </div>
+        
+        <!-- 使用说明 -->
+        <div class="info-box">
+            <strong>💡 使用说明：</strong>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+                <li>✅ 状态为绿色表示正常工作</li>
+                <li>❌ 状态为红色表示未启用或出错</li>
+                <li>⚠️ 状态为黄色表示部分支持</li>
+                <li>如需重新测试，请点击"刷新状态"按钮</li>
+                <li>如遇问题，可尝试"清除缓存"后重新加载</li>
+            </ul>
+        </div>
     </div>
-
+    
     <script>
-        // 日志功能
-        function log(msg, type = 'info') {
-            const container = document.getElementById('logContainer');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            const time = new Date().toLocaleTimeString();
-            entry.textContent = `[${time}] ${msg}`;
-            container.appendChild(entry);
-            container.scrollTop = container.scrollHeight;
-            console.log(`[${type.toUpperCase()}] ${msg}`);
-        }
-
-        // 检测 PWA 支持
-        function checkPWASupport() {
-            const checks = [
-                {
-                    label: 'Service Worker',
-                    value: 'serviceWorker' in navigator,
-                    desc: 'Service Worker API'
-                },
-                {
-                    label: 'Manifest',
-                    value: true, // 会异步检查
-                    desc: 'Web App Manifest',
-                    async: true
-                },
-                {
-                    label: 'Cache API',
-                    value: 'caches' in window,
-                    desc: '缓存存储'
-                },
-                {
-                    label: 'MediaSession',
-                    value: 'mediaSession' in navigator,
-                    desc: '媒体会话控制'
-                },
-                {
-                    label: 'Notifications',
-                    value: 'Notification' in window,
-                    desc: '推送通知'
-                },
-                {
-                    label: 'Standalone Mode',
-                    value: window.matchMedia('(display-mode: standalone)').matches,
-                    desc: 'PWA 独立模式'
-                },
-                {
-                    label: 'iOS',
-                    value: /iPad|iPhone|iPod/.test(navigator.userAgent),
-                    desc: 'iOS 设备'
-                },
-                {
-                    label: 'HTTPS',
-                    value: location.protocol === 'https:' || location.hostname === 'localhost',
-                    desc: '安全连接'
-                }
-            ];
-
-            const grid = document.getElementById('statusGrid');
-            
-            // 先显示同步检查结果
-            checks.forEach(check => {
-                const card = document.createElement('div');
-                // 使用安全的 ID（移除空格）
-                const safeId = check.label.replace(/\s+/g, '-');
-                card.id = `check-${safeId}`;
-                card.className = `status-card ${check.async ? '' : (check.value ? 'success' : 'warning')}`;
-                card.innerHTML = `
-                    <div class="label">${check.desc}</div>
-                    <div class="value">${check.async ? '⏳ 检测中...' : (check.value ? '✅ 支持' : '❌ 不支持')}</div>
-                `;
-                grid.appendChild(card);
-                
-                if (!check.async) {
-                    log(`${check.label}: ${check.value ? '支持' : '不支持'}`, check.value ? 'success' : 'warn');
-                }
-            });
-            
-            // 异步检查 Manifest
-            checkManifest();
-        }
+        // PWA 状态检测脚本
+        let installPromptEvent = null;
         
-        // 异步检查 manifest
-        async function checkManifest() {
-            const card = document.getElementById('check-Manifest');
-            try {
-                const response = await fetch('/manifest.json');
-                if (response.ok) {
-                    const manifest = await response.json();
-                    if (manifest.name && manifest.icons) {
-                        card.className = 'status-card success';
-                        card.querySelector('.value').textContent = '✅ 支持';
-                        log(`Manifest: 加载成功 - ${manifest.name}`, 'success');
-                    } else {
-                        throw new Error('Manifest 格式不完整');
-                    }
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            } catch (e) {
-                card.className = 'status-card warning';
-                card.querySelector('.value').textContent = '❌ 不支持';
-                log(`Manifest: 加载失败 - ${e.message}`, 'error');
-            }
-        }
-
-        // 显示图标
-        function showIcons() {
-            const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
-            const grid = document.getElementById('iconGrid');
-            
-            sizes.forEach(size => {
-                const item = document.createElement('div');
-                item.className = 'icon-item';
-                item.innerHTML = `
-                    <img src="/static/icon-${size}.png" alt="${size}x${size}" onerror="this.style.display='none'">
-                    <div class="size">${size}×${size}</div>
-                `;
-                grid.appendChild(item);
-            });
-        }
-
-        // 安装 PWA
-        let deferredPrompt = null;
-        
+        // 监听安装提示
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            deferredPrompt = e;
-            log('可以安装 PWA', 'success');
-            document.getElementById('btnInstall').disabled = false;
+            installPromptEvent = e;
+            console.log('[PWA] 检测到安装提示事件');
+            updateInstallableStatus(true);
         });
-
-        document.getElementById('btnInstall').addEventListener('click', async () => {
-            if (!deferredPrompt) {
-                log('无法安装：未检测到安装提示', 'error');
-                return;
-            }
-            
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            
-            if (outcome === 'accepted') {
-                log('用户接受安装 PWA', 'success');
-            } else {
-                log('用户拒绝安装 PWA', 'warn');
-            }
-            
-            deferredPrompt = null;
-            document.getElementById('btnInstall').disabled = true;
+        
+        // 监听已安装
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] 应用已安装到主屏幕');
+            installPromptEvent = null;
         });
-
-        // 注销 Service Worker
-        document.getElementById('btnUnregister').addEventListener('click', async () => {
-            if (!('serviceWorker' in navigator)) {
-                log('浏览器不支持 Service Worker', 'error');
-                return;
-            }
+        
+        // 检测 Service Worker 状态
+        async function checkServiceWorker() {
+            const supportEl = document.getElementById('sw-support');
+            const registeredEl = document.getElementById('sw-registered');
+            const activeEl = document.getElementById('sw-active');
+            const controllerEl = document.getElementById('sw-controller');
+            const urlEl = document.getElementById('sw-url');
             
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration of registrations) {
-                await registration.unregister();
-                log('已注销 Service Worker: ' + registration.scope, 'success');
-            }
-            
-            if (registrations.length === 0) {
-                log('没有找到已注册的 Service Worker', 'info');
-            }
-        });
-
-        // 刷新缓存
-        document.getElementById('btnRefresh').addEventListener('click', async () => {
-            if (!('caches' in window)) {
-                log('浏览器不支持 Cache API', 'error');
-                return;
-            }
-            
-            const cacheNames = await caches.keys();
-            for (let name of cacheNames) {
-                await caches.delete(name);
-                log('已删除缓存: ' + name, 'success');
-            }
-            
-            if (cacheNames.length === 0) {
-                log('没有找到缓存', 'info');
-            } else {
-                log('刷新页面以重新缓存资源', 'info');
-            }
-        });
-
-        // 测试功能
-        document.getElementById('btnTest').addEventListener('click', async () => {
-            log('开始测试...', 'info');
-            
-            // 测试 Service Worker
             if ('serviceWorker' in navigator) {
+                supportEl.textContent = '✅ 支持';
+                supportEl.className = 'status-value status-ok';
+                
                 try {
-                    const registration = await navigator.serviceWorker.register('/static/sw.js');
-                    log('Service Worker 注册成功', 'success');
+                    const registration = await navigator.serviceWorker.getRegistration();
                     
-                    // 发送测试消息
-                    if (registration.active) {
-                        const messageChannel = new MessageChannel();
-                        messageChannel.port1.onmessage = (event) => {
-                            if (event.data.type === 'PONG') {
-                                log('Service Worker 响应正常', 'success');
-                            }
-                        };
+                    if (registration) {
+                        registeredEl.textContent = '✅ 已注册';
+                        registeredEl.className = 'status-value status-ok';
                         
-                        registration.active.postMessage(
-                            { type: 'KEEP_ALIVE' },
-                            [messageChannel.port2]
-                        );
+                        if (registration.active) {
+                            activeEl.textContent = '✅ 已激活';
+                            activeEl.className = 'status-value status-ok';
+                            urlEl.textContent = registration.active.scriptURL;
+                            urlEl.className = 'status-value status-ok';
+                        } else if (registration.installing) {
+                            activeEl.textContent = '⏳ 安装中';
+                            activeEl.className = 'status-value status-warning';
+                        } else if (registration.waiting) {
+                            activeEl.textContent = '⏸ 等待激活';
+                            activeEl.className = 'status-value status-warning';
+                        } else {
+                            activeEl.textContent = '❌ 未激活';
+                            activeEl.className = 'status-value status-error';
+                        }
+                    } else {
+                        registeredEl.textContent = '❌ 未注册';
+                        registeredEl.className = 'status-value status-error';
+                        activeEl.textContent = '❌ 未激活';
+                        activeEl.className = 'status-value status-error';
+                        urlEl.textContent = 'N/A';
+                        urlEl.className = 'status-value';
+                    }
+                    
+                    if (navigator.serviceWorker.controller) {
+                        controllerEl.textContent = '✅ 已控制';
+                        controllerEl.className = 'status-value status-ok';
+                    } else {
+                        controllerEl.textContent = '❌ 未控制';
+                        controllerEl.className = 'status-value status-error';
                     }
                 } catch (err) {
-                    log('Service Worker 注册失败: ' + err.message, 'error');
+                    console.error('[PWA] 检测 Service Worker 失败:', err);
+                    registeredEl.textContent = '❌ 检测失败';
+                    registeredEl.className = 'status-value status-error';
                 }
+            } else {
+                supportEl.textContent = '❌ 不支持';
+                supportEl.className = 'status-value status-error';
+                registeredEl.textContent = 'N/A';
+                activeEl.textContent = 'N/A';
+                controllerEl.textContent = 'N/A';
+                urlEl.textContent = 'N/A';
             }
+        }
+        
+        // 检测 Manifest
+        async function checkManifest() {
+            const linkEl = document.getElementById('manifest-link');
+            const nameEl = document.getElementById('manifest-name');
+            const startUrlEl = document.getElementById('manifest-start-url');
             
-            // 测试 Manifest
-            try {
-                const response = await fetch('/static/manifest.json');
-                if (response.ok) {
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            
+            if (manifestLink) {
+                linkEl.textContent = '✅ 已链接';
+                linkEl.className = 'status-value status-ok';
+                
+                try {
+                    const response = await fetch(manifestLink.href);
                     const manifest = await response.json();
-                    log(`Manifest 加载成功: ${manifest.name}`, 'success');
+                    
+                    nameEl.textContent = manifest.name || manifest.short_name || 'N/A';
+                    nameEl.className = 'status-value status-ok';
+                    
+                    startUrlEl.textContent = manifest.start_url || '/';
+                    startUrlEl.className = 'status-value status-ok';
+                } catch (err) {
+                    console.error('[PWA] 解析 Manifest 失败:', err);
+                    nameEl.textContent = '❌ 解析失败';
+                    nameEl.className = 'status-value status-error';
+                    startUrlEl.textContent = '❌ 解析失败';
+                    startUrlEl.className = 'status-value status-error';
+                }
+            } else {
+                linkEl.textContent = '❌ 未找到';
+                linkEl.className = 'status-value status-error';
+                nameEl.textContent = 'N/A';
+                startUrlEl.textContent = 'N/A';
+            }
+        }
+        
+        // 检测安装状态
+        function checkInstallStatus() {
+            const displayModeEl = document.getElementById('display-mode');
+            const standaloneEl = document.getElementById('standalone');
+            
+            const displayMode = window.matchMedia('(display-mode: standalone)').matches ? 'standalone' :
+                               window.matchMedia('(display-mode: fullscreen)').matches ? 'fullscreen' :
+                               window.matchMedia('(display-mode: minimal-ui)').matches ? 'minimal-ui' : 'browser';
+            
+            displayModeEl.textContent = displayMode;
+            displayModeEl.className = displayMode === 'standalone' ? 'status-value status-ok' : 'status-value';
+            
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                window.navigator.standalone === true;
+            
+            standaloneEl.textContent = isStandalone ? '✅ 是' : '❌ 否';
+            standaloneEl.className = isStandalone ? 'status-value status-ok' : 'status-value';
+        }
+        
+        // 更新可安装状态
+        function updateInstallableStatus(installable) {
+            const installableEl = document.getElementById('installable');
+            installableEl.textContent = installable ? '✅ 可安装' : '❌ 不可安装';
+            installableEl.className = installable ? 'status-value status-ok' : 'status-value status-error';
+        }
+        
+        // 检测 Cache API
+        async function checkCacheAPI() {
+            const supportEl = document.getElementById('cache-support');
+            const countEl = document.getElementById('cache-count');
+            const itemsEl = document.getElementById('cache-items');
+            
+            if ('caches' in window) {
+                supportEl.textContent = '✅ 支持';
+                supportEl.className = 'status-value status-ok';
+                
+                try {
+                    const cacheNames = await caches.keys();
+                    countEl.textContent = cacheNames.length;
+                    countEl.className = 'status-value status-ok';
+                    
+                    let totalItems = 0;
+                    for (const name of cacheNames) {
+                        const cache = await caches.open(name);
+                        const keys = await cache.keys();
+                        totalItems += keys.length;
+                    }
+                    
+                    itemsEl.textContent = totalItems;
+                    itemsEl.className = 'status-value status-ok';
+                } catch (err) {
+                    console.error('[PWA] 检测缓存失败:', err);
+                    countEl.textContent = '❌ 检测失败';
+                    countEl.className = 'status-value status-error';
+                    itemsEl.textContent = '❌ 检测失败';
+                    itemsEl.className = 'status-value status-error';
+                }
+            } else {
+                supportEl.textContent = '❌ 不支持';
+                supportEl.className = 'status-value status-error';
+                countEl.textContent = 'N/A';
+                itemsEl.textContent = 'N/A';
+            }
+        }
+        
+        // 刷新所有状态
+        async function refreshStatus() {
+            console.log('[PWA] 刷新状态...');
+            await checkServiceWorker();
+            await checkManifest();
+            checkInstallStatus();
+            await checkCacheAPI();
+            
+            // 检查是否可安装
+            if (!installPromptEvent) {
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                    window.navigator.standalone === true;
+                updateInstallableStatus(!isStandalone && 'beforeinstallprompt' in window);
+            }
+        }
+        
+        // 清除所有缓存
+        async function clearAllCaches() {
+            if (!confirm('确定要清除所有缓存吗？')) return;
+            
+            try {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                alert('✅ 已清除所有缓存！');
+                await refreshStatus();
+            } catch (err) {
+                console.error('[PWA] 清除缓存失败:', err);
+                alert('❌ 清除缓存失败: ' + err.message);
+            }
+        }
+        
+        // 注销 Service Worker
+        async function unregisterSW() {
+            if (!confirm('确定要注销 Service Worker 吗？')) return;
+            
+            try {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    await registration.unregister();
+                    alert('✅ Service Worker 已注销！');
+                    await refreshStatus();
                 } else {
-                    log('Manifest 加载失败: ' + response.status, 'error');
+                    alert('⚠️ 没有找到已注册的 Service Worker');
                 }
             } catch (err) {
-                log('Manifest 加载失败: ' + err.message, 'error');
+                console.error('[PWA] 注销失败:', err);
+                alert('❌ 注销失败: ' + err.message);
             }
-            
-            // 测试图标
-            const testIcon = new Image();
-            testIcon.onload = () => log('图标加载成功: icon-192.png', 'success');
-            testIcon.onerror = () => log('图标加载失败: icon-192.png', 'error');
-            testIcon.src = '/static/icon-192.png';
-            
-            log('测试完成', 'info');
+        }
+        
+        // 页面加载时执行检测
+        window.addEventListener('load', () => {
+            refreshStatus();
         });
-
-        // 初始化
-        window.onload = () => {
-            log('PWA 测试页面已加载', 'info');
-            checkPWASupport();
-            showIcons();
-            
-            // 检查是否可以安装
-            document.getElementById('btnInstall').disabled = true;
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                log('当前运行在 PWA 独立模式', 'success');
-            }
-        };
     </script>
 </body>
 </html>

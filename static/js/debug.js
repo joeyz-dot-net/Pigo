@@ -14,8 +14,10 @@ export class Debug {
             debugPlayer: document.getElementById('debugPlayer'),
             debugPlaylist: document.getElementById('debugPlaylist'),
             debugStorage: document.getElementById('debugStorage'),
-            debugLogs: document.getElementById('debugLogs'),
-            themeDarkBtn: document.getElementById('themeDarkBtn'),
+            debugLogs: document.getElementById('debugLogs'),            debugPWA: document.getElementById('debugPWA'),
+            debugPWARefresh: document.getElementById('debugPWARefresh'),
+            debugPWATest: document.getElementById('debugPWATest'),
+            debugCachesClear: document.getElementById('debugCachesClear'),            themeDarkBtn: document.getElementById('themeDarkBtn'),
             themeLightBtn: document.getElementById('themeLightBtn'),
             logToggle: document.getElementById('logToggle')
         };
@@ -134,6 +136,36 @@ export class Debug {
                 console.log(`[日志] 控制台日志已${this.logEnabled ? '启用' : '禁用'}`);
             });
         }
+
+        // PWA 刷新按钮
+        if (this.elements.debugPWARefresh) {
+            this.elements.debugPWARefresh.addEventListener('click', () => {
+                this.updatePWAInfo();
+            });
+        }
+
+        // PWA 测试页按钮
+        if (this.elements.debugPWATest) {
+            this.elements.debugPWATest.addEventListener('click', () => {
+                window.open('/pwa-test', '_blank');
+            });
+        }
+
+        // 清除缓存按钮
+        if (this.elements.debugCachesClear) {
+            this.elements.debugCachesClear.addEventListener('click', async () => {
+                try {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    console.log('[PWA] 已清除所有缓存');
+                    this.updatePWAInfo();
+                    alert('✅ 缓存已清除！');
+                } catch (err) {
+                    console.error('[PWA] 清除缓存失败:', err);
+                    alert('❌ 清除缓存失败: ' + err.message);
+                }
+            });
+        }
     }
 
     // 显示调试面板
@@ -157,6 +189,7 @@ export class Debug {
         this.updatePlaylistInfo();
         this.updateStorageInfo();
         this.updateLogs();
+        this.updatePWAInfo();
     }
 
     // 更新播放器信息
@@ -272,6 +305,153 @@ export class Debug {
                 this.elements.themeLightBtn.style.borderColor = '#667eea';
                 this.elements.themeLightBtn.style.fontWeight = 'bold';
             }
+        }
+    }
+
+    // 检查 PWA 状态
+    async checkPWAStatus() {
+        const status = {
+            serviceWorker: {
+                supported: 'serviceWorker' in navigator,
+                registered: false,
+                active: false,
+                waiting: false,
+                installing: false,
+                scope: null,
+                scriptURL: null
+            },
+            manifest: {
+                available: false,
+                parsed: false,
+                data: null
+            },
+            installation: {
+                standalone: window.matchMedia('(display-mode: standalone)').matches,
+                installed: false
+            },
+            cacheAPI: {
+                supported: 'caches' in window,
+                cacheNames: [],
+                totalSize: 0
+            }
+        };
+
+        // 检查 Service Worker
+        if (status.serviceWorker.supported) {
+            try {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    status.serviceWorker.registered = true;
+                    status.serviceWorker.active = !!registration.active;
+                    status.serviceWorker.waiting = !!registration.waiting;
+                    status.serviceWorker.installing = !!registration.installing;
+                    status.serviceWorker.scope = registration.scope;
+                    status.serviceWorker.scriptURL = registration.active?.scriptURL || null;
+                }
+            } catch (err) {
+                console.error('[PWA] 获取 Service Worker 状态失败:', err);
+            }
+        }
+
+        // 检查 Manifest
+        try {
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            if (manifestLink) {
+                status.manifest.available = true;
+                const manifestURL = manifestLink.href;
+                const response = await fetch(manifestURL);
+                const manifestData = await response.json();
+                status.manifest.parsed = true;
+                status.manifest.data = manifestData;
+            }
+        } catch (err) {
+            console.error('[PWA] 解析 Manifest 失败:', err);
+        }
+
+        // 检查安装状态
+        if (window.navigator.standalone !== undefined) {
+            status.installation.installed = window.navigator.standalone;
+        } else {
+            status.installation.installed = status.installation.standalone;
+        }
+
+        // 检查 Cache API
+        if (status.cacheAPI.supported) {
+            try {
+                const cacheNames = await caches.keys();
+                status.cacheAPI.cacheNames = cacheNames;
+                
+                // 计算缓存总大小（粗略估算）
+                for (const name of cacheNames) {
+                    const cache = await caches.open(name);
+                    const keys = await cache.keys();
+                    status.cacheAPI.totalSize += keys.length;
+                }
+            } catch (err) {
+                console.error('[PWA] 获取缓存信息失败:', err);
+            }
+        }
+
+        return status;
+    }
+
+    // 更新 PWA 信息显示
+    async updatePWAInfo() {
+        if (!this.elements.debugPWA) return;
+
+        this.elements.debugPWA.innerHTML = '<div style="color: #ffd93d;">🔄 检测中...</div>';
+
+        try {
+            const status = await this.checkPWAStatus();
+            const timestamp = new Date().toLocaleTimeString();
+
+            let html = `<div style="color: #51cf66;">[${timestamp}] PWA 状态检测完成</div>`;
+
+            // Service Worker 状态
+            html += `<div style="margin-top: 8px;"><strong>Service Worker:</strong></div>`;
+            html += `<div style="margin-left: 10px;">• 支持: ${status.serviceWorker.supported ? '✅' : '❌'}</div>`;
+            if (status.serviceWorker.supported) {
+                html += `<div style="margin-left: 10px;">• 已注册: ${status.serviceWorker.registered ? '✅' : '❌'}</div>`;
+                if (status.serviceWorker.registered) {
+                    html += `<div style="margin-left: 10px;">• 激活: ${status.serviceWorker.active ? '✅' : '❌'}</div>`;
+                    html += `<div style="margin-left: 10px;">• 等待中: ${status.serviceWorker.waiting ? '⚠️' : '✅'}</div>`;
+                    html += `<div style="margin-left: 10px;">• 安装中: ${status.serviceWorker.installing ? '⏳' : '✅'}</div>`;
+                    if (status.serviceWorker.scriptURL) {
+                        html += `<div style="margin-left: 10px; font-size: 10px; color: #aaa;">• URL: ${status.serviceWorker.scriptURL}</div>`;
+                    }
+                }
+            }
+
+            // Manifest 状态
+            html += `<div style="margin-top: 8px;"><strong>Manifest:</strong></div>`;
+            html += `<div style="margin-left: 10px;">• 可用: ${status.manifest.available ? '✅' : '❌'}</div>`;
+            if (status.manifest.available) {
+                html += `<div style="margin-left: 10px;">• 解析: ${status.manifest.parsed ? '✅' : '❌'}</div>`;
+                if (status.manifest.parsed && status.manifest.data) {
+                    html += `<div style="margin-left: 10px; font-size: 10px; color: #aaa;">• 名称: ${status.manifest.data.name || 'N/A'}</div>`;
+                }
+            }
+
+            // 安装状态
+            html += `<div style="margin-top: 8px;"><strong>安装状态:</strong></div>`;
+            html += `<div style="margin-left: 10px;">• 独立模式: ${status.installation.standalone ? '✅' : '❌'}</div>`;
+            html += `<div style="margin-left: 10px;">• 已安装: ${status.installation.installed ? '✅' : '❌'}</div>`;
+
+            // Cache API
+            html += `<div style="margin-top: 8px;"><strong>缓存:</strong></div>`;
+            html += `<div style="margin-left: 10px;">• Cache API: ${status.cacheAPI.supported ? '✅' : '❌'}</div>`;
+            if (status.cacheAPI.supported) {
+                html += `<div style="margin-left: 10px;">• 缓存数: ${status.cacheAPI.cacheNames.length}</div>`;
+                html += `<div style="margin-left: 10px;">• 项目数: ~${status.cacheAPI.totalSize}</div>`;
+                if (status.cacheAPI.cacheNames.length > 0) {
+                    html += `<div style="margin-left: 10px; font-size: 10px; color: #aaa;">• 名称: ${status.cacheAPI.cacheNames.join(', ')}</div>`;
+                }
+            }
+
+            this.elements.debugPWA.innerHTML = html;
+        } catch (err) {
+            this.elements.debugPWA.innerHTML = `<div style="color: #ff6b6b;">❌ 检测失败: ${err.message}</div>`;
+            console.error('[PWA] 更新信息失败:', err);
         }
     }
 }
