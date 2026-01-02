@@ -1083,11 +1083,18 @@ async def get_status():
         
         # 构建状态日志（单行，使用 \r 覆盖）
         status_text = "⏸️ 暂停" if paused else "▶️ 播放中"
+        
+        # 截断标题避免过长（最多30个字符）
+        display_title = title[:30] + "..." if len(title) > 30 else title
+        
         log_content = (
-            f"🎵 [播放监控] {title} | {status_text} | "
-            f"进度: {format_time(time_pos)}/{format_time(duration)} ({progress_percent:.1f}%) | "
-            f"音量: {int(volume)}% | 类型: {song_type}"
+            f"🎵 {display_title} | {status_text} | "
+            f"{format_time(time_pos)}/{format_time(duration)} ({progress_percent:5.1f}%) | "
+            f"🔊 {int(volume):3d}%"
         )
+        
+        # 用空格填充到固定宽度（120字符），确保完全覆盖上一行
+        log_content = log_content.ljust(120)
         
         # 输出日志（覆盖同一行，不换行）
         print(f"\r{log_content}", end="", flush=True)
@@ -1517,7 +1524,7 @@ async def add_to_playlist(request: Request):
                 video_id_match = re.search(r'(?:youtube\.com/watch\?v=|youtu\.be/)([a-zA-Z0-9_-]{11})', url)
                 if video_id_match:
                     video_id = video_id_match.group(1)
-                    thumbnail_url = f"https://img.youtube.com/vi/{video_id}/default.jpg"
+                    thumbnail_url = f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
         
         song_obj = Song(
             url=song_data.get("url"),
@@ -1590,7 +1597,7 @@ async def add_song_to_playlist_next(playlist_id: str, request: Request):
             video_id_match = re.search(r'(?:youtube\.com/watch\?v=|youtu\.be/)([a-zA-Z0-9_-]{11})', url)
             if video_id_match:
                 video_id = video_id_match.group(1)
-                thumbnail_url = f"https://img.youtube.com/vi/{video_id}/default.jpg"
+                thumbnail_url = f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
         
         # 创建歌曲对象
         from models.song import Song
@@ -2465,4 +2472,17 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=80)
+    
+    # 过滤 /status 和 /volume 的访问日志，防止刷屏
+    class EndpointFilter(logging.Filter):
+        def filter(self, record):
+            message = record.getMessage()
+            # 过滤掉高频轮询请求
+            if '"/status"' in message or '"/volume"' in message:
+                return False
+            return True
+    
+    # 应用过滤器到 uvicorn 访问日志
+    logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
+    
+    uvicorn.run(app, host="0.0.0.0", port=80, access_log=False)
