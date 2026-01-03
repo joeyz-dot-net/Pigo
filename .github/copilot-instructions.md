@@ -3,7 +3,7 @@
 **Full-stack web music player**: FastAPI backend + ES6 frontend + MPV IPC engine.  
 **Key distinction**: Bilingual (zh/en), user-isolation via localStorage, event-driven auto-play, Windows/PyInstaller-optimized.
 
-> **Last Updated**: 2026-01-03 | **Focus**: Backend-controlled auto-play, API parity patterns, singleton architecture, deployment workflows
+> **Last Updated**: 2026-01-03 | **Focus**: Backend-controlled auto-play, API parity patterns, singleton architecture, deployment workflows, ES6 module system
 
 ## ⚠️ Critical Rules (Must Follow)
 
@@ -116,6 +116,56 @@ class MusicPlayerApp {
 
 **Rule**: All user preferences (theme, language, volume) stored in `localStorage`, NOT backend.
 
+## ES6 Module System & Frontend Architecture
+
+### Module Structure
+**Location**: [static/js/](../static/js/) — All frontend code uses ES6 modules with explicit exports
+
+**Pattern**: Each module exports singleton instances or utility functions:
+
+```javascript
+// api.js - API client
+export class MusicAPI { /* ... */ }
+export const api = new MusicAPI();
+
+// player.js - Player state & controls
+export class Player { /* ... */ }
+export const player = new Player();
+
+// playlist.js - Playlist management
+export class PlaylistManager { /* ... */ }
+export const playlistManager = new PlaylistManager();
+export function renderPlaylistUI({ container, onPlay, currentMeta }) { /* ... */ }
+```
+
+**Key Modules** (always import from these):
+
+| Module | Export | Purpose |
+|--------|--------|---------|
+| [api.js](../static/js/api.js) | `api` | All backend API calls—**must mirror app.py** |
+| [player.js](../static/js/player.js) | `player` | Playback state, controls, event emitter |
+| [playlist.js](../static/js/playlist.js) | `playlistManager`, `renderPlaylistUI` | Current playlist CRUD |
+| [playlists-management.js](../static/js/playlists-management.js) | `playlistsManagement` | Multi-playlist UI modal |
+| [i18n.js](../static/js/i18n.js) | `i18n` | Translation system—auto-detects browser language |
+| [themeManager.js](../static/js/themeManager.js) | `themeManager` | Theme switching (dark/light) |
+| [settingsManager.js](../static/js/settingsManager.js) | `settingsManager` | Settings panel & localStorage persistence |
+| [volume.js](../static/js/volume.js) | `volumeControl` | Volume slider with backend sync |
+| [search.js](../static/js/search.js) | `searchManager` | Search UI (local + YouTube) |
+| [local.js](../static/js/local.js) | `localFiles` | Local file tree browser |
+| [ui.js](../static/js/ui.js) | `Toast`, `loading`, `formatTime` | UI utilities |
+
+**Import Pattern**:
+```javascript
+// main.js - Entry point
+import { api } from './api.js';
+import { player } from './player.js';
+import { playlistManager, renderPlaylistUI } from './playlist.js';
+import { i18n } from './i18n.js';
+// ... use singleton instances directly
+```
+
+**Critical Rule**: Never instantiate classes directly—always use exported singletons. Multiple instances = state desync.
+
 ## Developer Workflows
 
 ### Development Server
@@ -156,13 +206,16 @@ python app.py
 **Output**: `dist/ClubMusic.exe` (single-file bundle, ~150MB).  
 **Spec file**: [app.spec](../app.spec) — controls PyInstaller bundling.
 
-**Build process**:
-1. Cleans `build/` and `dist/` directories
-2. Installs/verifies requirements
-3. Runs PyInstaller with `--clean --noconfirm` flags
-4. Bundles all Python code, dependencies, and static assets into `_MEIPASS`
+**Build process** ([build_exe.bat](../build_exe.bat)):
+1. Validates PyInstaller installation (`pip install pyinstaller` if missing)
+2. Cleans `build/` and `dist/` directories
+3. Installs/verifies `requirements.txt` dependencies
+4. Runs `python -m PyInstaller app.spec --clean --noconfirm`
+5. Bundles all Python code, dependencies, and static assets into `_MEIPASS` temp dir
 
-**Critical**: External tools (`bin/mpv.exe`, `bin/yt-dlp.exe`) must exist alongside the exe—they're NOT bundled into `_MEIPASS`.
+**Critical**: External tools (`bin/mpv.exe`, `bin/yt-dlp.exe`) must exist alongside the exe—they're NOT bundled into `_MEIPASS`. These are resolved via `_get_app_dir()` in [models/player.py](../models/player.py).
+
+**Entry Point**: [main.py](../main.py) (not app.py) — wraps UTF-8 encoding setup for Windows console.
 
 ### Deploy to Remote Server
 ```powershell
@@ -176,11 +229,14 @@ python app.py
 **Target**: `\\B560\code\ClubMusic` (network share)  
 **Backup**: Auto-creates timestamped backups in `\\B560\code\ClubMusic_backup` before deployment
 
-**Process**:
+**Process** ([.vscode/deploy.ps1](../.vscode/deploy.ps1)):
 1. Verifies `dist/ClubMusic.exe` exists (fails if not built)
-2. Backs up existing exe with timestamp: `ClubMusic_20260102_143022.exe`
-3. Copies new exe to remote directory
-4. Prints deployment summary
+2. Creates backup directory if missing: `\\B560\code\ClubMusic_backup`
+3. Backs up existing exe with timestamp: `ClubMusic_20260103_143022.exe`
+4. Copies new exe to remote: `\\B560\code\ClubMusic\ClubMusic.exe`
+5. Prints deployment summary with paths and status
+
+**Error Handling**: Uses PowerShell `$ErrorActionPreference = 'Stop'` — fails fast on any error.
 
 **Build & Deploy (Sequential)**:
 ```powershell
