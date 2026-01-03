@@ -2,25 +2,25 @@
 
 body.theme-light {
     --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-tertiary: #eeeeee;
-    --text-primary: #000000;
-    --text-secondary: #333333;
-    --text-tertiary: #666666;
-    --border-color: #dddddd;
-    --shadow-color: rgba(0, 0, 0, 0.15);
-    --button-bg: #e0e0e0;
-    --button-border: #cccccc;
-    --button-hover-bg: #d0d0d0;
-    --button-hover-border: #aaaaaa;
-    --card-bg: #f9f9f9;
-    --card-border: #e0e0e0;
-    --card-hover-bg: #f0f0f0;
-    --card-hover-border: #d0d0d0;
-    --modal-bg: #f5f5f5;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #f0f2f5;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-tertiary: #718096;
+    --border-color: #e2e8f0;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --button-bg: #edf2f7;
+    --button-border: #cbd5e0;
+    --button-hover-bg: #e2e8f0;
+    --button-hover-border: #a0aec0;
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --card-hover-bg: #f7fafc;
+    --card-hover-border: #cbd5e0;
+    --modal-bg: #f8f9fa;
     --input-bg: #ffffff;
-    --input-border: #dddddd;
-    --accent-color: #0066cc;
+    --input-border: #e2e8f0;
+    --accent-color: #3182ce;
 }
 
 /* 亮色主题 - 白色背景 + 黑色文字 */
@@ -39,63 +39,69 @@ body.theme-light {
 }
 
 #playlist.theme-light .playlist-track-item {
-    border-color: rgba(224, 224, 224, 0.6) !important;
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+    border-color: rgba(226, 232, 240, 0.7) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(8px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(180%) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
 }
 
 #playlist.theme-light .playlist-track-item:hover {
-    border-color: rgba(208, 208, 208, 0.7) !important;
-    background: rgba(245, 245, 245, 0.9) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    border-color: rgba(160, 174, 192, 0.5) !important;
+    background: rgba(247, 250, 252, 0.95) !important;
+    backdrop-filter: blur(10px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(200%) !important;
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+    transform: translateY(-1px) !important;
 }
 
 #playlist.theme-light .playlist-track-item.current-playing {
-    border-color: rgba(187, 187, 187, 0.7) !important;
-    background: rgba(240, 240, 240, 0.85) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(49, 130, 206, 0.3) !important;
+    background: linear-gradient(135deg, rgba(237, 242, 247, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+    box-shadow: 0 2px 8px rgba(49, 130, 206, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
 #playlist.theme-light .track-seq {
-    color: #1a1a1a !important;
-    background: #f5f5f5 !important;
+    color: #2d3748 !important;
+    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%) !important;
+    font-weight: 600 !important;
 }
 
 #playlist.theme-light .track-type {
-    color: #1a1a1a !important;
+    color: #2d3748 !important;
+    font-weight: 500 !important;
 }
 
 #playlist.theme-light .track-title,
 #playlist.theme-light .playlist-track-item .track-title {
-    color: #1a1a1a !important;
+    color: #1a202c !important;
+    font-weight: 500 !important;
 }
 
 #playlist.theme-light .track-meta {
-    color: #888888 !important;
+    color: #718096 !important;
 }
 
 #playlist.theme-light .track-playlist-name {
-    color: #888888 !important;
+    color: #718096 !important;
 }
 
 #playlist.theme-light .track-progress {
-    color: #888888 !important;
+    color: #a0aec0 !important;
 }
 
 #playlist.theme-light .playlist-track-item .track-menu-btn {
-    color: #999999 !important;
+    color: #a0aec0 !important;
+    transition: all 0.2s ease !important;
 }
 
 #playlist.theme-light .playlist-track-item .track-menu-btn:hover {
-    background: rgba(0, 0, 0, 0.05) !important;
-    color: #1a1a1a !important;
+    background: rgba(49, 130, 206, 0.08) !important;
+    color: #3182ce !important;
+    transform: scale(1.05) !important;
 }
 
 /* 拖拽手柄 - 亮色主题 */
@@ -121,75 +127,180 @@ body.theme-light {
 }
 
 #playlistsModal.bright-theme .playlists-modal {
-    background: #ffffff;
+    background: rgba(245, 247, 250, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+#playlistsModal.bright-theme .playlists-modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(230, 235, 240, 0.8);
 }
 
 #playlistsModal.bright-theme .playlists-modal-header {
-    background: #f9f9f9;
-    backdrop-filter: none;
-    border-bottom-color: #e0e0e0;
+    background: linear-gradient(180deg, rgba(250, 251, 252, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(230, 235, 240, 0.6);
 }
 
 #playlistsModal.bright-theme .playlists-modal-header h2 {
-    color: #1a1a1a;
+    color: #2c3e50;
+    font-weight: 600;
 }
 
 #playlistsModal.bright-theme .playlists-back-btn,
 #playlistsModal.bright-theme .playlists-add-btn {
-    color: #1a1a1a;
+    color: #5a6c7d;
 }
 
 #playlistsModal.bright-theme .playlists-back-btn:hover,
 #playlistsModal.bright-theme .playlists-add-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(103, 138, 174, 0.12);
+    color: #3d5467;
 }
 
 #playlistsModal.bright-theme .playlists-modal-body {
-    background: #ffffff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 251, 252, 0.85) 100%);
 }
 
 #playlistsModal.bright-theme .playlist-item {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: none;
-    border-color: #e8e8e8;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(230, 235, 240, 0.6);
 }
 
 #playlistsModal.bright-theme .playlist-item:hover {
-    background: #f8f8f8;
-    border-color: #d8d8d8;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(103, 138, 174, 0.3);
+    box-shadow: 0 4px 16px rgba(103, 138, 174, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     transform: translateY(-2px);
 }
 
 #playlistsModal.bright-theme .playlist-name {
-    color: #1a1a1a;
+    color: #2c3e50;
+    font-weight: 500;
 }
 
 #playlistsModal.bright-theme .playlist-count {
-    color: #888888;
+    color: #7b8794;
 }
 
 #playlistsModal.bright-theme .default-badge {
-    background: #f0f0f0;
-    border-color: #e0e0e0;
-    color: #666666;
+    background: linear-gradient(135deg, rgba(103, 138, 174, 0.15) 0%, rgba(103, 138, 174, 0.08) 100%);
+    border: 1px solid rgba(103, 138, 174, 0.2);
+    color: #5a6c7d;
 }
 
 #playlistsModal.bright-theme .playlist-action-btn {
-    background: #f9f9f9;
-    border-color: #e0e0e0;
-    color: #888888;
+    background: rgba(248, 249, 250, 0.8);
+    border: 1px solid rgba(230, 235, 240, 0.6);
+    color: #7b8794;
 }
 
 #playlistsModal.bright-theme .playlist-action-btn:hover {
-    background: #f0f0f0;
-    border-color: #d0d0d0;
+    background: rgba(103, 138, 174, 0.08);
+    border-color: rgba(103, 138, 174, 0.25);
+    color: #5a6c7d;
 }
 
 #playlistsModal.bright-theme .playlists-empty {
-    background: #f9f9f9;
-    border-color: #e0e0e0;
+    background: linear-gradient(135deg, rgba(250, 251, 252, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+    border: 2px dashed rgba(230, 235, 240, 0.8);
     color: #888888;
+}
+
+/* 暗色主题（有网络歌曲时）- 全局浅色模式下的暗色卡片 */
+#playlistsModal.dark-theme .playlists-modal {
+    background: rgba(240, 242, 245, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+#playlistsModal.dark-theme .playlists-modal-content {
+    background: rgba(250, 251, 252, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(220, 225, 235, 0.8);
+}
+
+#playlistsModal.dark-theme .playlists-modal-header {
+    background: linear-gradient(180deg, rgba(245, 247, 250, 0.95) 0%, rgba(250, 251, 252, 0.9) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(220, 225, 235, 0.6);
+}
+
+#playlistsModal.dark-theme .playlists-modal-header h2 {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+#playlistsModal.dark-theme .playlists-back-btn,
+#playlistsModal.dark-theme .playlists-add-btn {
+    color: #5a6c7d;
+}
+
+#playlistsModal.dark-theme .playlists-back-btn:hover,
+#playlistsModal.dark-theme .playlists-add-btn:hover {
+    background: rgba(103, 138, 174, 0.12);
+    color: #3d5467;
+}
+
+#playlistsModal.dark-theme .playlists-modal-body {
+    background: linear-gradient(180deg, rgba(250, 251, 252, 0.9) 0%, rgba(245, 247, 250, 0.85) 100%);
+}
+
+#playlistsModal.dark-theme .playlist-item {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(220, 225, 235, 0.6);
+}
+
+#playlistsModal.dark-theme .playlist-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(103, 138, 174, 0.3);
+    box-shadow: 0 4px 16px rgba(103, 138, 174, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+#playlistsModal.dark-theme .playlist-name {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+#playlistsModal.dark-theme .playlist-count {
+    color: #7b8794;
+}
+
+#playlistsModal.dark-theme .default-badge {
+    background: linear-gradient(135deg, rgba(103, 138, 174, 0.15) 0%, rgba(103, 138, 174, 0.08) 100%);
+    border: 1px solid rgba(103, 138, 174, 0.2);
+    color: #5a6c7d;
+}
+
+#playlistsModal.dark-theme .playlist-action-btn {
+    background: rgba(245, 247, 250, 0.8);
+    border: 1px solid rgba(220, 225, 235, 0.6);
+    color: #7b8794;
+}
+
+#playlistsModal.dark-theme .playlist-action-btn:hover {
+    background: rgba(103, 138, 174, 0.08);
+    border-color: rgba(103, 138, 174, 0.25);
+    color: #5a6c7d;
+}
+
+#playlistsModal.dark-theme .playlists-empty {
+    background: linear-gradient(135deg, rgba(245, 247, 250, 0.8) 0%, rgba(250, 251, 252, 0.6) 100%);
+    border: 2px dashed rgba(220, 225, 235, 0.8);
+    color: #7b8794;
 }
 
 /* Mini Player 代码已移除 */
@@ -201,286 +312,320 @@ body.theme-light {
 
 /* 导航栏液态玻璃效果 - 亮色主题 */
 .bottom-nav {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top-color: rgba(221, 221, 221, 0.5);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.04);
 }
 
 .nav-item {
-    color: #aaaaaa;
-    transition: all 0.2s ease;
+    color: #a0aec0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-item:hover {
-    color: #666666;
+    color: #4a5568;
+    transform: translateY(-2px);
 }
 
 .nav-item.active {
-    color: #000000;
+    color: #3182ce;
     font-weight: 600;
 }
 
 /* 播放条液态玻璃效果 - 亮色主题 */
 #playerBar {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top-color: rgba(221, 221, 221, 0.5);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.04);
 }
 
 #playerProgress {
-    background: rgba(221, 221, 221, 0.6);
+    background: rgba(226, 232, 240, 0.6);
 }
 
 #playerProgressFill {
-    background: #0066cc;
+    background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%);
+    box-shadow: 0 0 8px rgba(49, 130, 206, 0.3);
 }
 
 /* 模态框液态玻璃效果 - 亮色主题 */
 .modal {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(247, 250, 252, 0.75);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
 }
 
 .modal-content {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .modal-header {
-    background: rgba(249, 249, 249, 0.9);
-    border-bottom-color: rgba(221, 221, 221, 0.5);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(248, 249, 250, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
 }
 
 .modal-close, .ranking-modal-close, .history-modal-close, .local-songs-modal-close {
-    color: #333333;
-    transition: all 0.2s ease;
+    color: #4a5568;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-close:hover, .ranking-modal-close:hover, .history-modal-close:hover, .local-songs-modal-close:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #000000;
+    background: rgba(49, 130, 206, 0.08);
+    color: #3182ce;
+    transform: scale(1.05);
 }
 
 .modal-body, .ranking-modal-body {
-    background: rgba(255, 255, 255, 0.5);
-    color: #1a1a1a;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(247, 250, 252, 0.5) 100%);
+    color: #1a202c;
 }
 
 /* 排行榜标签页 - 亮色主题 */
 .ranking-tabs {
-    border-bottom-color: rgba(221, 221, 221, 0.5);
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
 }
 
 .ranking-tab {
-    border-color: #d0d0d0;
-    color: #888888;
-    background: rgba(255, 255, 255, 0.6);
-    transition: all 0.2s ease;
+    border: 1px solid rgba(203, 213, 224, 0.6);
+    color: #718096;
+    background: rgba(247, 250, 252, 0.7);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ranking-tab:hover {
-    background: rgba(240, 240, 240, 0.9);
-    border-color: #bbb;
-    color: #333333;
+    background: rgba(237, 242, 247, 0.95);
+    border-color: rgba(160, 174, 192, 0.7);
+    color: #4a5568;
+    transform: translateY(-1px);
 }
 
 .ranking-tab.active {
-    background: #ffffff;
-    border-color: #0066cc;
-    color: #0066cc;
+    background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+    border-color: #3182ce;
+    color: #3182ce;
     font-weight: 600;
+    box-shadow: 0 2px 8px rgba(49, 130, 206, 0.15);
 }
 
 /* 排行榜项目 - 亮色主题 */
 .ranking-item {
-    background: rgba(255, 255, 255, 0.8);
-    border-color: #e0e0e0;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    backdrop-filter: blur(8px) saturate(180%);
+    -webkit-backdrop-filter: blur(8px) saturate(180%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ranking-item:hover {
-    background: rgba(245, 245, 245, 0.95);
-    border-color: #d0d0d0;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(247, 250, 252, 0.95);
+    border-color: rgba(160, 174, 192, 0.5);
+    backdrop-filter: blur(10px) saturate(200%);
+    -webkit-backdrop-filter: blur(10px) saturate(200%);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.08);
+    transform: translateY(-2px);
 }
 
 .ranking-rank {
-    background: #f0f0f0;
+    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
 }
 
 /* Top 3 排名特殊样式 */
 .ranking-item:nth-child(1) .ranking-rank {
-    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .ranking-item:nth-child(1) .ranking-number {
-    color: #333;
+    color: #744210;
+    font-weight: 700;
 }
 
 .ranking-item:nth-child(2) .ranking-rank {
-    background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+    background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 50%, #e8e8e8 100%);
+    box-shadow: 0 2px 8px rgba(192, 192, 192, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .ranking-item:nth-child(2) .ranking-number {
-    color: #333;
+    color: #4a5568;
+    font-weight: 700;
 }
 
 .ranking-item:nth-child(3) .ranking-rank {
-    background: linear-gradient(135deg, #cd7f32, #daa520);
+    background: linear-gradient(135deg, #daa520 0%, #cd7f32 50%, #daa520 100%);
+    box-shadow: 0 2px 8px rgba(205, 127, 50, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .ranking-item:nth-child(3) .ranking-number {
-    color: #fff;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .ranking-number {
-    color: #1a1a1a;
+    color: #2d3748;
+    font-weight: 600;
 }
 
 .ranking-title {
-    color: #1a1a1a;
+    color: #1a202c;
+    font-weight: 500;
 }
 
 .ranking-meta {
-    color: #888888;
+    color: #718096;
 }
 
 .ranking-count {
-    color: #888888;
+    color: #a0aec0;
+    font-weight: 500;
 }
 
 .ranking-play-btn {
-    background: rgba(0, 102, 204, 0.1);
-    border-color: #0066cc;
-    color: #0066cc;
-    transition: all 0.2s ease;
+    background: rgba(49, 130, 206, 0.08);
+    border: 1px solid rgba(49, 130, 206, 0.3);
+    color: #3182ce;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ranking-play-btn:hover {
-    background: rgba(0, 102, 204, 0.2);
+    background: rgba(49, 130, 206, 0.15);
+    border-color: #3182ce;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(49, 130, 206, 0.2);
 }
 
 /* 搜索模态框 - 亮色主题 */
 .search-modal {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(247, 250, 252, 0.75);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
 }
 
 .search-modal-content {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .search-modal-header {
-    background: rgba(249, 249, 249, 0.9);
-    border-bottom-color: rgba(221, 221, 221, 0.5);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(248, 249, 250, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
 }
 
 .search-modal-back {
-    color: #333333;
+    color: #4a5568;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-modal-back:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(49, 130, 206, 0.08);
+    color: #3182ce;
+    transform: scale(1.05);
 }
 
 .search-modal-body {
-    background: rgba(255, 255, 255, 0.5);
-    color: #1a1a1a;
-}
-
-.search-modal-body {
-    background: rgba(255, 255, 255, 0.5);
-    color: #1a1a1a;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(247, 250, 252, 0.5) 100%);
+    color: #1a202c;
 }
 
 /* 搜索标签页 - 亮色主题 */
 .search-tabs {
-    background: rgba(255, 255, 255, 0.8);
-    border-bottom-color: rgba(221, 221, 221, 0.5);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(8px) saturate(180%);
+    -webkit-backdrop-filter: blur(8px) saturate(180%);
 }
 
 .search-tab {
-    background: rgba(245, 245, 245, 0.8);
-    border-color: #d0d0d0;
-    color: #888888;
-    transition: all 0.2s ease;
+    background: rgba(247, 250, 252, 0.8);
+    border: 1px solid rgba(203, 213, 224, 0.6);
+    color: #718096;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-tab:hover {
-    background: rgba(240, 240, 240, 0.95);
-    border-color: #0066cc;
-    color: #333333;
+    background: rgba(237, 242, 247, 0.95);
+    border-color: rgba(49, 130, 206, 0.5);
+    color: #4a5568;
+    transform: translateY(-1px);
 }
 
 .search-tab.active {
-    background: #ffffff;
-    color: #0066cc;
-    border-color: #0066cc;
+    background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+    color: #3182ce;
+    border-color: #3182ce;
     font-weight: 600;
+    box-shadow: 0 2px 8px rgba(49, 130, 206, 0.15);
 }
 
 /* 搜索结果项 - 亮色主题 */
 .search-result-item.playlist-track-item {
-    background: rgba(255, 255, 255, 0.8);
-    border-color: #e0e0e0;
-    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-result-item.playlist-track-item:hover {
-    background: rgba(245, 245, 245, 0.95);
-    border-color: #0066cc;
+    background: rgba(247, 250, 252, 0.95);
+    border-color: rgba(49, 130, 206, 0.4);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.08);
+    transform: translateY(-1px);
 }
 
 /* 搜索输入框 - 亮色主题 */
 .search-modal-input {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: #d0d0d0;
-    color: #1a1a1a;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(203, 213, 224, 0.8);
+    color: #1a202c;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-modal-input:focus {
-    border-color: #0066cc;
+    border-color: #3182ce;
     background: #ffffff;
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1), 0 2px 8px rgba(49, 130, 206, 0.05);
+    outline: none;
 }
 
 /* 搜索历史 - 亮色主题 */
 .search-modal-history {
-    border-bottom-color: rgba(221, 221, 221, 0.5);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
 }
 
 .search-modal-history-actions {
-    border-top-color: rgba(221, 221, 221, 0.5);
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
 }
 
 .search-modal-history-clear {
-    border-color: #d0d0d0;
-    color: #888888;
-    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(203, 213, 224, 0.7);
+    color: #718096;
+    background: rgba(247, 250, 252, 0.7);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-modal-history-clear:hover {
-    background: rgba(255, 107, 107, 0.08);
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+    background: rgba(254, 215, 215, 0.5);
+    border-color: #fc8181;
+    color: #e53e3e;
+    transform: scale(1.02);
 }
 
 /* YouTube搜索结果 - 亮色主题 */

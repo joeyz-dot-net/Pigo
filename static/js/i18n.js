@@ -10,7 +10,6 @@ const translations = {
         
         // 外观设置
         'settings.appearance': '🎨 外观设置',
-        'settings.theme': '主题样式',
         'settings.theme.dark': '深色主题',
         'settings.theme.light': '浅色主题',
         'settings.theme.auto': '自动',
@@ -47,7 +46,6 @@ const translations = {
         
         // Appearance settings
         'settings.appearance': '🎨 Appearance',
-        'settings.theme': 'Theme',
         'settings.theme.dark': 'Dark Theme',
         'settings.theme.light': 'Light Theme',
         'settings.theme.auto': 'Auto',

@@ -839,43 +839,7 @@ class MusicPlayerApp {
         }
     }
 
-    // 检测歌单类型并应用相应主题
-    applyPlaylistTheme() {
-        const playlist = playlistManager.getCurrent();
-        const playlistEl = document.getElementById('playlist');
-        const playlistsModal = document.getElementById('playlistsModal');
-        
-        if (!playlistEl) return;
-        
-        // 移除旧的主题类
-        playlistEl.classList.remove('bright-theme', 'dark-theme');
-        if (playlistsModal) {
-            playlistsModal.classList.remove('bright-theme', 'dark-theme');
-        }
-        
-        // 如果歌单为空，使用默认主题（深色主题）
-        if (!playlist || playlist.length === 0) {
-            playlistEl.classList.add('dark-theme');
-            if (playlistsModal) {
-                playlistsModal.classList.add('dark-theme');
-            }
-            return;
-        }
-        
-        // 检查歌单中是否有YouTube歌曲 或 网络歌曲
-        const hasYoutube = playlist.some(song => {
-            const isYoutube = song.type === 'youtube' || song.type === 'stream';
-            const isUrl = song.url && (song.url.startsWith('http') || song.url.startsWith('youtu'));
-            return isYoutube || isUrl;
-        });
-        
-        // 如果全是本地歌曲，使用亮色主题；否则使用深色主题
-        const theme = !hasYoutube ? 'bright-theme' : 'dark-theme';
-        playlistEl.classList.add(theme);
-        if (playlistsModal) {
-            playlistsModal.classList.add(theme);
-        }
-    }
+
 
     // 渲染播放列表
     renderPlaylist() {
@@ -885,9 +849,6 @@ class MusicPlayerApp {
             onPlay: (song) => this.playSong(song),
             currentMeta: status?.current_meta || null
         });
-        
-        // 应用相应的主题
-        this.applyPlaylistTheme();
     }
 
     // 更新歌单歌曲数量显示（已移除playlist header，此方法不再需要）
@@ -1386,9 +1347,10 @@ class MusicPlayerApp {
         
         // 返回上一个栏目
         const navigateBack = () => {
-            // 如果栈中只有一个元素，不能再返回
+            // 如果栈中只有一个元素，不能再返回 - 刷新页面
             if (navigationStack.length <= 1) {
-                console.log('ℹ️ 已是第一个栏目，无法返回');
+                console.log('ℹ️ 已是第一个栏目，无法返回 - 刷新页面');
+                window.location.reload();
                 return;
             }
             
@@ -1946,7 +1908,6 @@ window.app = {
     // 显式导出关键方法，确保可以被外部调用
     playSong: app.playSong.bind(app),
     renderPlaylist: app.renderPlaylist.bind(app),
-    applyPlaylistTheme: app.applyPlaylistTheme.bind(app),
     player,      // 播放器对象
     settingsManager,  // 设置管理器
     modules: {

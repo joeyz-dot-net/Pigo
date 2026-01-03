@@ -326,10 +326,6 @@ export const settingsManager = {
         const appearanceSection = document.querySelectorAll('.section-title')[0];
         if (appearanceSection) appearanceSection.textContent = i18n.t('settings.appearance', language);
         
-        // 更新主题标签
-        const themeLabel = document.querySelectorAll('.settings-label')[0];
-        if (themeLabel) themeLabel.textContent = i18n.t('settings.theme', language);
-        
         // 更新主题选项 (HTML顺序: auto, dark, light)
         const themeSelect = document.getElementById('themeSetting');
         if (themeSelect) {

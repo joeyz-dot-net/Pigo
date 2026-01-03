@@ -257,14 +257,14 @@ class StreamSong(Song):
     def _get_hq_thumbnail_url(self, video_id: str) -> str:
         """
         获取高质量YouTube缩略图URL
-        优先级: maxresdefault > sddefault > mqdefault > default
-        前端会自动处理失败的URL
+        使用 sddefault (640x480) - 可靠性更高，避免 404 错误
+        前端会自动处理失败的URL降级到 mqdefault 或 default
         """
         if not video_id:
             return ""
-        # 使用最高分辨率（1280x720）
-        # 如果不可用，浏览器会尝试下一个，最终回退到default
-        return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+        # 使用 sddefault (640x480) - 几乎所有视频都有此分辨率
+        # 避免 maxresdefault 的大量 404 错误
+        return f"https://img.youtube.com/vi/{video_id}/sddefault.jpg"
 
     def is_youtube(self) -> bool:
         """是否为YouTube视频"""

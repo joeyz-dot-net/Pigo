@@ -1534,21 +1534,41 @@ async function showPlaybackHistory() {
                     flex-shrink: 0;
                 `;
                 cover.src = item.thumbnail_url || '';
+                // YouTube 缩略图降级策略
+                const getThumbnailFallbacks = (url) => {
+                    if (url && url.includes('img.youtube.com/vi/')) {
+                        const baseUrl = url.substring(0, url.lastIndexOf('/'));
+                        return [
+                            url,
+                            baseUrl + '/mqdefault.jpg',
+                            baseUrl + '/default.jpg'
+                        ];
+                    }
+                    return [url];
+                };
+                const fallbackUrls = getThumbnailFallbacks(item.thumbnail_url);
                 cover.onerror = function() {
-                    this.style.display = 'none';
-                    const placeholder = document.createElement('div');
-                    placeholder.style.cssText = `
-                        width: 40px;
-                        height: 40px;
-                        border-radius: 4px;
-                        background: ${colors.buttonBg};
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 20px;
-                    `;
-                    placeholder.textContent = '🎵';
-                    this.parentNode.replaceChild(placeholder, this);
+                    const currentIndex = fallbackUrls.indexOf(this.src);
+                    if (currentIndex < fallbackUrls.length - 1) {
+                        // 尝试下一个降级版本，静默处理
+                        this.src = fallbackUrls[currentIndex + 1];
+                    } else {
+                        // 所有降级都失败，显示占位符
+                        this.style.display = 'none';
+                        const placeholder = document.createElement('div');
+                        placeholder.style.cssText = `
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 4px;
+                            background: ${colors.buttonBg};
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 20px;
+                        `;
+                        placeholder.textContent = '🎵';
+                        this.parentNode.replaceChild(placeholder, this);
+                    }
                 };
                 
                 // 信息
