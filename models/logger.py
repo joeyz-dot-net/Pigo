@@ -39,7 +39,6 @@ class ColoredFormatter(logging.Formatter):
     }
     
     MODULE_COLORS = {
-        'stream': Colors.MAGENTA,
         'player': Colors.BLUE,
         'app': Colors.GREEN,
         'playlist': Colors.CYAN,
@@ -84,7 +83,7 @@ class ColoredFormatter(logging.Formatter):
 
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_POLLING_SAMPLE_RATE = 0.1
-DEFAULT_FILTERED_PATHS = {'/status', '/stream/status', '/volume'}
+DEFAULT_FILTERED_PATHS = {'/status', '/volume'}
 DEFAULT_HEARTBEAT_LOG_INTERVAL = 10
 
 

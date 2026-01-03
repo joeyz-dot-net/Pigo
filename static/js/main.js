@@ -228,23 +228,9 @@ class MusicPlayerApp {
             console.log('播放已暂停');
         });
 
-        // 监听推流相关事件
-        player.on('stream:paused', () => {
-            Toast.info('推流已暂停');
-        });
-
         // ✅【移除】自动播放完全由后端 handle_playback_end() 控制
         // 后端通过 MPV 事件监听器检测 end-file 事件并自动处理自动播放
         // 前端不应该在这里干涉自动播放流程，以避免竞态条件
-
-        player.on('stream:error', ({ errorMsg, silent }) => {
-            // 静默错误不显示 toast（例如格式不支持错误）
-            if (silent) {
-                console.warn('[推流] 静默错误，已自动处理:', errorMsg);
-                return;
-            }
-            Toast.error(`推流错误: ${errorMsg || '未知错误'}`);
-        });
 
         // 监听循环模式变化
         player.on('loopChange', (loopMode) => {
@@ -992,9 +978,6 @@ class MusicPlayerApp {
             
             loading.show('📀 准备播放歌曲...');
             
-            // 从 localStorage 读取用户选择的格式，默认为 mp3
-            const streamFormat = localStorage.getItem('streamFormat') || 'mp3';
-            
             // 播放歌曲，添加重试逻辑，网络歌曲特别容易失败
             let playSuccess = false;
             let lastError = null;
@@ -1002,7 +985,7 @@ class MusicPlayerApp {
             
             for (let retry = 0; retry < maxRetries; retry++) {
                 try {
-                    await player.play(song.url, song.title, song.type, streamFormat);
+                    await player.play(song.url, song.title, song.type);
                     playSuccess = true;
                     break; // 播放成功，跳出重试循环
                 } catch (err) {
@@ -1086,17 +1069,6 @@ class MusicPlayerApp {
         
         const currentPlaylist = playlists.find(p => p.id === this.currentPlaylistId);
         console.log(`[队列图标] 已更新为: ${icon} (歌单: ${currentPlaylist?.name || '未知'}, 索引: ${playlistIndex >= 0 ? playlistIndex : 'N/A'})`);  
-    }
-
-    // 设置音频格式
-    setStreamFormat(format) {
-        localStorage.setItem('streamFormat', format);
-        console.log(`[设置] 音频推流格式已更改为: ${format}`);
-    }
-
-    // 获取当前音频格式
-    getStreamFormat() {
-        return localStorage.getItem('streamFormat') || 'mp3';
     }
 
     // 播放/暂停
@@ -1435,7 +1407,7 @@ class MusicPlayerApp {
             console.log(`📌 导航项${index}: data-tab="${tabName}"`);
             
             // 跳过没有 data-tab 属性的按钮
-            if (!tabName || tabName === 'stream') {
+            if (!tabName) {
                 console.log(`⏭️ 跳过 "${tabName}" 按钮（独立功能）`);
                 return;
             }
@@ -1744,8 +1716,6 @@ class MusicPlayerApp {
     // 初始化调试面板
     initDebugPanel() {
         const debugRefresh = document.getElementById('debugRefresh');
-        const startStreamBtn = document.getElementById('startStreamBtn');
-        const stopStreamBtn = document.getElementById('stopStreamBtn');
         const debugClearLogs = document.getElementById('debugClearLogs');
         const debugLogToggle = document.getElementById('debugLogToggle');
         

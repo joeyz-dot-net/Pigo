@@ -749,83 +749,6 @@ button:active { transform: scale(0.98); }
 .nav-icon { font-size: 32px; }
 .nav-label { font-size: 10px; font-weight: 500; }
 
-/* 推流状态指示器 */
-.stream-status-indicator {
-    position: fixed;
-    bottom: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: none; /* 默认隐藏 */
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    z-index: 95;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.stream-status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-/* 推流状态：禁止 (红色) */
-.stream-status-disabled {
-    background-color: #f44336;
-    box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
-}
-
-/* 推流状态：关闭 (灰色) */
-.stream-status-closed {
-    background-color: #9e9e9e;
-    box-shadow: 0 0 8px rgba(158, 158, 158, 0.5);
-}
-
-/* 推流状态：缓冲 (黄色) */
-.stream-status-buffering {
-    background-color: #ffc107;
-    box-shadow: 0 0 12px rgba(255, 193, 7, 0.8);
-    animation: stream-pulse 1.5s infinite;
-}
-
-/* 推流状态：播放 (绿色) */
-.stream-status-playing {
-    background-color: #4caf50;
-    box-shadow: 0 0 12px rgba(76, 175, 80, 0.8);
-    animation: stream-pulse 1s infinite;
-}
-
-@keyframes stream-pulse {
-    0%, 100% {
-        box-shadow: 0 0 12px rgba(76, 175, 80, 0.8);
-    }
-    50% {
-        box-shadow: 0 0 20px rgba(76, 175, 80, 1);
-    }
-}
-
-.stream-status-text {
-    font-size: 12px;
-    font-weight: 500;
-}
-
-/* 推流指示器深色主题文本 */
-.theme-dark .stream-status-indicator {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #e0e0e0;
-}
-
-/* 推流指示器浅色主题文本 */
-.theme-light .stream-status-indicator {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #333;
-}
-
 /* 播放条 */
 #playerBar {
     position: fixed;
@@ -2056,35 +1979,6 @@ button:active { transform: scale(0.98); }
 }
 
 .local-empty { padding: 40px; text-align: center; }
-/* 推流按钮状态样式 */
-#streamNavBtn {
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-#streamNavBtn.stream-active {
-    background-color: rgba(81, 207, 102, 0.2);
-    box-shadow: 0 0 12px rgba(81, 207, 102, 0.4);
-}
-
-#streamNavBtn.stream-disconnected {
-    background-color: rgba(244, 67, 54, 0.2);
-    box-shadow: 0 0 12px rgba(244, 67, 54, 0.4);
-}
-
-#streamNavIcon {
-    transition: color 0.3s ease, text-shadow 0.3s ease;
-}
-
-#streamNavBtn.stream-active #streamNavIcon {
-    color: #51cf66;
-    text-shadow: 0 0 8px rgba(81, 207, 102, 0.6);
-}
-
-#streamNavBtn.stream-disconnected #streamNavIcon {
-    color: #f44336;
-    text-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
-}
 
 /* 播放列表模态框动画 */
 @keyframes fadeIn {

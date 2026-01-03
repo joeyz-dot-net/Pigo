@@ -63,8 +63,8 @@ export class Player {
     }
 
     // 播放控制
-    async play(url, title, type = 'local', streamFormat = 'mp3') {
-        const result = await api.play(url, title, type, streamFormat);
+    async play(url, title, type = 'local') {
+        const result = await api.play(url, title, type);
         
         // 记录当前播放的URL
         this.currentPlayingUrl = url;
