@@ -142,16 +142,30 @@ export const settingsManager = {
     updateUI() {
         const settings = this.loadSettingsFromStorage();
         
-        // 主题
-        const themeSelect = document.getElementById('themeSetting');
-        if (themeSelect) {
-            themeSelect.value = settings.theme || 'dark';
+        // 主题按钮组
+        const themeGroup = document.getElementById('themeSetting');
+        if (themeGroup) {
+            const currentTheme = settings.theme || 'auto';
+            themeGroup.querySelectorAll('.settings-btn').forEach(btn => {
+                if (btn.dataset.value === currentTheme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
         }
         
-        // 语言
-        const langSelect = document.getElementById('languageSetting');
-        if (langSelect) {
-            langSelect.value = settings.language || 'auto';
+        // 语言按钮组
+        const langGroup = document.getElementById('languageSetting');
+        if (langGroup) {
+            const currentLang = settings.language || 'auto';
+            langGroup.querySelectorAll('.settings-btn').forEach(btn => {
+                if (btn.dataset.value === currentLang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
         }
     },
     
@@ -159,21 +173,35 @@ export const settingsManager = {
      * 绑定事件
      */
     bindEvents() {
-        // 主题切换
-        const themeSelect = document.getElementById('themeSetting');
-        if (themeSelect) {
-            themeSelect.addEventListener('change', (e) => {
-                this.setSetting('theme', e.target.value);
-                this.applyTheme(e.target.value);
+        // 主题按钮组
+        const themeGroup = document.getElementById('themeSetting');
+        if (themeGroup) {
+            themeGroup.querySelectorAll('.settings-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const value = btn.dataset.value;
+                    // 更新按钮状态
+                    themeGroup.querySelectorAll('.settings-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    // 保存并应用
+                    this.setSetting('theme', value);
+                    this.applyTheme(value);
+                });
             });
         }
         
-        // 语言切换
-        const langSelect = document.getElementById('languageSetting');
-        if (langSelect) {
-            langSelect.addEventListener('change', (e) => {
-                this.setSetting('language', e.target.value);
-                this.applyLanguage(e.target.value);
+        // 语言按钮组
+        const langGroup = document.getElementById('languageSetting');
+        if (langGroup) {
+            langGroup.querySelectorAll('.settings-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const value = btn.dataset.value;
+                    // 更新按钮状态
+                    langGroup.querySelectorAll('.settings-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    // 保存并应用
+                    this.setSetting('language', value);
+                    this.applyLanguage(value);
+                });
             });
         }
         

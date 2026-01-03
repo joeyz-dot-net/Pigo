@@ -115,11 +115,78 @@
     border-bottom: none;
 }
 
+/* 垂直布局的设置项（用于按钮组） */
+.settings-item-vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
 .settings-label {
     color: var(--text-primary, #fff);
     font-size: 14px;
     font-weight: 500;
     flex: 1;
+}
+
+/* 图形按钮组 */
+.settings-button-group {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.settings-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    background: var(--bg-tertiary, #2a2a2a);
+    border: 2px solid var(--border-color, #444);
+    border-radius: 8px;
+    color: var(--text-primary, #fff);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+}
+
+.settings-btn:hover {
+    background: var(--bg-hover, #333);
+    border-color: var(--accent-color, #007AFF);
+    transform: translateY(-2px);
+}
+
+.settings-btn.active {
+    background: var(--accent-color, #007AFF);
+    border-color: var(--accent-color, #007AFF);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.settings-btn .btn-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.settings-btn .btn-label {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+@media (max-width: 400px) {
+    .settings-btn {
+        padding: 10px 6px;
+    }
+    
+    .settings-btn .btn-icon {
+        font-size: 20px;
+    }
+    
+    .settings-btn .btn-label {
+        font-size: 11px;
+    }
 }
 
 /* 下拉选择框 */

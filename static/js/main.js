@@ -771,7 +771,6 @@ class MusicPlayerApp {
             
             // 只在缩略图改变时更新
             if (thumbnailUrl !== this.lastThumbnailUrl) {
-                console.log('[播放器] 更新封面:', thumbnailUrl);
                 this.lastThumbnailUrl = thumbnailUrl;
                 
                 // 初始化失败URL集合
@@ -795,6 +794,7 @@ class MusicPlayerApp {
                 const self = this;
                 
                 if (this.elements.miniPlayerCover) {
+                    this.elements.miniPlayerCover.crossOrigin = 'anonymous';
                     this.elements.miniPlayerCover.src = thumbnailUrl;
                     this.elements.miniPlayerCover.style.display = 'block';
                     this.elements.miniPlayerCover.onerror = function() {
@@ -808,6 +808,7 @@ class MusicPlayerApp {
                     };
                 }
                 if (this.elements.fullPlayerCover) {
+                    this.elements.fullPlayerCover.crossOrigin = 'anonymous';
                     this.elements.fullPlayerCover.src = thumbnailUrl;
                     this.elements.fullPlayerCover.style.display = 'block';
                     this.elements.fullPlayerCover.onerror = function() {
@@ -1852,7 +1853,6 @@ class MusicPlayerApp {
                 status = player.getStatus();
             }
         } catch (err) {
-            console.warn('[DEBUG] player.getStatus() 报错:', err);
             status = null;
         }
 
@@ -1869,13 +1869,12 @@ class MusicPlayerApp {
                             player.updateStatus(status);
                         }
                     } catch (e) {
-                        console.warn('[DEBUG] 更新 player 缓存失败:', e);
+                        // 更新失败，继续
                     }
                 } else {
                     status = null;
                 }
             } catch (err) {
-                console.warn('[DEBUG] api.getStatus() 失败:', err);
                 status = null;
             }
         }

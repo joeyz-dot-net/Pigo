@@ -333,22 +333,40 @@
 				<div class="settings-section">
 					<h3 class="section-title">🎨 外观设置</h3>
 					
-					<div class="settings-item">
-						<label class="settings-label">主题样式</label>
-						<select id="themeSetting" class="settings-select">
-							<option value="auto">自动 (根据时间)</option>
-							<option value="dark">深色主题</option>
-							<option value="light">浅色主题</option>
-						</select>
+<div class="settings-item settings-item-vertical">
+					<label class="settings-label">主题样式</label>
+					<div class="settings-button-group" id="themeSetting">
+						<button class="settings-btn" data-value="auto" title="自动 (根据时间)">
+							<span class="btn-icon">🌓</span>
+							<span class="btn-label">自动</span>
+						</button>
+						<button class="settings-btn" data-value="dark" title="深色主题">
+							<span class="btn-icon">🌙</span>
+							<span class="btn-label">深色</span>
+						</button>
+						<button class="settings-btn" data-value="light" title="浅色主题">
+							<span class="btn-icon">☀️</span>
+							<span class="btn-label">浅色</span>
+						</button>
+					</div>
 					</div>
 					
-					<div class="settings-item">
-						<label class="settings-label">语言</label>
-						<select id="languageSetting" class="settings-select">
-							<option value="auto">自动选择</option>
-							<option value="zh">中文 (Chinese)</option>
-							<option value="en">English</option>
-						</select>
+				<div class="settings-item settings-item-vertical">
+					<label class="settings-label">语言</label>
+					<div class="settings-button-group" id="languageSetting">
+						<button class="settings-btn" data-value="auto" title="自动选择">
+							<span class="btn-icon">🌐</span>
+							<span class="btn-label">自动</span>
+						</button>
+						<button class="settings-btn" data-value="zh" title="中文">
+							<span class="btn-icon">🇨🇳</span>
+							<span class="btn-label">中文</span>
+						</button>
+						<button class="settings-btn" data-value="en" title="English">
+							<span class="btn-icon">🇺🇸</span>
+							<span class="btn-label">English</span>
+						</button>
+					</div>
 					</div>
 				</div>
 	
