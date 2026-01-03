@@ -23,8 +23,6 @@ dist/
 # Logs / runtime
 *.log
 
-app.spec
-.gitignore
 
 #playlist.json
 *.json
