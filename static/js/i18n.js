@@ -24,7 +24,7 @@ const translations = {
         'settings.clubvoiceLabel': '实时语音',
         'settings.clubvoiceVolume': '语音音量',
         'settings.streaming': '直播',
-        'settings.autoStream': '自动开启直播',
+        'settings.autoStream': '开启直播',
         'settings.streamVolume': '直播音量',
         // 按钮
         'settings.reset': '🔄 重置为默认',
@@ -68,7 +68,7 @@ const translations = {
         'settings.clubvoiceLabel': 'Live Voice',
         'settings.clubvoiceVolume': 'Voice Volume',
         'settings.streaming': 'live',
-        'settings.autoStream': 'Auto Enable Live',
+        'settings.autoStream': 'Enable Live',
         'settings.streamVolume': 'Live Volume',
         // Buttons
         'settings.reset': '🔄 Reset to Default',

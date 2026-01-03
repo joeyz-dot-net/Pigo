@@ -27,7 +27,7 @@
 	<link rel="shortcut icon" href="/static/images/favicon.ico" />
 	
 	<!-- PWA Manifest -->
-	<link rel="manifest" href="/manifest.json" />
+	<link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
 	<meta name="theme-color" content="#667eea" />
 	<meta name="mobile-web-app-capable" content="yes" />
 	
@@ -35,6 +35,7 @@
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	<meta name="apple-mobile-web-app-title" content="ClubMusic" />
+	<meta name="format-detection" content="telephone=no" />
 	<!-- iOS touch icons - multiple sizes for different devices -->
 	<link rel="apple-touch-icon" href="/static/images/icon-192.png" />
 	<link rel="apple-touch-icon" sizes="72x72" href="/static/images/icon-72.png" />
@@ -335,7 +336,8 @@
 		</div>
 	</div>
 
-
+	<!-- Load ClubVoice SDK first to prevent race condition -->
+	<script src="//b.joeyz.net/sdk/clubvoice.js"></script>
 
 	<script type="module" src="/static/js/main.js?v=18"></script>
 
@@ -410,7 +412,6 @@
 				</div>
 			</div>
 
-			<script src="//b.joeyz.net/sdk/clubvoice.js"></script>
 			<script>
 			(function(){
 				let clubVoiceSDK = null;
@@ -426,20 +427,23 @@
 
 				async function initClubVoice(){
 					try{
-						if(typeof ClubVoiceSDK === 'undefined'){
-							throw new Error('ClubVoiceSDK not loaded');
-						}
+						// 轮询检查 SDK 是否加载（最长10秒）
+						for (let i = 0; i < 40; i++) {  // 40 * 250ms = 10s
+							if (typeof ClubVoiceSDK !== 'undefined') {
+								console.log(`[ClubVoice] SDK 已加载 (${i * 250}ms)`);
+								break;
+							}
+							if (i === 39) {
+								throw new Error('ClubVoice SDK 加载超时 (10秒)');
+							}
+							await new Promise(resolve => setTimeout(resolve, 250));
+					}  // ✅ 关闭 for 循环
 
-						clubVoiceSDK = new ClubVoiceSDK(SERVER_URL);
-
-						// 连接成功
-						clubVoiceSDK.onConnected = (data) => {
-							console.log('✅ ClubVoice 已连接', data);
-							status.textContent = '✓ 已连接';
-							btn.textContent = '开始收听';
-							btn.disabled = false;
-							vol.disabled = false;
-						};
+					// ✅ 创建 SDK 实例（在轮询成功后）
+					window.clubVoiceSDK = new ClubVoiceSDK(SERVER_URL);
+					clubVoiceSDK = window.clubVoiceSDK;
+					btn.disabled = false;
+					vol.disabled = false;
 
 						// 连接断开
 						clubVoiceSDK.onDisconnected = () => {
@@ -458,10 +462,11 @@
 						clubVoiceSDK.onListeningChanged = (listening) => {
 							btn.textContent = listening ? '停止收听' : '开始收听';
 							status.textContent = listening ? '▶️ 正在收听' : '⏸️ 已停止';
-						};
-
-						// 音频数据接收
-						clubVoiceSDK.onAudioReceived = (info) => {
+						
+						// 通知 iosBackgroundAudio 更新 Media Session 状态
+						if (window.iosBackgroundAudio) {
+							window.iosBackgroundAudio.onClubVoiceStateChange(listening);
+						}
 							if(clubVoiceSDK.stats){
 								stats.textContent = `${clubVoiceSDK.stats.packetsReceived} packets`;
 							}
@@ -518,10 +523,11 @@
 					}
 				});
 
-				// 延迟初始化（等待 SDK 加载）
-				setTimeout(() => {
-					initClubVoice();
-				}, 500);
+				// 立即初始化（内部轮询等待 SDK 加载）
+				initClubVoice().catch(err => {
+					console.error('[ClubVoice] 初始化失败:', err);
+					status.textContent = 'SDK 加载失败';
+				});
 			})();
 			</script>
 
@@ -578,8 +584,37 @@
 
 <!-- PWA Service Worker 注册 -->
 <script>
+	// Safari Storage Access API - 请求存储权限（修复Tracking Prevention）
+	async function requestStorageAccess() {
+		if (!document.hasStorageAccess) {
+			return true; // 不支持Storage Access API的浏览器直接返回
+		}
+		
+		try {
+			const hasAccess = await document.hasStorageAccess();
+			if (!hasAccess) {
+				console.log('[Safari] 检测到Tracking Prevention，请求存储权限...');
+				await document.requestStorageAccess();
+				console.log('[Safari] ✅ 存储权限已获取');
+			}
+			return true;
+		} catch (err) {
+			console.warn('[Safari] ⚠️ 无法获取存储权限（需要用户交互）:', err.message);
+			return false;
+		}
+	}
+	
+	// 用户首次交互时请求存储权限（Safari要求用户手势）
+	document.addEventListener('click', async function handleFirstClick() {
+		await requestStorageAccess();
+		document.removeEventListener('click', handleFirstClick);
+	}, { once: true });
+	
 	if ('serviceWorker' in navigator) {
-		window.addEventListener('load', () => {
+		window.addEventListener('load', async () => {
+			// 先尝试获取存储权限
+			await requestStorageAccess();
+			
 			navigator.serviceWorker.register('/sw.js')
 				.then(registration => {
 					console.log('[PWA] Service Worker 注册成功:', registration.scope);

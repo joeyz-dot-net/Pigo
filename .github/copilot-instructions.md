@@ -3,7 +3,7 @@
 **Full-stack web music player**: FastAPI backend + ES6 frontend + MPV IPC engine.  
 **Key distinction**: Bilingual (zh/en), user-isolation via localStorage, event-driven auto-play, Windows/PyInstaller-optimized.
 
-> **Last Updated**: 2026-01-02 | **Focus**: Backend-controlled auto-play, API parity patterns, singleton architecture
+> **Last Updated**: 2026-01-02 | **Focus**: Backend-controlled auto-play, API parity patterns, singleton architecture, deployment workflows
 
 ## ⚠️ Critical Rules (Must Follow)
 
@@ -129,17 +129,64 @@ python app.py
 
 **Port**: 80 (requires admin on Windows). Change in [settings.ini](../settings.ini) if needed.
 
+**What happens**:
+- `main.py`: Enumerates audio devices → updates `settings.ini` → launches `app.py`
+- `app.py`: Initializes singletons → starts MPV event listener → runs Uvicorn on port 80
+- Frontend: Polls `/status` every 1s for playback state updates
+
+### VS Code Tasks (Available)
+
+| Task | Command | Purpose |
+|------|---------|---------|
+| **Build** | `.\build_exe.bat` | 📦 Creates `dist/ClubMusic.exe` (local build only) |
+| **Deploy Remote** | `.\.vscode\deploy.ps1` | 🚀 Deploys exe to `\\B560\code\ClubMusic` (with backup) |
+| **Build & Deploy** | Sequential combo | 🔨➡️🚀 Builds then deploys (default task: `Ctrl+Shift+B`) |
+
+**Access**: `Ctrl+Shift+P` → "Run Task" → Select task name
+
 ### Build Windows Executable
 ```powershell
-# Via VS Code task
+# Via VS Code task (recommended)
 # Ctrl+Shift+P → "Run Task" → "Build"
 
 # Or manual
 .\build_exe.bat
 ```
 
-**Output**: `dist/app.exe` (single-file bundle, ~150MB).  
+**Output**: `dist/ClubMusic.exe` (single-file bundle, ~150MB).  
 **Spec file**: [app.spec](../app.spec) — controls PyInstaller bundling.
+
+**Build process**:
+1. Cleans `build/` and `dist/` directories
+2. Installs/verifies requirements
+3. Runs PyInstaller with `--clean --noconfirm` flags
+4. Bundles all Python code, dependencies, and static assets into `_MEIPASS`
+
+**Critical**: External tools (`bin/mpv.exe`, `bin/yt-dlp.exe`) must exist alongside the exe—they're NOT bundled into `_MEIPASS`.
+
+### Deploy to Remote Server
+```powershell
+# Via VS Code task
+# Ctrl+Shift+P → "Run Task" → "Deploy Remote"
+
+# Or manual
+.\.vscode\deploy.ps1
+```
+
+**Target**: `\\B560\code\ClubMusic` (network share)  
+**Backup**: Auto-creates timestamped backups in `\\B560\code\ClubMusic_backup` before deployment
+
+**Process**:
+1. Verifies `dist/ClubMusic.exe` exists (fails if not built)
+2. Backs up existing exe with timestamp: `ClubMusic_20260102_143022.exe`
+3. Copies new exe to remote directory
+4. Prints deployment summary
+
+**Build & Deploy (Sequential)**:
+```powershell
+# Via VS Code task (runs Build → Deploy in order)
+# Ctrl+Shift+P → "Run Task" → "Build & Deploy"
+```
 
 ### Configuration
 **File**: [settings.ini](../settings.ini)

@@ -735,6 +735,16 @@ async def pwa_test_page():
     except Exception as e:
         return HTMLResponse(f"<h1>错误</h1><p>{str(e)}</p>", status_code=500)
 
+@app.get("/safari-debug")
+async def safari_debug_page():
+    """返回 Safari PWA 诊断工具页面"""
+    try:
+        template_path = _get_resource_path("templates/safari-debug.html")
+        with open(template_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(f.read())
+    except Exception as e:
+        return HTMLResponse(f"<h1>错误</h1><p>{str(e)}</p>", status_code=500)
+
 @app.get("/sw.js")
 async def service_worker():
     """返回 Service Worker 脚本"""
