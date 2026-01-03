@@ -3,7 +3,7 @@
 **Full-stack web music player**: FastAPI backend + ES6 frontend + MPV IPC engine.  
 **Key distinction**: Bilingual (zh/en), user-isolation via localStorage, event-driven auto-play, Windows/PyInstaller-optimized.
 
-> **Last Updated**: 2026-01-02 | **Focus**: Backend-controlled auto-play, API parity patterns, singleton architecture, deployment workflows
+> **Last Updated**: 2026-01-03 | **Focus**: Backend-controlled auto-play, API parity patterns, singleton architecture, deployment workflows
 
 ## ⚠️ Critical Rules (Must Follow)
 
@@ -340,6 +340,24 @@ const text = i18n.t('my.new.key');
 - **YouTube search**: Search "test" → add to playlist → verify thumbnail shows
 - **Cover art**: Play local MP3 → verify cover displays (embedded or folder)
 - **Loop modes**: Toggle loop (0→1→2→0) → verify behavior matches mode
+
+## Dependencies & External Tools
+
+### Python Requirements ([requirements.txt](../requirements.txt))
+```
+fastapi         # Web framework
+uvicorn         # ASGI server
+python-multipart # FormData support
+psutil          # Process management
+yt-dlp          # YouTube download
+mutagen         # Audio metadata extraction
+pyinstaller     # Exe packaging
+```
+
+### External Binaries (required in production)
+- **MPV** (`bin/mpv.exe`): Media player with IPC support
+- **yt-dlp** (`bin/yt-dlp.exe`): YouTube video extraction
+- Must exist alongside `ClubMusic.exe` in deployment
 
 ## Questions & Feedback
 
