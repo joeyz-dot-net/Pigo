@@ -1,0 +1,182 @@
+[build-system]
+# 使用 setuptools 作为构建后端
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# 项目元数据
+name = "clubmusic"
+version = "1.0.0"
+description = "全栈网页音乐播放器 - FastAPI 后端 + ES6 前端 + MPV 播放引擎"
+readme = "README.md"
+authors = [
+    { name = "ClubMusic Team", email = "support@clubmusic.local" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.8"
+keywords = [
+    "music-player",
+    "fastapi",
+    "mpv",
+    "youtube",
+    "streaming",
+    "windows"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Video",
+]
+
+# 依赖声明
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "python-multipart>=0.0.5",
+    "psutil>=5.9.0",
+    "requests>=2.31.0",
+    "Pillow>=10.0.0",
+    "yt-dlp>=2023.11.0",
+    "mutagen>=1.46.0",
+]
+
+# 可选依赖组（用于不同的用途）
+[project.optional-dependencies]
+# 打包和分发
+build = [
+    "pyinstaller>=6.0.0",
+    "wheel>=0.40.0",
+    "setuptools>=65.0",
+]
+
+# 开发工具
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+]
+
+# 所有依赖（用于完整开发环境）
+all = [
+    "clubmusic[build,dev]",
+]
+
+# 项目 URLs
+[project.urls]
+Homepage = "https://github.com/yourname/clubmusic"
+Repository = "https://github.com/yourname/clubmusic.git"
+Issues = "https://github.com/yourname/clubmusic/issues"
+Documentation = "https://github.com/yourname/clubmusic#readme"
+
+# ============================================
+# Tool 配置
+# ============================================
+
+# setuptools 配置（文件发现）
+[tool.setuptools]
+packages = ["models"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+models = ["*.py"]
+
+# Black 代码格式化配置
+[tool.black]
+line-length = 120
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # 目录
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | __pycache__
+)/
+'''
+
+# isort 导入排序配置
+[tool.isort]
+profile = "black"
+multi_line_mode = 3
+include_trailing_comma = true
+line_length = 120
+skip_glob = ["*/migrations/*"]
+
+# Flake8 配置（通过 pyproject.toml，需要 flake8>=4.0）
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".venv",
+    "venv",
+]
+
+# mypy 静态类型检查配置
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = [
+    "venv/",
+    "build/",
+    "dist/",
+]
+
+# pytest 配置
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+# Coverage 配置（pytest-cov）
+[tool.coverage.run]
+source = ["models", "app.py"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
